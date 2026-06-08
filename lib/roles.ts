@@ -1,11 +1,6 @@
 import type { Locale } from "@/lib/types/database";
 
-export const USER_ROLES = [
-  {
-    value: "admin",
-    label: "Admin",
-    description: "Full access to the admin portal",
-  },
+export const APP_USER_ROLES = [
   {
     value: "mother",
     label: "Mother",
@@ -18,25 +13,26 @@ export const USER_ROLES = [
   },
 ] as const;
 
-export type UserRole = (typeof USER_ROLES)[number]["value"];
+export type AppUserRole = (typeof APP_USER_ROLES)[number]["value"];
 
-export function isUserRole(value: string): value is UserRole {
-  return USER_ROLES.some((role) => role.value === value);
+/** @deprecated Use AppUserRole — admin accounts live in admin_users table. */
+export type UserRole = AppUserRole;
+
+export function isAppUserRole(value: string): value is AppUserRole {
+  return APP_USER_ROLES.some((role) => role.value === value);
+}
+
+/** @deprecated Use isAppUserRole */
+export function isUserRole(value: string): value is AppUserRole {
+  return isAppUserRole(value);
 }
 
 export function roleLabel(role: string | null | undefined): string {
-  return USER_ROLES.find((item) => item.value === role)?.label ?? role ?? "—";
+  return APP_USER_ROLES.find((item) => item.value === role)?.label ?? role ?? "—";
 }
 
-export function accountTypeForRole(role: UserRole): string {
-  switch (role) {
-    case "admin":
-      return "Admin";
-    case "partner":
-      return "Partner";
-    default:
-      return "Mother";
-  }
+export function accountTypeForRole(role: AppUserRole): string {
+  return role === "partner" ? "Partner" : "Mother";
 }
 
 export type CreateUserInput = {
@@ -44,6 +40,9 @@ export type CreateUserInput = {
   password: string;
   full_name?: string;
   phone?: string;
-  role: UserRole;
+  role: AppUserRole;
   locale?: Locale;
 };
+
+/** Backward-compatible alias for mobile app user roles in UI. */
+export const USER_ROLES = APP_USER_ROLES;

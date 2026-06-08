@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdminSession } from "@/lib/adminAuth";
 import {
   accountTypeForRole,
-  isUserRole,
+  isAppUserRole,
   type CreateUserInput,
 } from "@/lib/roles";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
@@ -18,7 +18,7 @@ function parseCreateBody(body: unknown): CreateUserInput | string {
 
   if (!email) return "Email is required";
   if (password.length < 8) return "Password must be at least 8 characters";
-  if (!isUserRole(role)) return "Role must be admin, mother, or partner";
+  if (!isAppUserRole(role)) return "Role must be mother or partner";
 
   const locale =
     typeof data.locale === "string" &&
@@ -70,9 +70,6 @@ export async function POST(request: Request) {
       email: parsed.email,
       password: parsed.password,
       email_confirm: true,
-      app_metadata: {
-        role: parsed.role === "admin" ? "admin" : parsed.role,
-      },
       user_metadata: {
         full_name: parsed.full_name ?? "",
         phone: parsed.phone ?? "",
@@ -89,17 +86,19 @@ export async function POST(request: Request) {
     );
   }
 
+  const profilePayload = {
+    id: created.user.id,
+    full_name: parsed.full_name || null,
+    phone: parsed.phone || null,
+    account_type: accountType,
+    role: parsed.role,
+    is_admin: false,
+    locale: parsed.locale,
+  };
+
   const { data: profile, error: profileError } = await serviceClient
     .from("profiles")
-    .update({
-      full_name: parsed.full_name || null,
-      phone: parsed.phone || null,
-      account_type: accountType,
-      role: parsed.role,
-      is_admin: parsed.role === "admin",
-      locale: parsed.locale,
-    })
-    .eq("id", created.user.id)
+    .upsert(profilePayload, { onConflict: "id" })
     .select("*")
     .single();
 

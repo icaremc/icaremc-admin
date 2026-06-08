@@ -41,7 +41,8 @@ Run these in the Supabase SQL Editor, in order:
 10. [`v2_uuid_normalized.sql`](./v2_uuid_normalized.sql) — normalized UUID tables (pregnancy weeks, mothers, pregnancy logs)
 11. [`v2_admin_policies.sql`](./v2_admin_policies.sql) — admin access for v2 tables
 12. [`pregnancy_week_linking.sql`](./pregnancy_week_linking.sql) — link gestational week/day to daily tips
-13. [`user_roles_migration.sql`](./user_roles_migration.sql) — profile roles (admin / mother / partner)
+13. [`user_roles_migration.sql`](./user_roles_migration.sql) — profile roles (mother / partner)
+14. [`admin_users_migration.sql`](./admin_users_migration.sql) — separate admin portal accounts + roles
 
 ### Content translations
 
@@ -49,13 +50,33 @@ The `content_translations` table stores editable content: child milestones. Dail
 
 ### Admin portal setup
 
-After running `admin_policies.sql` and `user_roles_migration.sql`, grant admin access to your account:
+After running `admin_policies.sql`, `user_roles_migration.sql`, and `admin_users_migration.sql`, grant your first super admin:
 
 ```sql
-update public.profiles
-set role = 'admin', is_admin = true
-where id = (select id from auth.users where email = 'your-admin@email.com');
+insert into public.admin_users (id, email, full_name, admin_role, is_active)
+select
+  u.id,
+  u.email,
+  p.full_name,
+  'super_admin',
+  true
+from auth.users u
+left join public.profiles p on p.id = u.id
+where u.email = 'your-admin@email.com'
+on conflict (id) do update
+set admin_role = 'super_admin', is_active = true, updated_at = now();
 ```
+
+**Admin roles** (`admin_users.admin_role`):
+
+| Role | Access |
+|------|--------|
+| `super_admin` | Full portal + manage other admins |
+| `content_admin` | CMS content, pregnancy weeks, daily tips |
+| `support` | View app users and health records |
+| `viewer` | Read-only dashboard |
+
+Mobile app users stay in `profiles` with role `mother` or `partner` only.
 
 Configure `icaremc-admin/.env`:
 
@@ -63,6 +84,7 @@ Configure `icaremc-admin/.env`:
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+# Optional bootstrap allowlist. Portal access is granted when profiles.role = 'admin'.
 NEXT_PUBLIC_ADMIN_EMAILS=your-admin@email.com
 ```
 

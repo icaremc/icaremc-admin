@@ -22,7 +22,7 @@ import {
   updateProfileRole,
 } from "@/features/profiles/profilesSlice";
 import { LOCALES } from "@/lib/constants";
-import { USER_ROLES, type UserRole } from "@/lib/roles";
+import { APP_USER_ROLES, type AppUserRole } from "@/lib/roles";
 import { formatDateTime } from "@/lib/format";
 import type { Locale } from "@/lib/types/database";
 
@@ -31,7 +31,7 @@ const emptyForm = {
   password: "",
   full_name: "",
   phone: "",
-  role: "mother" as UserRole,
+  role: "mother" as AppUserRole,
   locale: "en" as Locale,
 };
 
@@ -86,8 +86,8 @@ export default function UsersPage() {
   return (
     <>
       <PageHero
-        title="Users"
-        description="Create accounts and assign admin, mother, or partner roles"
+        title="App users"
+        description="Mobile app accounts for mothers and partners"
         icon={Users}
         stat={{ label: "Total users", value: profiles.length }}
       />
@@ -181,12 +181,12 @@ export default function UsersPage() {
                   onChange={(e) =>
                     setForm((current) => ({
                       ...current,
-                      role: e.target.value as UserRole,
+                      role: e.target.value as AppUserRole,
                     }))
                   }
                   className="flex h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
                 >
-                  {USER_ROLES.map((role) => (
+                  {APP_USER_ROLES.map((role) => (
                     <option key={role.value} value={role.value}>
                       {role.label}
                     </option>
@@ -264,19 +264,19 @@ export default function UsersPage() {
                     <TableCell>{profile.account_type || "—"}</TableCell>
                     <TableCell>
                       <select
-                        value={profile.role ?? (profile.is_admin ? "admin" : "mother")}
+                        value={profile.role ?? "mother"}
                         disabled={saving}
                         onChange={(event) =>
                           dispatch(
                             updateProfileRole({
                               id: profile.id,
-                              role: event.target.value as UserRole,
+                              role: event.target.value as AppUserRole,
                             }),
                           )
                         }
                         className="rounded-md border border-gray-200 bg-white px-2 py-1 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
                       >
-                        {USER_ROLES.map((role) => (
+                        {APP_USER_ROLES.map((role) => (
                           <option key={role.value} value={role.value}>
                             {role.label}
                           </option>

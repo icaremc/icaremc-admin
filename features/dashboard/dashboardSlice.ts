@@ -59,9 +59,9 @@ async function countRecentLogs(): Promise<number> {
 
 async function countAdminUsers(): Promise<number> {
   const { count, error } = await supabase
-    .from("profiles")
+    .from("admin_users")
     .select("*", { count: "exact", head: true })
-    .eq("is_admin", true);
+    .eq("is_active", true);
 
   if (error) throw error;
   return count ?? 0;

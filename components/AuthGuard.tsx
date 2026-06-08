@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { isAdminEmail } from "@/lib/authConfig";
+import { fetchAdminAccess } from "@/lib/adminAccess";
 import { useAppDispatch } from "@/app/store/hooks";
 import { authActions, restoreSession } from "@/app/store/slices/authSlice";
 
@@ -22,8 +22,8 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         const result = await dispatch(restoreSession()).unwrap();
         if (!result) {
           const { data } = await supabase.auth.getSession();
-          const email = data.session?.user?.email;
-          if (!email) {
+          const user = data.session?.user;
+          if (!user?.email) {
             if (mounted && !didNavigate.current) {
               didNavigate.current = true;
               router.replace(
@@ -32,7 +32,14 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
             }
             return;
           }
-          if (!isAdminEmail(email)) {
+
+          const access = await fetchAdminAccess(
+            supabase,
+            user.id,
+            user.email,
+          );
+
+          if (!access.allowed) {
             await supabase.auth.signOut();
             dispatch(authActions.logout());
             if (mounted && !didNavigate.current) {
@@ -71,7 +78,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (checking) {
     return (
-      <div className="ml-64 grid min-h-screen w-full place-items-center bg-gray-50">
+      <div className="ml-[260px] grid min-h-screen w-full place-items-center bg-gray-50">
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
           Checking access…

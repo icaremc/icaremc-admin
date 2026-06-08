@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { supabase } from "@/lib/supabaseClient";
-import { accountTypeForRole, type CreateUserInput, type UserRole } from "@/lib/roles";
+import { accountTypeForRole, type CreateUserInput, type AppUserRole } from "@/lib/roles";
 import type { Profile } from "@/lib/types/database";
 
 type ProfilesState = {
@@ -31,13 +31,23 @@ async function readApiError(response: Response): Promise<string> {
 export const fetchProfiles = createAsyncThunk(
   "profiles/fetchAll",
   async (_, { rejectWithValue }) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const [{ data: profiles, error: profilesError }, { data: admins, error: adminsError }] =
+      await Promise.all([
+        supabase
+          .from("profiles")
+          .select("*")
+          .order("created_at", { ascending: false }),
+        supabase.from("admin_users").select("id"),
+      ]);
 
-    if (error) return rejectWithValue(error.message);
-    return (data ?? []) as Profile[];
+    if (profilesError) return rejectWithValue(profilesError.message);
+    if (adminsError) return rejectWithValue(adminsError.message);
+
+    const adminIds = new Set((admins ?? []).map((row) => row.id));
+
+    return ((profiles ?? []) as Profile[]).filter(
+      (profile) => !adminIds.has(profile.id),
+    );
   },
 );
 
@@ -62,7 +72,7 @@ export const createUser = createAsyncThunk(
 export const updateProfileRole = createAsyncThunk(
   "profiles/updateRole",
   async (
-    payload: { id: string; role: UserRole },
+    payload: { id: string; role: AppUserRole },
     { rejectWithValue },
   ) => {
     const { data, error } = await supabase
@@ -70,7 +80,7 @@ export const updateProfileRole = createAsyncThunk(
       .update({
         role: payload.role,
         account_type: accountTypeForRole(payload.role),
-        is_admin: payload.role === "admin",
+        is_admin: false,
       })
       .eq("id", payload.id)
       .select("*")

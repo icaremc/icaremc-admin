@@ -1,6 +1,11 @@
 export type Locale = "en" | "am" | "om";
 
-export type UserRole = "admin" | "mother" | "partner";
+export type AppUserRole = "mother" | "partner";
+
+/** @deprecated Use AppUserRole for mobile profiles. */
+export type UserRole = AppUserRole;
+
+export type AdminRole = "super_admin" | "content_admin" | "support" | "viewer";
 
 export type ContentNamespace =
   | "milestone"
@@ -15,8 +20,18 @@ export type Profile = {
   dark_mode: boolean;
   notifications_enabled: boolean;
   onboarding_complete: boolean;
-  role?: UserRole;
+  role?: AppUserRole;
   is_admin?: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminUser = {
+  id: string;
+  email: string;
+  full_name: string | null;
+  admin_role: AdminRole;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 };

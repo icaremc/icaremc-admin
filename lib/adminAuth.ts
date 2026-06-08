@@ -1,5 +1,6 @@
-import { isAdminEmail } from "@/lib/authConfig";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { fetchAdminAccess } from "@/lib/adminAccess";
+import type { AdminRole } from "@/lib/types/database";
 
 export async function requireAdminSession() {
   const supabase = await createServerSupabaseClient();
@@ -12,20 +13,26 @@ export async function requireAdminSession() {
     return { error: "Unauthorized", status: 401 as const };
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role, is_admin")
-    .eq("id", user.id)
-    .maybeSingle();
+  const access = await fetchAdminAccess(supabase, user.id, user.email);
 
-  const isAdmin =
-    profile?.role === "admin" ||
-    profile?.is_admin === true ||
-    isAdminEmail(user.email);
-
-  if (!isAdmin) {
+  if (!access.allowed) {
     return { error: "Forbidden", status: 403 as const };
   }
 
-  return { user, supabase };
+  return {
+    user,
+    supabase,
+    adminRole: access.adminRole as AdminRole,
+  };
+}
+
+export async function requireSuperAdminSession() {
+  const auth = await requireAdminSession();
+  if ("error" in auth) return auth;
+
+  if (auth.adminRole !== "super_admin") {
+    return { error: "Forbidden", status: 403 as const };
+  }
+
+  return auth;
 }

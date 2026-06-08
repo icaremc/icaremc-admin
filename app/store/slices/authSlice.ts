@@ -1,11 +1,13 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { supabase } from "@/lib/supabaseClient";
-import { isAdminEmail } from "@/lib/authConfig";
+import { fetchAdminAccess } from "@/lib/adminAccess";
+import type { AdminRole } from "@/lib/types/database";
 
 type AuthUser = {
   id: string;
   name: string;
   email: string;
+  adminRole: AdminRole | null;
 };
 
 type AuthState = {
@@ -22,6 +24,28 @@ const initialState: AuthState = {
   error: null,
 };
 
+const UNAUTHORIZED_MESSAGE =
+  "This account is not authorized for admin access.";
+
+function authUserFromSession(
+  user: { id: string; email?: string | null; user_metadata?: Record<string, unknown> },
+  access: Awaited<ReturnType<typeof fetchAdminAccess>>,
+  emailFallback: string,
+): AuthUser {
+  const name =
+    access.fullName ??
+    (user.user_metadata?.full_name as string | undefined) ??
+    user.email?.split("@")[0] ??
+    "Admin";
+
+  return {
+    id: user.id,
+    name,
+    email: user.email ?? emailFallback,
+    adminRole: access.adminRole,
+  };
+}
+
 export const login = createAsyncThunk<
   { user: AuthUser; token: string },
   { email: string; password: string },
@@ -31,10 +55,6 @@ export const login = createAsyncThunk<
 
   if (!trimmed || !password) {
     return rejectWithValue("Email and password are required.");
-  }
-
-  if (!isAdminEmail(trimmed)) {
-    return rejectWithValue("This account is not authorized for admin access.");
   }
 
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -50,17 +70,19 @@ export const login = createAsyncThunk<
     return rejectWithValue("Login failed. No session returned.");
   }
 
-  const name =
-    (data.user.user_metadata?.full_name as string | undefined) ??
-    data.user.email?.split("@")[0] ??
-    "Admin";
+  const access = await fetchAdminAccess(
+    supabase,
+    data.user.id,
+    data.user.email ?? trimmed,
+  );
+
+  if (!access.allowed) {
+    await supabase.auth.signOut();
+    return rejectWithValue(UNAUTHORIZED_MESSAGE);
+  }
 
   return {
-    user: {
-      id: data.user.id,
-      name,
-      email: data.user.email ?? trimmed,
-    },
+    user: authUserFromSession(data.user, access, trimmed),
     token: data.session.access_token,
   };
 });
@@ -79,22 +101,19 @@ export const restoreSession = createAsyncThunk<
   const session = data.session;
   if (!session?.user?.email) return null;
 
-  if (!isAdminEmail(session.user.email)) {
+  const access = await fetchAdminAccess(
+    supabase,
+    session.user.id,
+    session.user.email,
+  );
+
+  if (!access.allowed) {
     await supabase.auth.signOut();
     return null;
   }
 
-  const name =
-    (session.user.user_metadata?.full_name as string | undefined) ??
-    session.user.email.split("@")[0] ??
-    "Admin";
-
   return {
-    user: {
-      id: session.user.id,
-      name,
-      email: session.user.email,
-    },
+    user: authUserFromSession(session.user, access, session.user.email),
     token: session.access_token,
   };
 });

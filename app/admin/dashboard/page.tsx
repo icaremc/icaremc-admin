@@ -30,9 +30,9 @@ function greetingForHour(hour: number): string {
 
 const quickActions = [
   {
-    href: "/admin/users",
-    label: "Create user",
-    description: "Add admin, mother, or partner accounts",
+    href: "/admin/admins",
+    label: "Create admin",
+    description: "Add portal accounts with admin roles",
     icon: Plus,
   },
   {

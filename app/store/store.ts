@@ -1,4 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
+import { adminsReducer } from "@/features/admins/adminsSlice";
 import { appointmentsReducer } from "@/features/appointments/appointmentsSlice";
 import { childrenReducer } from "@/features/children/childrenSlice";
 import { contentReducer } from "@/features/content/contentSlice";
@@ -18,6 +19,7 @@ export const store = configureStore({
     dashboard: dashboardReducer,
     content: contentReducer,
     profiles: profilesReducer,
+    admins: adminsReducer,
     pregnancyWeeks: pregnancyWeeksReducer,
     dailyTips: dailyTipsReducer,
     mothers: mothersReducer,
