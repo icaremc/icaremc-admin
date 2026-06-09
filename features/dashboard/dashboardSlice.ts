@@ -14,9 +14,7 @@ const emptyStats: DashboardStats = {
   pregnancyWeeks: 0,
   pregnancies: 0,
   pregnancyLogs: 0,
-  symptomLogs: 0,
   children: 0,
-  appointments: 0,
   adminUsers: 0,
   recentLogs: 0,
 };
@@ -92,8 +90,6 @@ export const fetchDashboardStats = createAsyncThunk(
         children,
         adminUsers,
         recentLogs,
-        symptomLogs,
-        appointments,
       ] = await Promise.all([
         countTable("profiles"),
         countMilestones(),
@@ -104,8 +100,6 @@ export const fetchDashboardStats = createAsyncThunk(
         countTable("children"),
         countAdminUsers(),
         countRecentPregnancyLogs(),
-        countTableOptional("symptom_logs"),
-        countTableOptional("appointments"),
       ]);
 
       return {
@@ -114,9 +108,7 @@ export const fetchDashboardStats = createAsyncThunk(
         pregnancyWeeks,
         pregnancies,
         pregnancyLogs,
-        symptomLogs,
         children,
-        appointments,
         adminUsers,
         recentLogs,
       } satisfies DashboardStats;

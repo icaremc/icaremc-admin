@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { supabase } from "@/lib/supabaseClient";
 import { fetchAdminAccess } from "@/lib/adminAccess";
 import type { AdminRole } from "@/lib/types/database";
@@ -127,9 +127,6 @@ const authSlice = createSlice({
       state.token = null;
       state.status = "idle";
       state.error = null;
-    },
-    setToken(state, action: PayloadAction<string | null>) {
-      state.token = action.payload;
     },
     clearAuthError(state) {
       state.error = null;

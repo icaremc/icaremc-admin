@@ -2,9 +2,6 @@ export type Locale = "en" | "am" | "om";
 
 export type AppUserRole = "mother" | "partner";
 
-/** @deprecated Use AppUserRole for mobile profiles. */
-export type UserRole = AppUserRole;
-
 export type AdminRole = "super_admin" | "content_admin" | "support" | "viewer";
 
 export type ContentNamespace =
@@ -41,9 +38,6 @@ export type PregnancyStatus =
   | "completed"
   | "miscarriage"
   | "terminated";
-
-/** @deprecated Use Pregnancy — kept for legacy references. */
-export type Mother = Pregnancy;
 
 export type Pregnancy = {
   id: string;
@@ -111,18 +105,6 @@ export type PregnancyLog = {
   pregnancies?: { user_id: string; profiles?: { full_name: string | null } | null } | null;
 };
 
-export type SymptomLog = {
-  id: string;
-  pregnancy_id: string;
-  log_date: string;
-  symptom_type: string;
-  severity: number | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-  pregnancies?: { user_id: string } | null;
-};
-
 export type Child = {
   id: string;
   user_id: string;
@@ -150,28 +132,6 @@ export type ChildMilestone = {
   updated_at: string;
 };
 
-/** @deprecated Use Child */
-export type ChildProfile = Child;
-
-export type MilestoneCheck = {
-  id: string;
-  user_id: string;
-  item_key: string;
-  checked_at: string;
-};
-
-export type Appointment = {
-  id: string;
-  user_id: string;
-  title: string;
-  appointment_type: string | null;
-  appointment_at: string | null;
-  location: string | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
 export type ContentTranslation = {
   id: string;
   namespace: ContentNamespace;
@@ -182,13 +142,6 @@ export type ContentTranslation = {
   created_at: string;
   updated_at: string;
 };
-
-export type DailyTipCategory =
-  | "nutrition"
-  | "exercise"
-  | "warning"
-  | "emotional"
-  | "general";
 
 export type DailyTip = {
   id: string;
@@ -217,9 +170,7 @@ export type DashboardStats = {
   pregnancyWeeks: number;
   pregnancies: number;
   pregnancyLogs: number;
-  symptomLogs: number;
   children: number;
-  appointments: number;
   adminUsers: number;
   recentLogs: number;
 };
