@@ -48,17 +48,43 @@ export function dailyTipEnTitle(tip: DailyTip): string {
   return en?.title ?? "";
 }
 
+export type DailyTipTitlePreview = {
+  language_code: string;
+  title: string;
+};
+
+/** All non-empty titles for a tip, sorted by language code. */
+export function dailyTipTranslationTitles(tip: DailyTip): DailyTipTitlePreview[] {
+  const rows = tip.daily_tip_translations ?? [];
+  return rows
+    .filter((row) => row.title?.trim())
+    .map((row) => ({
+      language_code: row.language_code,
+      title: row.title.trim(),
+    }))
+    .sort((a, b) => a.language_code.localeCompare(b.language_code));
+}
+
+export function dailyTipTitleForLocale(tip: DailyTip, locale: string): string {
+  const row = tip.daily_tip_translations?.find(
+    (item) => item.language_code === locale,
+  );
+  return row?.title?.trim() ?? "";
+}
+
 export function summarizeDailyTipsByWeek(
   items: DailyTip[],
 ): Map<number, DailyTipWeekSummary> {
   const summary = new Map<number, DailyTipWeekSummary>();
 
   for (const item of items) {
+    if (item.day_number === null) continue;
+
     const week = item.week_number;
     const current = summary.get(week) ?? { total: 0, published: 0, daysFilled: 0 };
     current.total += 1;
     if (item.is_active) current.published += 1;
-    if (item.day_number !== null) current.daysFilled += 1;
+    current.daysFilled += 1;
     summary.set(week, current);
   }
 
@@ -78,14 +104,32 @@ export function dailyTipBackPath(tip: DailyTip | null): string {
 }
 
 export function dailyTipListLabel(tip: DailyTip): string {
-  const content = dailyTipEnContent(tip);
-  return content ? truncate(content) : truncateEntityId(tip.id);
+  const titles = dailyTipTranslationTitles(tip);
+  if (titles.length > 0) {
+    return titles
+      .map(
+        (row) =>
+          `${row.language_code.toUpperCase()}: ${truncate(row.title, 48)}`,
+      )
+      .join(" · ");
+  }
+  const title = dailyTipEnTitle(tip);
+  if (title) return truncate(title);
+  return truncateEntityId(tip.id);
 }
 
 export function dailyTipHeroTitle(tip: DailyTip): string {
   const title = dailyTipEnTitle(tip);
-  const content = dailyTipEnContent(tip);
-  return title || (content ? truncate(content, 48) : "Daily tip");
+  if (title) return title;
+  const anyTitle = dailyTipTranslationTitles(tip)[0]?.title;
+  if (anyTitle) return truncate(anyTitle, 48);
+  return "Daily tip";
+}
+
+export function dailyTipsForWeek(items: DailyTip[], week: number): DailyTip[] {
+  return items
+    .filter((tip) => tip.week_number === week && tip.day_number !== null)
+    .sort((a, b) => (a.day_number ?? 0) - (b.day_number ?? 0));
 }
 
 export function dailyTipWeekNumber(item: ContentTranslation): number | null {

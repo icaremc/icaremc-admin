@@ -12,9 +12,10 @@ const emptyStats: DashboardStats = {
   profiles: 0,
   contentItems: 0,
   pregnancyWeeks: 0,
-  mothers: 0,
+  pregnancies: 0,
   pregnancyLogs: 0,
-  childProfiles: 0,
+  symptomLogs: 0,
+  children: 0,
   appointments: 0,
   adminUsers: 0,
   recentLogs: 0,
@@ -35,25 +36,35 @@ async function countTable(table: string): Promise<number> {
   return count ?? 0;
 }
 
-async function countRecentLogs(): Promise<number> {
+/** Returns 0 when table is missing (mobile-only schema). */
+async function countTableOptional(table: string): Promise<number> {
+  try {
+    return await countTable(table);
+  } catch {
+    return 0;
+  }
+}
+
+async function countMilestones(): Promise<number> {
+  const { count, error } = await supabase
+    .from("content_translations")
+    .select("*", { count: "exact", head: true })
+    .eq("namespace", "milestone");
+
+  if (error) return 0;
+  return count ?? 0;
+}
+
+async function countRecentPregnancyLogs(): Promise<number> {
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 7);
-  const date = weekAgo.toISOString().slice(0, 10);
 
   const { count, error } = await supabase
     .from("pregnancy_logs")
     .select("*", { count: "exact", head: true })
-    .gte("log_date", date);
+    .gte("updated_at", weekAgo.toISOString());
 
-  if (error) {
-    const fallback = await supabase
-      .from("daily_health_logs")
-      .select("*", { count: "exact", head: true })
-      .gte("log_date", date);
-    if (fallback.error) throw fallback.error;
-    return fallback.count ?? 0;
-  }
-
+  if (error) return 0;
   return count ?? 0;
 }
 
@@ -73,33 +84,38 @@ export const fetchDashboardStats = createAsyncThunk(
     try {
       const [
         profiles,
-        contentItems,
+        milestones,
+        dailyTips,
         pregnancyWeeks,
-        mothers,
+        pregnancies,
         pregnancyLogs,
-        childProfiles,
-        appointments,
+        children,
         adminUsers,
         recentLogs,
+        symptomLogs,
+        appointments,
       ] = await Promise.all([
         countTable("profiles"),
-        countTable("content_translations"),
-        countTable("pregnancy_weeks"),
-        countTable("mothers"),
+        countMilestones(),
+        countTableOptional("daily_tips"),
+        countTableOptional("pregnancy_weeks"),
+        countTable("pregnancies"),
         countTable("pregnancy_logs"),
-        countTable("child_profiles"),
-        countTable("appointments"),
+        countTable("children"),
         countAdminUsers(),
-        countRecentLogs(),
+        countRecentPregnancyLogs(),
+        countTableOptional("symptom_logs"),
+        countTableOptional("appointments"),
       ]);
 
       return {
         profiles,
-        contentItems,
+        contentItems: milestones + dailyTips,
         pregnancyWeeks,
-        mothers,
+        pregnancies,
         pregnancyLogs,
-        childProfiles,
+        symptomLogs,
+        children,
         appointments,
         adminUsers,
         recentLogs,

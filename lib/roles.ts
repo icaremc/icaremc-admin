@@ -28,7 +28,7 @@ export function isUserRole(value: string): value is AppUserRole {
 }
 
 export function roleLabel(role: string | null | undefined): string {
-  return APP_USER_ROLES.find((item) => item.value === role)?.label ?? role ?? "—";
+  return APP_USER_ROLES.find((item) => item.value === role)?.label ?? role ?? "-";
 }
 
 export function accountTypeForRole(role: AppUserRole): string {

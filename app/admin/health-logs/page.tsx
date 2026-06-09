@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 import { Activity } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import {
@@ -13,13 +14,11 @@ import {
 } from "@/components/ui/table";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { fetchPregnancyLogs } from "@/features/pregnancyLogs/pregnancyLogsSlice";
-import { formatDate, truncate } from "@/lib/format";
+import { formatDateTime, truncate } from "@/lib/format";
 
 export default function PregnancyLogsPage() {
   const dispatch = useAppDispatch();
-  const { logs, loading, error } = useAppSelector(
-    (state) => state.pregnancyLogs,
-  );
+  const weekly = useAppSelector((state) => state.pregnancyLogs);
 
   useEffect(() => {
     dispatch(fetchPregnancyLogs());
@@ -28,69 +27,103 @@ export default function PregnancyLogsPage() {
   return (
     <>
       <PageHero
-        title="Pregnancy logs"
-        description="Daily logs linked to mother UUID and optional pregnancy week"
+        title="Weekly health logs"
+        description="Weekly weight, height, vitals, and symptoms per gestational week (1-40)"
         icon={Activity}
-        stat={{ label: "Recent logs", value: logs.length }}
+        stat={{
+          label: "Weekly logs",
+          value: weekly.logs.length,
+        }}
       />
 
-      <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
-        {error ? (
-          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
-            {error}
+      <div className="mx-auto max-w-[1200px] space-y-8 px-6 py-8 lg:px-8">
+        {weekly.error ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+            {weekly.error}
           </div>
         ) : null}
 
-        <div className="admin-table-wrap">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-b border-white/20 bg-gradient-to-r from-emerald-50/50 to-teal-50/50">
-                <TableHead className="font-semibold text-gray-700">Date</TableHead>
-                <TableHead className="font-semibold text-gray-700">Mother ID</TableHead>
-                <TableHead className="font-semibold text-gray-700">Week</TableHead>
-                <TableHead className="font-semibold text-gray-700">Mood</TableHead>
-                <TableHead className="font-semibold text-gray-700">Symptoms</TableHead>
-                <TableHead className="font-semibold text-gray-700">Notes</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-gray-500">
-                    Loading pregnancy logs…
-                  </TableCell>
+        <section>
+          <div className="admin-table-wrap">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-b border-white/20 bg-gradient-to-r from-emerald-50/50 to-teal-50/50">
+                  <TableHead className="font-semibold text-gray-700">Week</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Mother</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Weight</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Height</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Blood pressure</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Temp</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Symptoms</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Notes</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Updated</TableHead>
                 </TableRow>
-              ) : logs.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-gray-500">
-                    No pregnancy logs found.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                logs.map((log) => (
-                  <TableRow key={log.id}>
-                    <TableCell>{formatDate(log.log_date)}</TableCell>
-                    <TableCell className="font-mono text-xs text-gray-600">
-                      {log.mother_id.slice(0, 8)}…
-                    </TableCell>
-                    <TableCell>
-                      {log.pregnancy_weeks?.week_number
-                        ? `Week ${log.pregnancy_weeks.week_number}`
-                        : "—"}
-                    </TableCell>
-                    <TableCell>{log.mood || "—"}</TableCell>
-                    <TableCell>
-                      {log.symptoms.length ? log.symptoms.join(", ") : "—"}
-                    </TableCell>
-                    <TableCell className="text-gray-600">
-                      {truncate(log.notes ?? JSON.stringify(log.checklist), 60)}
+              </TableHeader>
+              <TableBody>
+                {weekly.loading ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="py-8 text-center text-gray-500">
+                      Loading weekly logs…
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                ) : weekly.logs.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="py-8 text-center text-gray-500">
+                      No weekly pregnancy logs found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  weekly.logs.map((log) => {
+                    const userId = log.pregnancies?.user_id;
+                    const motherName =
+                      log.pregnancies?.profiles?.full_name ?? null;
+
+                    return (
+                      <TableRow key={log.id}>
+                        <TableCell>Week {log.week_number}</TableCell>
+                        <TableCell>
+                          {userId ? (
+                            <Link
+                              href={`/admin/users/${userId}`}
+                              className="text-emerald-700 hover:underline"
+                            >
+                              {motherName || `${userId.slice(0, 8)}…`}
+                            </Link>
+                          ) : (
+                            "-"
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {log.weight != null ? `${log.weight} kg` : "-"}
+                        </TableCell>
+                        <TableCell>
+                          {log.height != null ? `${log.height} cm` : "-"}
+                        </TableCell>
+                        <TableCell>
+                          {log.blood_pressure_systolic != null
+                            ? `${log.blood_pressure_systolic}/${log.blood_pressure_diastolic ?? "-"}`
+                            : "-"}
+                        </TableCell>
+                        <TableCell>
+                          {log.temperature != null ? `${log.temperature} °C` : "-"}
+                        </TableCell>
+                        <TableCell>
+                          {log.symptoms.length ? log.symptoms.join(", ") : "-"}
+                        </TableCell>
+                        <TableCell className="text-gray-600">
+                          {truncate(log.notes ?? "", 60)}
+                        </TableCell>
+                        <TableCell className="text-xs text-gray-500">
+                          {formatDateTime(log.updated_at)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </section>
       </div>
     </>
   );

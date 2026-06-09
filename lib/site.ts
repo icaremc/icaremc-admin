@@ -3,7 +3,7 @@ const DEFAULT_SITE_URL = "http://localhost:3000";
 export const siteConfig = {
   name: "ICare MC",
   shortName: "ICare MC",
-  title: "ICare MC — Pregnancy & child care",
+  title: "ICare MC | Pregnancy & child care",
   description:
     "Track pregnancy weeks, daily health tips, milestones, and appointments for mothers and caregivers. Available in English, Amharic, and Oromo.",
   adminTitle: "ICare MC Admin",

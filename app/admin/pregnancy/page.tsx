@@ -13,42 +13,51 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
-import { fetchMothers } from "@/features/mothers/mothersSlice";
+import { fetchPregnancies } from "@/features/pregnancies/pregnanciesSlice";
 import { formatDate } from "@/lib/format";
 import { dailyTipWeekPath } from "@/lib/content/contentLabels";
 import { formatGestationalAge, gestationalAge } from "@/lib/pregnancy";
+import type { PregnancyStatus } from "@/lib/types/database";
 
-function statusBadge(status: string | undefined) {
-  const value = status ?? "active";
-  if (value === "delivered") {
-    return (
-      <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
-        Delivered
-      </span>
-    );
-  }
+function statusBadge(status: PregnancyStatus) {
+  const styles: Record<PregnancyStatus, string> = {
+    active: "bg-emerald-100 text-emerald-800",
+    completed: "bg-gray-100 text-gray-700",
+    miscarriage: "bg-amber-100 text-amber-800",
+    terminated: "bg-red-100 text-red-700",
+  };
+  const labels: Record<PregnancyStatus, string> = {
+    active: "Active",
+    completed: "Completed",
+    miscarriage: "Miscarriage",
+    terminated: "Terminated",
+  };
   return (
-    <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
-      Active
+    <span
+      className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${styles[status]}`}
+    >
+      {labels[status]}
     </span>
   );
 }
 
-export default function MothersPage() {
+export default function PregnanciesPage() {
   const dispatch = useAppDispatch();
-  const { mothers, loading, error } = useAppSelector((state) => state.mothers);
+  const { pregnancies, loading, error } = useAppSelector(
+    (state) => state.pregnancies,
+  );
 
   useEffect(() => {
-    dispatch(fetchMothers());
+    dispatch(fetchPregnancies());
   }, [dispatch]);
 
-  const activeCount = mothers.filter((m) => (m.status ?? "active") === "active").length;
+  const activeCount = pregnancies.filter((p) => p.status === "active").length;
 
   return (
     <>
       <PageHero
         title="Pregnancies"
-        description="Each row is one pregnancy — mothers can have multiple active/delivered records"
+        description="User → Pregnancy → Child. Each row is one pregnancy journey"
         icon={Heart}
         stat={{ label: "Active", value: activeCount }}
       />
@@ -64,15 +73,15 @@ export default function MothersPage() {
           <Table>
             <TableHeader>
               <TableRow className="border-b border-white/20 bg-gradient-to-r from-emerald-50/50 to-teal-50/50">
+                <TableHead className="font-semibold text-gray-700">#</TableHead>
                 <TableHead className="font-semibold text-gray-700">Pregnancy ID</TableHead>
-                <TableHead className="font-semibold text-gray-700">User ID</TableHead>
+                <TableHead className="font-semibold text-gray-700">Mother</TableHead>
                 <TableHead className="font-semibold text-gray-700">Status</TableHead>
-                <TableHead className="font-semibold text-gray-700">Start date</TableHead>
-                <TableHead className="font-semibold text-gray-700">Due date</TableHead>
-                <TableHead className="font-semibold text-gray-700">Delivered</TableHead>
+                <TableHead className="font-semibold text-gray-700">LMP</TableHead>
+                <TableHead className="font-semibold text-gray-700">EDD</TableHead>
+                <TableHead className="font-semibold text-gray-700">Completed</TableHead>
                 <TableHead className="font-semibold text-gray-700">Gestational age</TableHead>
                 <TableHead className="font-semibold text-gray-700">Content</TableHead>
-                <TableHead className="font-semibold text-gray-700">First</TableHead>
                 <TableHead className="font-semibold text-gray-700">Hospital</TableHead>
               </TableRow>
             </TableHeader>
@@ -83,33 +92,45 @@ export default function MothersPage() {
                     Loading pregnancies…
                   </TableCell>
                 </TableRow>
-              ) : mothers.length === 0 ? (
+              ) : pregnancies.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={10} className="py-8 text-center text-gray-500">
                     No pregnancy records found.
                   </TableCell>
                 </TableRow>
               ) : (
-                mothers.map((mother) => {
-                  const isActive = (mother.status ?? "active") === "active";
+                pregnancies.map((pregnancy) => {
+                  const isActive = pregnancy.status === "active";
                   const age = isActive
-                    ? gestationalAge(mother.pregnancy_start_date, mother.due_date)
+                    ? gestationalAge(pregnancy.lmp_date, pregnancy.edd)
                     : null;
 
                   return (
-                    <TableRow key={mother.id}>
+                    <TableRow key={pregnancy.id}>
+                      <TableCell>{pregnancy.pregnancy_number}</TableCell>
                       <TableCell className="font-mono text-xs text-gray-600">
-                        {mother.id.slice(0, 8)}…
+                        {pregnancy.id.slice(0, 8)}…
                       </TableCell>
-                      <TableCell className="font-mono text-xs text-gray-600">
-                        {mother.user_id.slice(0, 8)}…
-                      </TableCell>
-                      <TableCell>{statusBadge(mother.status)}</TableCell>
-                      <TableCell>{formatDate(mother.pregnancy_start_date)}</TableCell>
-                      <TableCell>{formatDate(mother.due_date)}</TableCell>
-                      <TableCell>{formatDate(mother.delivered_at)}</TableCell>
                       <TableCell>
-                        {age ? formatGestationalAge(age) : "—"}
+                        <Link
+                          href={`/admin/users/${pregnancy.user_id}`}
+                          className="text-emerald-700 hover:underline"
+                        >
+                          {pregnancy.profiles?.full_name ||
+                            `${pregnancy.user_id.slice(0, 8)}…`}
+                        </Link>
+                        {pregnancy.profiles?.phone ? (
+                          <p className="text-xs text-gray-500">
+                            {pregnancy.profiles.phone}
+                          </p>
+                        ) : null}
+                      </TableCell>
+                      <TableCell>{statusBadge(pregnancy.status)}</TableCell>
+                      <TableCell>{formatDate(pregnancy.lmp_date)}</TableCell>
+                      <TableCell>{formatDate(pregnancy.edd)}</TableCell>
+                      <TableCell>{formatDate(pregnancy.completed_at)}</TableCell>
+                      <TableCell>
+                        {age ? formatGestationalAge(age) : "-"}
                       </TableCell>
                       <TableCell>
                         {age ? (
@@ -128,11 +149,10 @@ export default function MothersPage() {
                             </Link>
                           </div>
                         ) : (
-                          "—"
+                          "-"
                         )}
                       </TableCell>
-                      <TableCell>{mother.is_first_pregnancy ? "Yes" : "No"}</TableCell>
-                      <TableCell>{mother.hospital || "—"}</TableCell>
+                      <TableCell>{pregnancy.hospital || "-"}</TableCell>
                     </TableRow>
                   );
                 })

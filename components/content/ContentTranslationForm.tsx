@@ -408,8 +408,8 @@ export default function ContentTranslationForm({
         {namespace === "milestone" ? (
           <>
             <div className="grid gap-4 lg:grid-cols-2">
-              {renderGrowth("growth_boys", "Growth standards — boys")}
-              {renderGrowth("growth_girls", "Growth standards — girls")}
+              {renderGrowth("growth_boys", "Growth standards (boys)")}
+              {renderGrowth("growth_girls", "Growth standards (girls)")}
             </div>
             {renderCategories()}
           </>

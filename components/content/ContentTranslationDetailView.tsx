@@ -122,10 +122,10 @@ function LocaleContentPanel({
         <>
           <div className="grid gap-4 lg:grid-cols-2">
             {growthBoys ? (
-              <GrowthPanel title="Growth standards — boys" growth={growthBoys} />
+              <GrowthPanel title="Growth standards (boys)" growth={growthBoys} />
             ) : null}
             {growthGirls ? (
-              <GrowthPanel title="Growth standards — girls" growth={growthGirls} />
+              <GrowthPanel title="Growth standards (girls)" growth={growthGirls} />
             ) : null}
           </div>
 

@@ -7,7 +7,6 @@ import {
   ArrowRight,
   Baby,
   BookOpen,
-  CalendarCheck2,
   FileText,
   Heart,
   LayoutDashboard,
@@ -49,8 +48,8 @@ const quickActions = [
   },
   {
     href: "/admin/pregnancy",
-    label: "Mothers",
-    description: "Review EDD and gestational weeks",
+    label: "Pregnancies",
+    description: "Review pregnancies and gestational weeks",
     icon: Activity,
   },
 ];
@@ -71,10 +70,9 @@ export default function DashboardPage() {
 
   const totalPlatformRecords =
     stats.profiles +
-    stats.mothers +
+    stats.pregnancies +
     stats.pregnancyLogs +
-    stats.childProfiles +
-    stats.appointments;
+    stats.children;
 
   return (
     <>
@@ -123,30 +121,30 @@ export default function DashboardPage() {
               accent="emerald"
             />
             <StatCard
-              label="Mothers"
-              value={stats.mothers}
+              label="Pregnancies"
+              value={stats.pregnancies}
               href="/admin/pregnancy"
               icon={Heart}
               loading={loading}
-              description="Active pregnancy profiles"
+              description="Active and completed journeys"
               accent="teal"
             />
             <StatCard
-              label="Logs this week"
-              value={stats.recentLogs}
+              label="Weekly logs"
+              value={stats.pregnancyLogs}
               href="/admin/health-logs"
               icon={Activity}
               loading={loading}
-              description={`${stats.pregnancyLogs} total logs`}
+              description={`${stats.recentLogs} updated this week`}
               accent="cyan"
             />
             <StatCard
-              label="Appointments"
-              value={stats.appointments}
-              href="/admin/appointments"
-              icon={CalendarCheck2}
+              label="Children"
+              value={stats.children}
+              href="/admin/children"
+              icon={Baby}
               loading={loading}
-              description={`${stats.childProfiles} child profiles`}
+              description="Birth records from mobile app"
               accent="amber"
             />
           </div>
@@ -179,12 +177,12 @@ export default function DashboardPage() {
               accent="emerald"
             />
             <StatCard
-              label="Child profiles"
-              value={stats.childProfiles}
+              label="Children"
+              value={stats.children}
               href="/admin/children"
               icon={Baby}
               loading={loading}
-              description="Post-birth tracking"
+              description="Linked to pregnancies"
               accent="teal"
             />
           </div>

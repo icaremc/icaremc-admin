@@ -105,11 +105,7 @@ export default function NewDailyTipForWeekPage() {
   return (
     <>
       <PageHero
-        title={
-          dayNumber !== null
-            ? `New tip for week ${weekNumber}, day ${dayNumber}`
-            : `New tip for week ${weekNumber}`
-        }
+        title={`New tip for week ${weekNumber}, day ${dayNumber ?? form.day_number}`}
         description="Daily tips · daily_tips"
         icon={FileText}
       />

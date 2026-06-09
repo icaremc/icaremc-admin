@@ -1,5 +1,7 @@
+export const EMPTY_DISPLAY = "-";
+
 export function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
+  if (!value) return EMPTY_DISPLAY;
   return new Date(value).toLocaleDateString(undefined, {
     year: "numeric",
     month: "short",
@@ -8,7 +10,7 @@ export function formatDate(value: string | null | undefined): string {
 }
 
 export function formatDateTime(value: string | null | undefined): string {
-  if (!value) return "—";
+  if (!value) return EMPTY_DISPLAY;
   return new Date(value).toLocaleString(undefined, {
     year: "numeric",
     month: "short",

@@ -19,10 +19,8 @@ export const fetchPregnancyLogs = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     const { data, error } = await supabase
       .from("pregnancy_logs")
-      .select(
-        "*, mothers(user_id), pregnancy_weeks(week_number)",
-      )
-      .order("log_date", { ascending: false })
+      .select("*, pregnancies(user_id, profiles(full_name))")
+      .order("week_number", { ascending: false })
       .limit(200);
 
     if (error) return rejectWithValue(error.message);

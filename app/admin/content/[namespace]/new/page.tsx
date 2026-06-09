@@ -61,7 +61,7 @@ function NewDailyTipPage() {
     <>
       <PageHero
         title="New daily tip"
-        description="Daily tips · daily_tips"
+        description="Add a health tip for a specific pregnancy week and day"
         icon={FileText}
       />
 

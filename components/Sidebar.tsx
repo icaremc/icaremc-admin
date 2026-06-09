@@ -7,7 +7,6 @@ import {
   Activity,
   Baby,
   BookOpen,
-  CalendarCheck2,
   ChevronDown,
   ChevronRight,
   FileText,
@@ -22,10 +21,9 @@ import { CONTENT_NAMESPACES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 const healthDataItems = [
-  { href: "/admin/pregnancy", label: "Mothers", icon: Heart },
-  { href: "/admin/health-logs", label: "Pregnancy logs", icon: Activity },
+  { href: "/admin/pregnancy", label: "Pregnancies", icon: Heart },
+  { href: "/admin/health-logs", label: "Weekly vitals", icon: Activity },
   { href: "/admin/children", label: "Children", icon: Baby },
-  { href: "/admin/appointments", label: "Appointments", icon: CalendarCheck2 },
 ];
 
 const contentSubItems = [
@@ -153,42 +151,6 @@ export default function Sidebar() {
 
             <li className="pt-5">
               <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                Users
-              </p>
-              <ul className="space-y-0.5">
-                <li>
-                  <Link
-                    href="/admin/users"
-                    className={cn(
-                      "group flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-[15px] transition-colors",
-                      navClass(pathname === "/admin/users"),
-                    )}
-                  >
-                    <Users
-                      className={cn("h-4 w-4", iconClass(pathname === "/admin/users"))}
-                    />
-                    <span>App users</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/admin/admins"
-                    className={cn(
-                      "group flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-[15px] transition-colors",
-                      navClass(pathname === "/admin/admins"),
-                    )}
-                  >
-                    <Shield
-                      className={cn("h-4 w-4", iconClass(pathname === "/admin/admins"))}
-                    />
-                    <span>Admins</span>
-                  </Link>
-                </li>
-              </ul>
-            </li>
-
-            <li className="pt-5">
-              <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
                 Health Data
               </p>
               <button
@@ -230,6 +192,42 @@ export default function Sidebar() {
                   })}
                 </ul>
               ) : null}
+            </li>
+
+            <li className="pt-5">
+              <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                Users
+              </p>
+              <ul className="space-y-0.5">
+                <li>
+                  <Link
+                    href="/admin/users"
+                    className={cn(
+                      "group flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-[15px] transition-colors",
+                      navClass(pathname === "/admin/users"),
+                    )}
+                  >
+                    <Users
+                      className={cn("h-4 w-4", iconClass(pathname === "/admin/users"))}
+                    />
+                    <span>App users</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/admin/admins"
+                    className={cn(
+                      "group flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-[15px] transition-colors",
+                      navClass(pathname === "/admin/admins"),
+                    )}
+                  >
+                    <Shield
+                      className={cn("h-4 w-4", iconClass(pathname === "/admin/admins"))}
+                    />
+                    <span>Admins</span>
+                  </Link>
+                </li>
+              </ul>
             </li>
           </ul>
         </nav>

@@ -15,7 +15,7 @@ export const CONTENT_NAMESPACES: {
   {
     value: "daily_tip",
     label: "Daily tips",
-    description: "Health tips grouped by pregnancy week — shown based on the mother's current week",
+    description: "Health tips grouped by pregnancy week, shown based on the mother's current week",
   },
 ];
 
@@ -51,6 +51,18 @@ export function namespaceLabel(namespace: ContentNamespace): string {
     CONTENT_NAMESPACES.find((item) => item.value === namespace)?.label ??
     namespace
   );
+}
+
+export function namespaceDescription(namespace: ContentNamespace): string {
+  return (
+    CONTENT_NAMESPACES.find((item) => item.value === namespace)?.description ??
+    namespaceLabel(namespace)
+  );
+}
+
+export function contentEntityIdLabel(namespace: ContentNamespace): string {
+  if (namespace === "milestone") return "Age (months)";
+  return "Identifier";
 }
 
 export const PREGNANCY_WEEK_NUMBERS = Array.from({ length: 42 }, (_, i) => i + 1);

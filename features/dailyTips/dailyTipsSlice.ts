@@ -106,8 +106,10 @@ export function validateDailyTipForm(form: DailyTipFormState): string | null {
     return "Pregnancy week must be between 1 and 42.";
   }
   if (
-    form.day_number !== null &&
-    (!Number.isInteger(form.day_number) || form.day_number < 1 || form.day_number > 7)
+    form.day_number === null ||
+    !Number.isInteger(form.day_number) ||
+    form.day_number < 1 ||
+    form.day_number > 7
   ) {
     return "Day in week must be between 1 and 7.";
   }
@@ -235,7 +237,7 @@ export function createEmptyDailyTipForm(
 ): DailyTipFormState {
   return {
     week_number: weekNumber ?? 1,
-    day_number: dayNumber ?? null,
+    day_number: dayNumber ?? 1,
     category: "",
     is_active: true,
     translations: {

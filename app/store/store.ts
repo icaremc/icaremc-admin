@@ -4,11 +4,13 @@ import { appointmentsReducer } from "@/features/appointments/appointmentsSlice";
 import { childrenReducer } from "@/features/children/childrenSlice";
 import { contentReducer } from "@/features/content/contentSlice";
 import { dashboardReducer } from "@/features/dashboard/dashboardSlice";
-import { mothersReducer } from "@/features/mothers/mothersSlice";
+import { pregnanciesReducer } from "@/features/pregnancies/pregnanciesSlice";
 import { pregnancyLogsReducer } from "@/features/pregnancyLogs/pregnancyLogsSlice";
+import { symptomLogsReducer } from "@/features/symptomLogs/symptomLogsSlice";
 import { dailyTipsReducer } from "@/features/dailyTips/dailyTipsSlice";
 import { pregnancyWeeksReducer } from "@/features/pregnancyWeeks/pregnancyWeeksSlice";
 import { profilesReducer } from "@/features/profiles/profilesSlice";
+import { userDetailReducer } from "@/features/users/userDetailSlice";
 import { authReducer } from "./slices/authSlice";
 import { uiReducer } from "./slices/uiSlice";
 
@@ -19,11 +21,13 @@ export const store = configureStore({
     dashboard: dashboardReducer,
     content: contentReducer,
     profiles: profilesReducer,
+    userDetail: userDetailReducer,
     admins: adminsReducer,
     pregnancyWeeks: pregnancyWeeksReducer,
     dailyTips: dailyTipsReducer,
-    mothers: mothersReducer,
+    pregnancies: pregnanciesReducer,
     pregnancyLogs: pregnancyLogsReducer,
+    symptomLogs: symptomLogsReducer,
     children: childrenReducer,
     appointments: appointmentsReducer,
   },

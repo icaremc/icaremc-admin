@@ -1,7 +1,8 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { Plus, Search, Users } from "lucide-react";
+import Link from "next/link";
+import { ChevronRight, Plus, Search, Users } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,7 +88,7 @@ export default function UsersPage() {
     <>
       <PageHero
         title="App users"
-        description="Mobile app accounts for mothers and partners"
+        description="Tap a mother to view pregnancy, weekly vitals, and children"
         icon={Users}
         stat={{ label: "Total users", value: profiles.length }}
       />
@@ -245,23 +246,29 @@ export default function UsersPage() {
                 <TableHead className="font-semibold text-gray-700">Locale</TableHead>
                 <TableHead className="font-semibold text-gray-700">Onboarding</TableHead>
                 <TableHead className="font-semibold text-gray-700">Joined</TableHead>
+                <TableHead className="font-semibold text-gray-700 w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-8 text-center text-gray-500">
+                  <TableCell colSpan={8} className="py-8 text-center text-gray-500">
                     No users found.
                   </TableCell>
                 </TableRow>
               ) : (
                 filtered.map((profile) => (
-                  <TableRow key={profile.id}>
+                  <TableRow key={profile.id} className="group">
                     <TableCell className="font-medium text-gray-900">
-                      {profile.full_name || "—"}
+                      <Link
+                        href={`/admin/users/${profile.id}`}
+                        className="text-emerald-800 hover:underline"
+                      >
+                        {profile.full_name || "Unnamed user"}
+                      </Link>
                     </TableCell>
-                    <TableCell>{profile.phone || "—"}</TableCell>
-                    <TableCell>{profile.account_type || "—"}</TableCell>
+                    <TableCell>{profile.phone || "-"}</TableCell>
+                    <TableCell>{profile.account_type || "-"}</TableCell>
                     <TableCell>
                       <select
                         value={profile.role ?? "mother"}
@@ -283,7 +290,7 @@ export default function UsersPage() {
                         ))}
                       </select>
                     </TableCell>
-                    <TableCell>{profile.locale || "—"}</TableCell>
+                    <TableCell>{profile.locale || "-"}</TableCell>
                     <TableCell>
                       <span
                         className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
@@ -297,6 +304,15 @@ export default function UsersPage() {
                     </TableCell>
                     <TableCell className="text-gray-600">
                       {formatDateTime(profile.created_at)}
+                    </TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/admin/users/${profile.id}`}
+                        className="inline-flex text-emerald-600 opacity-70 transition group-hover:opacity-100"
+                        aria-label={`View ${profile.full_name ?? "user"}`}
+                      >
+                        <ChevronRight className="h-5 w-5" />
+                      </Link>
                     </TableCell>
                   </TableRow>
                 ))

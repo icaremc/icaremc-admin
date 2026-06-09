@@ -32,7 +32,7 @@ export function isAdminRole(value: string): value is AdminRole {
 }
 
 export function adminRoleLabel(role: string | null | undefined): string {
-  return ADMIN_ROLES.find((item) => item.value === role)?.label ?? role ?? "—";
+  return ADMIN_ROLES.find((item) => item.value === role)?.label ?? role ?? "-";
 }
 
 export type AdminPermission =

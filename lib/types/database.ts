@@ -36,20 +36,30 @@ export type AdminUser = {
   updated_at: string;
 };
 
-export type Mother = {
+export type PregnancyStatus =
+  | "active"
+  | "completed"
+  | "miscarriage"
+  | "terminated";
+
+/** @deprecated Use Pregnancy — kept for legacy references. */
+export type Mother = Pregnancy;
+
+export type Pregnancy = {
   id: string;
   user_id: string;
-  pregnancy_start_date: string | null;
-  due_date: string | null;
+  lmp_date: string | null;
+  edd: string | null;
+  status: PregnancyStatus;
+  pregnancy_number: number;
   is_first_pregnancy: boolean;
   location: string | null;
   hospital: string | null;
   conditions: string[];
-  status: "active" | "delivered";
-  delivered_at: string | null;
-  child_local_id: string | null;
   created_at: string;
+  completed_at: string | null;
   updated_at: string;
+  profiles?: { full_name: string | null; phone: string | null } | null;
 };
 
 export type PregnancyWeek = {
@@ -87,28 +97,61 @@ export type PregnancyWeekSection = {
 
 export type PregnancyLog = {
   id: string;
-  mother_id: string;
-  pregnancy_week_id: string | null;
-  log_date: string;
+  pregnancy_id: string;
+  week_number: number;
   weight: number | null;
-  mood: string | null;
+  height: number | null;
+  blood_pressure_systolic: number | null;
+  blood_pressure_diastolic: number | null;
+  temperature: number | null;
   symptoms: string[];
-  checklist: Record<string, boolean>;
   notes: string | null;
   created_at: string;
   updated_at: string;
-  mothers?: { user_id: string } | null;
-  pregnancy_weeks?: { week_number: number } | null;
+  pregnancies?: { user_id: string; profiles?: { full_name: string | null } | null } | null;
 };
 
-export type ChildProfile = {
+export type SymptomLog = {
+  id: string;
+  pregnancy_id: string;
+  log_date: string;
+  symptom_type: string;
+  severity: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  pregnancies?: { user_id: string } | null;
+};
+
+export type Child = {
   id: string;
   user_id: string;
+  pregnancy_id: string | null;
+  local_id: string | null;
+  name: string;
+  gender: "male" | "female";
   birth_date: string;
-  sex: "male" | "female";
+  birth_weight: number | null;
+  birth_height: number | null;
+  delivery_type: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  profiles?: { full_name: string | null; phone: string | null } | null;
+};
+
+export type ChildMilestone = {
+  id: string;
+  child_id: string;
+  milestone_type: string;
+  achieved_date: string | null;
+  notes: string | null;
   created_at: string;
   updated_at: string;
 };
+
+/** @deprecated Use Child */
+export type ChildProfile = Child;
 
 export type MilestoneCheck = {
   id: string;
@@ -172,9 +215,10 @@ export type DashboardStats = {
   profiles: number;
   contentItems: number;
   pregnancyWeeks: number;
-  mothers: number;
+  pregnancies: number;
   pregnancyLogs: number;
-  childProfiles: number;
+  symptomLogs: number;
+  children: number;
   appointments: number;
   adminUsers: number;
   recentLogs: number;

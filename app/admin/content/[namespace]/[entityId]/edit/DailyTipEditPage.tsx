@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FileText } from "lucide-react";
+import { Lightbulb } from "lucide-react";
+import DailyTipStatusBadge from "@/components/content/DailyTipStatusBadge";
 import DailyTipForm from "@/components/content/DailyTipForm";
 import PageHero from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import {
   createEmptyDailyTipForm,
@@ -74,9 +74,15 @@ export default function DailyTipEditPage() {
   return (
     <>
       <PageHero
-        title="Edit daily tip"
-        description="Daily tips · daily_tips"
-        icon={FileText}
+        title={
+          selected
+            ? `Edit · Week ${selected.week_number}${
+                selected.day_number ? ` Day ${selected.day_number}` : ""
+              }`
+            : "Edit daily tip"
+        }
+        description="Update titles and content for each language"
+        icon={Lightbulb}
       />
 
       <div className="mx-auto max-w-4xl px-6 py-8 lg:px-8">
@@ -115,15 +121,31 @@ export default function DailyTipEditPage() {
           <p className="text-sm text-gray-600">Loading…</p>
         ) : (
           <div className="admin-panel space-y-6">
-            <div className="flex items-center gap-2">
-              <input
-                id="active"
-                type="checkbox"
-                checked={form.is_active}
-                onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
-              />
-              <Label htmlFor="active">Active (visible in mobile app)</Label>
-            </div>
+            <label
+              htmlFor="active"
+              className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-gray-200 bg-gray-50/80 px-4 py-3"
+            >
+              <div>
+                <p className="text-sm font-medium text-gray-900">
+                  Visible in mobile app
+                </p>
+                <p className="text-xs text-gray-500">
+                  Inactive tips are kept but not shown to mothers
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <DailyTipStatusBadge active={form.is_active} />
+                <input
+                  id="active"
+                  type="checkbox"
+                  checked={form.is_active}
+                  onChange={(e) =>
+                    setForm({ ...form, is_active: e.target.checked })
+                  }
+                  className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                />
+              </div>
+            </label>
 
             <DailyTipForm value={form} onChange={setForm} />
 
