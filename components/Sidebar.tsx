@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   Activity,
   Baby,
@@ -13,31 +13,52 @@ import {
   Heart,
   LayoutDashboard,
   LogOut,
+  Megaphone,
   Shield,
   Stethoscope,
   CalendarCheck,
-  Megaphone,
   Tags,
   Users,
+  type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { CONTENT_NAMESPACES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
-const healthDataItems = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  matchPrefix?: boolean;
+};
+
+const mothersItems: NavItem[] = [
+  { href: "/admin/users", label: "App users", icon: Users, matchPrefix: true },
   { href: "/admin/pregnancy", label: "Pregnancies", icon: Heart },
+  { href: "/admin/children", label: "Children", icon: Baby, matchPrefix: true },
   { href: "/admin/health-logs", label: "Weekly vitals", icon: Activity },
-  { href: "/admin/children", label: "Children", icon: Baby },
 ];
 
-const contentSubItems = [
+const doctorsItems: NavItem[] = [
+  { href: "/admin/doctors", label: "Doctors", icon: Stethoscope, matchPrefix: true },
+  { href: "/admin/doctor-categories", label: "Categories", icon: Tags },
+  { href: "/admin/appointments", label: "Appointments", icon: CalendarCheck },
+];
+
+const contentItems: NavItem[] = [
   { href: "/admin/content", label: "Overview", icon: BookOpen },
-  { href: "/admin/pregnancy-weeks", label: "Pregnancy weeks", icon: Heart },
+  { href: "/admin/pregnancy-weeks", label: "Pregnancy weeks", icon: Heart, matchPrefix: true },
   ...CONTENT_NAMESPACES.map((item) => ({
     href: `/admin/content/${item.value}`,
     label: item.label,
     icon: FileText,
+    matchPrefix: true,
   })),
+];
+
+const adminItems: NavItem[] = [
+  { href: "/admin/push", label: "Push notifications", icon: Megaphone },
+  { href: "/admin/admins", label: "Portal admins", icon: Shield },
 ];
 
 function navClass(active: boolean) {
@@ -52,27 +73,104 @@ function iconClass(active: boolean) {
     : "text-gray-400 group-hover:text-gray-600";
 }
 
+function isItemActive(pathname: string | null, item: NavItem) {
+  if (!pathname) return false;
+  if (pathname === item.href) return true;
+  if (!item.matchPrefix) return false;
+  if (item.href === "/admin/content") {
+    return pathname.startsWith("/admin/content/");
+  }
+  return pathname.startsWith(`${item.href}/`);
+}
+
+function sectionActive(pathname: string | null, items: NavItem[]) {
+  return items.some((item) => isItemActive(pathname, item));
+}
+
+function NavLink({ item, compact = false }: { item: NavItem; compact?: boolean }) {
+  const pathname = usePathname();
+  const active = isItemActive(pathname, item);
+  const Icon = item.icon;
+
+  return (
+    <Link
+      href={item.href}
+      className={cn(
+        "group flex items-center gap-3 rounded-[var(--radius)] transition-colors",
+        compact ? "px-3 py-2 text-sm" : "px-3 py-2.5 text-[15px]",
+        navClass(active),
+      )}
+    >
+      <Icon className={cn(compact ? "h-3.5 w-3.5" : "h-4 w-4", iconClass(active))} />
+      <span>{item.label}</span>
+    </Link>
+  );
+}
+
+function NavSection({
+  title,
+  items,
+  defaultOpen,
+  compact = false,
+}: {
+  title: string;
+  items: NavItem[];
+  defaultOpen: boolean;
+  compact?: boolean;
+}) {
+  const pathname = usePathname();
+  const active = sectionActive(pathname, items);
+  const [open, setOpen] = useState(defaultOpen || active);
+
+  useEffect(() => {
+    if (active) setOpen(true);
+  }, [active]);
+
+  return (
+    <li className="pt-5">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className={cn(
+          "group mb-2 flex w-full items-center justify-between gap-3 rounded-[var(--radius)] px-3 py-1.5 transition-colors",
+          active ? "text-emerald-700" : "text-gray-500 hover:text-gray-700",
+        )}
+      >
+        <span className="text-[11px] font-semibold uppercase tracking-wider">
+          {title}
+        </span>
+        {open ? (
+          <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+        ) : (
+          <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+        )}
+      </button>
+      {open ? (
+        <ul className="ml-1 space-y-0.5 border-l border-gray-100 pl-2">
+          {items.map((item) => (
+            <li key={item.href}>
+              <NavLink item={item} compact={compact} />
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </li>
+  );
+}
+
+function FlatSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <li className="pt-5">
+      <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+        {title}
+      </p>
+      <ul className="space-y-0.5">{children}</ul>
+    </li>
+  );
+}
+
 export default function Sidebar() {
   const pathname = usePathname();
-  const isContentActive =
-    pathname?.startsWith("/admin/content") ||
-    pathname?.startsWith("/admin/pregnancy-weeks");
-  const isHealthActive = healthDataItems.some(
-    (item) =>
-      pathname === item.href || pathname?.startsWith(`${item.href}/`),
-  );
-  const [isContentOpen, setIsContentOpen] = useState(
-    () => isContentActive,
-  );
-  const [isHealthOpen, setIsHealthOpen] = useState(() => isHealthActive);
-
-  useEffect(() => {
-    if (isContentActive) setIsContentOpen(true);
-  }, [isContentActive]);
-
-  useEffect(() => {
-    if (isHealthActive) setIsHealthOpen(true);
-  }, [isHealthActive]);
 
   return (
     <aside className="fixed left-0 top-0 z-40 flex h-screen w-[260px] flex-col border-r border-gray-200 bg-white">
@@ -103,215 +201,34 @@ export default function Sidebar() {
               </Link>
             </li>
 
-            <li className="pt-5">
-              <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                Content Management
-              </p>
-              <button
-                type="button"
-                onClick={() => setIsContentOpen(!isContentOpen)}
-                className={cn(
-                  "group flex w-full items-center justify-between gap-3 rounded-[var(--radius)] px-3 py-2.5 text-[15px] transition-colors",
-                  navClass(!!isContentActive),
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <BookOpen
-                    className={cn("h-4 w-4", iconClass(!!isContentActive))}
-                  />
-                  <span>Content</span>
-                </div>
-                {isContentOpen ? (
-                  <ChevronDown className="h-4 w-4 text-gray-400" />
-                ) : (
-                  <ChevronRight className="h-4 w-4 text-gray-400" />
-                )}
-              </button>
-              {isContentOpen ? (
-                <ul className="ml-4 mt-0.5 space-y-0.5 border-l border-gray-100 pl-3">
-                  {contentSubItems.map(({ href, label, icon: Icon }) => {
-                    const active =
-                      pathname === href ||
-                      (href !== "/admin/content" &&
-                        pathname?.startsWith(`${href}/`));
-                    return (
-                      <li key={href}>
-                        <Link
-                          href={href}
-                          className={cn(
-                            "group flex items-center gap-3 rounded-[var(--radius)] px-3 py-2 text-sm transition-colors",
-                            navClass(active),
-                          )}
-                        >
-                          <Icon className={cn("h-3.5 w-3.5", iconClass(active))} />
-                          <span>{label}</span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : null}
-            </li>
+            <NavSection
+              title="Mothers"
+              items={mothersItems}
+              defaultOpen={sectionActive(pathname, mothersItems)}
+              compact
+            />
 
-            <li className="pt-5">
-              <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                Health Data
-              </p>
-              <button
-                type="button"
-                onClick={() => setIsHealthOpen(!isHealthOpen)}
-                className={cn(
-                  "group flex w-full items-center justify-between gap-3 rounded-[var(--radius)] px-3 py-2.5 text-[15px] transition-colors",
-                  navClass(isHealthActive),
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <Heart className={cn("h-4 w-4", iconClass(isHealthActive))} />
-                  <span>Records</span>
-                </div>
-                {isHealthOpen ? (
-                  <ChevronDown className="h-4 w-4 text-gray-400" />
-                ) : (
-                  <ChevronRight className="h-4 w-4 text-gray-400" />
-                )}
-              </button>
-              {isHealthOpen ? (
-                <ul className="ml-4 mt-0.5 space-y-0.5 border-l border-gray-100 pl-3">
-                  {healthDataItems.map(({ href, label, icon: Icon }) => {
-                    const active = pathname === href;
-                    return (
-                      <li key={href}>
-                        <Link
-                          href={href}
-                          className={cn(
-                            "group flex items-center gap-3 rounded-[var(--radius)] px-3 py-2 text-sm transition-colors",
-                            navClass(active),
-                          )}
-                        >
-                          <Icon className={cn("h-3.5 w-3.5", iconClass(active))} />
-                          <span>{label}</span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : null}
-            </li>
+            <NavSection
+              title="Doctors"
+              items={doctorsItems}
+              defaultOpen={sectionActive(pathname, doctorsItems)}
+              compact
+            />
 
-            <li className="pt-5">
-              <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                Doctors
-              </p>
-              <ul className="space-y-0.5">
-                <li>
-                  <Link
-                    href="/admin/doctors"
-                    className={cn(
-                      "group flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-[15px] transition-colors",
-                      navClass(
-                        pathname === "/admin/doctors" ||
-                          pathname?.startsWith("/admin/doctors/"),
-                      ),
-                    )}
-                  >
-                    <Stethoscope
-                      className={cn(
-                        "h-4 w-4",
-                        iconClass(
-                          pathname === "/admin/doctors" ||
-                            pathname?.startsWith("/admin/doctors/"),
-                        ),
-                      )}
-                    />
-                    <span>All doctors</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/admin/doctor-categories"
-                    className={cn(
-                      "group flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-[15px] transition-colors",
-                      navClass(pathname === "/admin/doctor-categories"),
-                    )}
-                  >
-                    <Tags
-                      className={cn(
-                        "h-4 w-4",
-                        iconClass(pathname === "/admin/doctor-categories"),
-                      )}
-                    />
-                    <span>Categories</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/admin/appointments"
-                    className={cn(
-                      "group flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-[15px] transition-colors",
-                      navClass(pathname === "/admin/appointments"),
-                    )}
-                  >
-                    <CalendarCheck
-                      className={cn(
-                        "h-4 w-4",
-                        iconClass(pathname === "/admin/appointments"),
-                      )}
-                    />
-                    <span>Appointments</span>
-                  </Link>
-                </li>
-              </ul>
-            </li>
+            <NavSection
+              title="Content"
+              items={contentItems}
+              defaultOpen={sectionActive(pathname, contentItems)}
+              compact
+            />
 
-            <li className="pt-5">
-              <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-                Users
-              </p>
-              <ul className="space-y-0.5">
-                <li>
-                  <Link
-                    href="/admin/push"
-                    className={cn(
-                      "group flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-[15px] transition-colors",
-                      navClass(pathname === "/admin/push"),
-                    )}
-                  >
-                    <Megaphone
-                      className={cn("h-4 w-4", iconClass(pathname === "/admin/push"))}
-                    />
-                    <span>Push notifications</span>
-                  </Link>
+            <FlatSection title="Administration">
+              {adminItems.map((item) => (
+                <li key={item.href}>
+                  <NavLink item={item} />
                 </li>
-                <li>
-                  <Link
-                    href="/admin/users"
-                    className={cn(
-                      "group flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-[15px] transition-colors",
-                      navClass(pathname === "/admin/users"),
-                    )}
-                  >
-                    <Users
-                      className={cn("h-4 w-4", iconClass(pathname === "/admin/users"))}
-                    />
-                    <span>App users</span>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/admin/admins"
-                    className={cn(
-                      "group flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-[15px] transition-colors",
-                      navClass(pathname === "/admin/admins"),
-                    )}
-                  >
-                    <Shield
-                      className={cn("h-4 w-4", iconClass(pathname === "/admin/admins"))}
-                    />
-                    <span>Admins</span>
-                  </Link>
-                </li>
-              </ul>
-            </li>
+              ))}
+            </FlatSection>
           </ul>
         </nav>
       </div>
