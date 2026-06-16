@@ -25,7 +25,37 @@ import {
 import { LOCALES } from "@/lib/constants";
 import { APP_USER_ROLES, type AppUserRole } from "@/lib/roles";
 import { formatDateTime } from "@/lib/format";
-import type { Locale } from "@/lib/types/database";
+import type { Locale, Profile } from "@/lib/types/database";
+
+function pushStatusLabel(profile: Profile) {
+  if (profile.role === "partner") return { label: "—", className: "text-gray-400" };
+
+  if (!profile.fcm_token) {
+    return { label: "No token", className: "bg-amber-50 text-amber-700" };
+  }
+
+  if (profile.notifications_enabled === false) {
+    return { label: "Off", className: "bg-gray-100 text-gray-600" };
+  }
+
+  return { label: "Ready", className: "bg-emerald-50 text-emerald-700" };
+}
+
+function PushStatusBadge({ profile }: { profile: Profile }) {
+  const push = pushStatusLabel(profile);
+
+  if (push.className.startsWith("bg-")) {
+    return (
+      <span
+        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${push.className}`}
+      >
+        {push.label}
+      </span>
+    );
+  }
+
+  return <span className={push.className}>{push.label}</span>;
+}
 
 const emptyForm = {
   email: "",
@@ -245,6 +275,7 @@ export default function UsersPage() {
                 <TableHead className="font-semibold text-gray-700">Role</TableHead>
                 <TableHead className="font-semibold text-gray-700">Locale</TableHead>
                 <TableHead className="font-semibold text-gray-700">Onboarding</TableHead>
+                <TableHead className="font-semibold text-gray-700">Push</TableHead>
                 <TableHead className="font-semibold text-gray-700">Joined</TableHead>
                 <TableHead className="font-semibold text-gray-700 w-10" />
               </TableRow>
@@ -252,7 +283,7 @@ export default function UsersPage() {
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-8 text-center text-gray-500">
+                  <TableCell colSpan={9} className="py-8 text-center text-gray-500">
                     No users found.
                   </TableCell>
                 </TableRow>
@@ -301,6 +332,9 @@ export default function UsersPage() {
                       >
                         {profile.onboarding_complete ? "Complete" : "Pending"}
                       </span>
+                    </TableCell>
+                    <TableCell>
+                      <PushStatusBadge profile={profile} />
                     </TableCell>
                     <TableCell className="text-gray-600">
                       {formatDateTime(profile.created_at)}

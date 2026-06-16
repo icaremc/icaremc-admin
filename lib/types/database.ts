@@ -16,6 +16,7 @@ export type Profile = {
   locale: Locale | null;
   dark_mode: boolean;
   notifications_enabled: boolean;
+  fcm_token: string | null;
   onboarding_complete: boolean;
   role?: AppUserRole;
   is_admin?: boolean;
@@ -173,4 +174,7 @@ export type DashboardStats = {
   children: number;
   adminUsers: number;
   recentLogs: number;
+  appointments: number;
+  pendingAppointments: number;
+  doctors: number;
 };

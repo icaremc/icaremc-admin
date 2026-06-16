@@ -74,7 +74,6 @@ export default function PregnanciesPage() {
             <TableHeader>
               <TableRow className="border-b border-white/20 bg-gradient-to-r from-emerald-50/50 to-teal-50/50">
                 <TableHead className="font-semibold text-gray-700">#</TableHead>
-                <TableHead className="font-semibold text-gray-700">Pregnancy ID</TableHead>
                 <TableHead className="font-semibold text-gray-700">Mother</TableHead>
                 <TableHead className="font-semibold text-gray-700">Status</TableHead>
                 <TableHead className="font-semibold text-gray-700">LMP</TableHead>
@@ -88,13 +87,13 @@ export default function PregnanciesPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="py-8 text-center text-gray-500">
+                  <TableCell colSpan={9} className="py-8 text-center text-gray-500">
                     Loading pregnancies…
                   </TableCell>
                 </TableRow>
               ) : pregnancies.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="py-8 text-center text-gray-500">
+                  <TableCell colSpan={9} className="py-8 text-center text-gray-500">
                     No pregnancy records found.
                   </TableCell>
                 </TableRow>
@@ -108,16 +107,12 @@ export default function PregnanciesPage() {
                   return (
                     <TableRow key={pregnancy.id}>
                       <TableCell>{pregnancy.pregnancy_number}</TableCell>
-                      <TableCell className="font-mono text-xs text-gray-600">
-                        {pregnancy.id.slice(0, 8)}…
-                      </TableCell>
                       <TableCell>
                         <Link
                           href={`/admin/users/${pregnancy.user_id}`}
                           className="text-emerald-700 hover:underline"
                         >
-                          {pregnancy.profiles?.full_name ||
-                            `${pregnancy.user_id.slice(0, 8)}…`}
+                          {pregnancy.profiles?.full_name || "View profile"}
                         </Link>
                         {pregnancy.profiles?.phone ? (
                           <p className="text-xs text-gray-500">

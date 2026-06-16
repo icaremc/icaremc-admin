@@ -87,7 +87,7 @@ export default function PregnancyLogsPage() {
                               href={`/admin/users/${userId}`}
                               className="text-emerald-700 hover:underline"
                             >
-                              {motherName || `${userId.slice(0, 8)}…`}
+                              {motherName || "Unknown mother"}
                             </Link>
                           ) : (
                             "-"

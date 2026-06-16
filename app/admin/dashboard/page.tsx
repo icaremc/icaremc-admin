@@ -7,11 +7,13 @@ import {
   ArrowRight,
   Baby,
   BookOpen,
+  CalendarCheck,
   FileText,
   Heart,
   LayoutDashboard,
   Lightbulb,
   Plus,
+  Stethoscope,
   Users,
 } from "lucide-react";
 import PageHero from "@/components/PageHero";
@@ -51,6 +53,18 @@ const quickActions = [
     label: "Pregnancies",
     description: "Review pregnancies and gestational weeks",
     icon: Activity,
+  },
+  {
+    href: "/admin/appointments",
+    label: "Appointments",
+    description: "Review bookings and update status",
+    icon: CalendarCheck,
+  },
+  {
+    href: "/admin/doctors",
+    label: "Doctors",
+    description: "Approve doctor profiles and categories",
+    icon: Stethoscope,
   },
 ];
 
@@ -152,6 +166,44 @@ export default function DashboardPage() {
 
         <section>
           <div className="mb-4">
+            <h2 className="admin-section-title">Doctors & bookings</h2>
+            <p className="admin-section-desc">
+              ICare Doctors profiles and patient appointments
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <StatCard
+              label="Appointments"
+              value={stats.appointments}
+              href="/admin/appointments"
+              icon={CalendarCheck}
+              loading={loading}
+              description={`${stats.pendingAppointments} pending review`}
+              accent="emerald"
+            />
+            <StatCard
+              label="Pending bookings"
+              value={stats.pendingAppointments}
+              href="/admin/appointments"
+              icon={CalendarCheck}
+              loading={loading}
+              description="Awaiting doctor confirmation"
+              accent="amber"
+            />
+            <StatCard
+              label="Doctors"
+              value={stats.doctors}
+              href="/admin/doctors"
+              icon={Stethoscope}
+              loading={loading}
+              description="Manage verification and categories"
+              accent="teal"
+            />
+          </div>
+        </section>
+
+        <section>
+          <div className="mb-4">
             <h2 className="admin-section-title">Content</h2>
             <p className="admin-section-desc">
               CMS items synced to the mobile app
@@ -164,7 +216,7 @@ export default function DashboardPage() {
               href="/admin/content"
               icon={BookOpen}
               loading={loading}
-              description="All namespaces combined"
+              description="Tips, weeks, and milestones"
               accent="violet"
             />
             <StatCard
@@ -219,7 +271,7 @@ export default function DashboardPage() {
 
           <section className="admin-panel">
             <h2 className="admin-section-title">
-              Content namespaces
+              Content libraries
             </h2>
             <p className="admin-section-desc mt-1">
               Localized content in English, Amharic, and Oromo

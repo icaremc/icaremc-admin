@@ -12,7 +12,7 @@ import {
   contentActions,
   fetchContentItem,
 } from "@/features/content/contentSlice";
-import { namespaceLabel } from "@/lib/constants";
+import { namespaceDescription, namespaceLabel } from "@/lib/constants";
 import {
   contentEditPath,
   contentHeroTitle,
@@ -39,7 +39,7 @@ export default function ContentDetailPage() {
 
   const heroTitle = selected
     ? contentHeroTitle(namespace, selected)
-    : entityId;
+    : "Content item";
 
   return (
     <>
@@ -48,17 +48,9 @@ export default function ContentDetailPage() {
         description={
           selected
             ? `${namespaceLabel(namespace)} · Updated ${formatDateTime(selected.updated_at)}`
-            : `${namespaceLabel(namespace)} · ${namespace}`
+            : namespaceDescription(namespace)
         }
         icon={FileText}
-        stat={
-          selected
-            ? {
-                label: "Version",
-                value: `v${selected.version}`,
-              }
-            : undefined
-        }
       />
 
       <div className="mx-auto max-w-4xl px-6 py-8 lg:px-8">

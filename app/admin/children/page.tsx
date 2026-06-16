@@ -158,9 +158,7 @@ export default function ChildrenPage() {
                           {child.profiles.full_name}
                         </Link>
                       ) : (
-                        <span className="font-mono text-xs text-gray-500">
-                          {child.user_id.slice(0, 8)}…
-                        </span>
+                        <span className="text-sm text-gray-500">Unknown mother</span>
                       )}
                       {child.profiles?.phone ? (
                         <p className="text-xs text-gray-500">{child.profiles.phone}</p>

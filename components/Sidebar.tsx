@@ -14,6 +14,10 @@ import {
   LayoutDashboard,
   LogOut,
   Shield,
+  Stethoscope,
+  CalendarCheck,
+  Megaphone,
+  Tags,
   Users,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
@@ -196,9 +200,88 @@ export default function Sidebar() {
 
             <li className="pt-5">
               <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+                Doctors
+              </p>
+              <ul className="space-y-0.5">
+                <li>
+                  <Link
+                    href="/admin/doctors"
+                    className={cn(
+                      "group flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-[15px] transition-colors",
+                      navClass(
+                        pathname === "/admin/doctors" ||
+                          pathname?.startsWith("/admin/doctors/"),
+                      ),
+                    )}
+                  >
+                    <Stethoscope
+                      className={cn(
+                        "h-4 w-4",
+                        iconClass(
+                          pathname === "/admin/doctors" ||
+                            pathname?.startsWith("/admin/doctors/"),
+                        ),
+                      )}
+                    />
+                    <span>All doctors</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/admin/doctor-categories"
+                    className={cn(
+                      "group flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-[15px] transition-colors",
+                      navClass(pathname === "/admin/doctor-categories"),
+                    )}
+                  >
+                    <Tags
+                      className={cn(
+                        "h-4 w-4",
+                        iconClass(pathname === "/admin/doctor-categories"),
+                      )}
+                    />
+                    <span>Categories</span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/admin/appointments"
+                    className={cn(
+                      "group flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-[15px] transition-colors",
+                      navClass(pathname === "/admin/appointments"),
+                    )}
+                  >
+                    <CalendarCheck
+                      className={cn(
+                        "h-4 w-4",
+                        iconClass(pathname === "/admin/appointments"),
+                      )}
+                    />
+                    <span>Appointments</span>
+                  </Link>
+                </li>
+              </ul>
+            </li>
+
+            <li className="pt-5">
+              <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
                 Users
               </p>
               <ul className="space-y-0.5">
+                <li>
+                  <Link
+                    href="/admin/push"
+                    className={cn(
+                      "group flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-[15px] transition-colors",
+                      navClass(pathname === "/admin/push"),
+                    )}
+                  >
+                    <Megaphone
+                      className={cn("h-4 w-4", iconClass(pathname === "/admin/push"))}
+                    />
+                    <span>Push notifications</span>
+                  </Link>
+                </li>
                 <li>
                   <Link
                     href="/admin/users"

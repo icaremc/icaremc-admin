@@ -1,0 +1,188 @@
+import { NextResponse } from "next/server";
+import { requireAdminSession } from "@/lib/adminAuth";
+import {
+  appointmentStatusPushMessage,
+  doctorCancelledPushMessage,
+} from "@/lib/appointments/status";
+import { sendDoctorPush } from "@/lib/push/sendDoctorPush";
+import {
+  fetchMotherPushProfile,
+  pushReadiness,
+  sendMotherPush,
+} from "@/lib/push/sendMotherPush";
+import { createServiceSupabaseClient } from "@/lib/supabase/service";
+import type { Appointment, AppointmentStatus } from "@/lib/types/doctors";
+
+type RouteContext = { params: Promise<{ id: string }> };
+
+const APPOINTMENT_SELECT =
+  "*, doctor_profiles(first_name, last_name, specialty, hospital), profiles(full_name, phone)";
+
+function isAppointmentStatus(value: unknown): value is AppointmentStatus {
+  return (
+    value === "pending" ||
+    value === "confirmed" ||
+    value === "completed" ||
+    value === "cancelled"
+  );
+}
+
+export async function GET(_request: Request, context: RouteContext) {
+  const auth = await requireAdminSession();
+  if ("error" in auth) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
+  const { id } = await context.params;
+
+  try {
+    const client = createServiceSupabaseClient();
+    const { data, error } = await client
+      .from("appointments")
+      .select(APPOINTMENT_SELECT)
+      .eq("id", id)
+      .maybeSingle();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    if (!data) {
+      return NextResponse.json({ error: "Appointment not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ appointment: data as Appointment });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Server error" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(request: Request, context: RouteContext) {
+  const auth = await requireAdminSession();
+  if ("error" in auth) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
+  const { id } = await context.params;
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const status =
+    body &&
+    typeof body === "object" &&
+    "status" in body
+      ? (body as { status: unknown }).status
+      : null;
+
+  if (!isAppointmentStatus(status)) {
+    return NextResponse.json(
+      { error: "status must be pending, confirmed, completed, or cancelled" },
+      { status: 400 },
+    );
+  }
+
+  try {
+    const client = createServiceSupabaseClient();
+
+    const { data: existing, error: existingError } = await client
+      .from("appointments")
+      .select(APPOINTMENT_SELECT)
+      .eq("id", id)
+      .maybeSingle();
+
+    if (existingError) {
+      return NextResponse.json({ error: existingError.message }, { status: 500 });
+    }
+    if (!existing) {
+      return NextResponse.json({ error: "Appointment not found" }, { status: 404 });
+    }
+
+    const previous = existing as Appointment;
+    if (previous.status === status) {
+      return NextResponse.json({ appointment: previous });
+    }
+
+    const { data, error } = await client
+      .from("appointments")
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select(APPOINTMENT_SELECT)
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    const appointment = data as Appointment;
+    const doctor = appointment.doctor_profiles;
+    const doctorName = doctor
+      ? `Dr. ${doctor.first_name} ${doctor.last_name}`.trim()
+      : "Your doctor";
+    const patientName =
+      appointment.patient_name?.trim() ||
+      appointment.profiles?.full_name?.trim() ||
+      "Patient";
+
+    const pushResults: Record<string, unknown> = {};
+
+    const patientMessage = appointmentStatusPushMessage({
+      status,
+      doctorName,
+      appointmentDate: appointment.appointment_date,
+      timeSlot: appointment.time_slot,
+    });
+
+    if (patientMessage) {
+      const { profile } = await fetchMotherPushProfile(
+        client,
+        appointment.patient_id,
+      );
+      const readiness = pushReadiness(
+        profile ?? {
+          fcm_token: null,
+          notifications_enabled: null,
+          full_name: null,
+          role: null,
+        },
+      );
+
+      if (readiness.canSend && profile?.fcm_token) {
+        const patientPush = await sendMotherPush({
+          serviceClient: client,
+          userId: appointment.patient_id,
+          token: profile.fcm_token,
+          input: patientMessage,
+        });
+        pushResults.patient = patientPush;
+      } else {
+        pushResults.patient = { skipped: readiness.reason };
+      }
+    }
+
+    if (status === "cancelled") {
+      const doctorPush = await sendDoctorPush({
+        serviceClient: client,
+        userId: appointment.doctor_id,
+        input: doctorCancelledPushMessage({
+          patientName,
+          appointmentDate: appointment.appointment_date,
+          timeSlot: appointment.time_slot,
+        }),
+      });
+      pushResults.doctor = doctorPush;
+    }
+
+    return NextResponse.json({ appointment, push: pushResults });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Server error" },
+      { status: 500 },
+    );
+  }
+}

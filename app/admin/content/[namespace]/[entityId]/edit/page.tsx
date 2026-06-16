@@ -16,11 +16,11 @@ import {
   fetchContentItem,
   saveContentItem,
 } from "@/features/content/contentSlice";
-import { namespaceLabel } from "@/lib/constants";
+import { namespaceDescription, contentEntityIdLabel } from "@/lib/constants";
 import {
   contentEntityPath,
+  contentHeroTitle,
 } from "@/lib/content/contentLabels";
-import { isUuid, namespaceUsesUuidEntityId, newUuidEntityId } from "@/lib/content/entityId";
 import type { LocaleFormMap } from "@/lib/content/formTypes";
 import {
   createEmptyForm,
@@ -75,11 +75,6 @@ export default function ContentEditPage() {
       return;
     }
 
-    if (namespaceUsesUuidEntityId(namespace) && !isUuid(selected!.entity_id)) {
-      setFormError("This content type must use a valid UUID identifier.");
-      return;
-    }
-
     const translations = formToTranslations(namespace, form);
     if (!translations.en) {
       setFormError("English translation is required.");
@@ -116,8 +111,8 @@ export default function ContentEditPage() {
   return (
     <>
       <PageHero
-        title={`Edit ${entityId}`}
-        description={`${namespaceLabel(namespace)} · ${namespace}`}
+        title={selected ? contentHeroTitle(namespace, selected) : "Edit item"}
+        description={namespaceDescription(namespace)}
         icon={FileText}
       />
 
@@ -157,9 +152,9 @@ export default function ContentEditPage() {
           <p className="text-sm text-gray-600">Loading…</p>
         ) : (
           <div className="admin-panel space-y-6">
-            {!namespaceUsesUuidEntityId(namespace) ? (
+            {namespace === "milestone" ? (
               <div>
-                <Label>Entity ID</Label>
+                <Label>{contentEntityIdLabel(namespace)}</Label>
                 <Input
                   value={entityId}
                   readOnly

@@ -46,7 +46,7 @@ export default function DailyTipDetailPage() {
     dispatch(fetchDailyTip(tipId));
   }, [dispatch, tipId]);
 
-  const heroTitle = selected ? dailyTipHeroTitle(selected) : tipId;
+  const heroTitle = selected ? dailyTipHeroTitle(selected) : "Daily tip";
 
   return (
     <>

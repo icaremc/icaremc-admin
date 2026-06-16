@@ -11,7 +11,7 @@ import {
   dailyTipDayNumber,
   dailyTipWeekNumber,
 } from "@/lib/content/contentLabels";
-import { namespaceUsesUuidEntityId } from "@/lib/content/entityId";
+import { contentEntityIdLabel } from "@/lib/constants";
 import { translationsToForm } from "@/lib/content/transform";
 import type {
   ContentNamespace,
@@ -214,22 +214,16 @@ export default function ContentTranslationDetailView({
             </div>
           </>
         ) : null}
-        {!namespaceUsesUuidEntityId(namespace) ? (
+        {namespace === "milestone" ? (
           <div className="rounded-xl border border-gray-200 bg-white p-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-              Entity ID
+              {contentEntityIdLabel(namespace)}
             </p>
-            <p className="mt-1 break-all font-mono text-xs text-gray-900">
+            <p className="mt-1 text-lg font-semibold text-gray-900">
               {item.entity_id}
             </p>
           </div>
         ) : null}
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-            Version
-          </p>
-          <p className="mt-1 text-lg font-semibold text-gray-900">v{item.version}</p>
-        </div>
         <div className="rounded-xl border border-gray-200 bg-white p-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
             Status
@@ -243,12 +237,6 @@ export default function ContentTranslationDetailView({
           >
             {item.is_published ? "Published" : "Draft"}
           </span>
-        </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-            Namespace
-          </p>
-          <p className="mt-1 text-sm font-medium text-gray-900">{item.namespace}</p>
         </div>
       </div>
 

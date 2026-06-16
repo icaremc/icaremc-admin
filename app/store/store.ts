@@ -1,5 +1,9 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { adminsReducer } from "@/features/admins/adminsSlice";
+import { appointmentsReducer } from "@/features/appointments/appointmentsSlice";
+import { doctorsReducer } from "@/features/doctors/doctorsSlice";
+import { doctorDetailReducer } from "@/features/doctors/doctorDetailSlice";
+import { doctorCategoriesReducer } from "@/features/doctorCategories/doctorCategoriesSlice";
 import { childrenReducer } from "@/features/children/childrenSlice";
 import { contentReducer } from "@/features/content/contentSlice";
 import { dashboardReducer } from "@/features/dashboard/dashboardSlice";
@@ -24,6 +28,10 @@ export const store = configureStore({
     pregnancies: pregnanciesReducer,
     pregnancyLogs: pregnancyLogsReducer,
     children: childrenReducer,
+    doctors: doctorsReducer,
+    doctorDetail: doctorDetailReducer,
+    doctorCategories: doctorCategoriesReducer,
+    appointments: appointmentsReducer,
   },
 });
 

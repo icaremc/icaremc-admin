@@ -17,6 +17,9 @@ const emptyStats: DashboardStats = {
   children: 0,
   adminUsers: 0,
   recentLogs: 0,
+  appointments: 0,
+  pendingAppointments: 0,
+  doctors: 0,
 };
 
 const initialState: DashboardState = {
@@ -76,6 +79,26 @@ async function countAdminUsers(): Promise<number> {
   return count ?? 0;
 }
 
+async function fetchBookingStats(): Promise<{
+  total: number;
+  pending: number;
+}> {
+  try {
+    const response = await fetch("/api/admin/appointments/stats");
+    if (!response.ok) return { total: 0, pending: 0 };
+    const body = (await response.json()) as {
+      total?: number;
+      pending?: number;
+    };
+    return {
+      total: body.total ?? 0,
+      pending: body.pending ?? 0,
+    };
+  } catch {
+    return { total: 0, pending: 0 };
+  }
+}
+
 export const fetchDashboardStats = createAsyncThunk(
   "dashboard/fetchStats",
   async (_, { rejectWithValue }) => {
@@ -90,6 +113,8 @@ export const fetchDashboardStats = createAsyncThunk(
         children,
         adminUsers,
         recentLogs,
+        bookingStats,
+        doctors,
       ] = await Promise.all([
         countTable("profiles"),
         countMilestones(),
@@ -100,6 +125,8 @@ export const fetchDashboardStats = createAsyncThunk(
         countTable("children"),
         countAdminUsers(),
         countRecentPregnancyLogs(),
+        fetchBookingStats(),
+        countTableOptional("doctor_profiles"),
       ]);
 
       return {
@@ -111,6 +138,9 @@ export const fetchDashboardStats = createAsyncThunk(
         children,
         adminUsers,
         recentLogs,
+        appointments: bookingStats.total,
+        pendingAppointments: bookingStats.pending,
+        doctors,
       } satisfies DashboardStats;
     } catch (error) {
       return rejectWithValue(

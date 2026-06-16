@@ -1,4 +1,3 @@
-import { truncateEntityId } from "@/lib/content/entityId";
 import type {
   ContentNamespace,
   ContentTranslation,
@@ -115,7 +114,7 @@ export function dailyTipListLabel(tip: DailyTip): string {
   }
   const title = dailyTipEnTitle(tip);
   if (title) return truncate(title);
-  return truncateEntityId(tip.id);
+  return "Untitled tip";
 }
 
 export function dailyTipHeroTitle(tip: DailyTip): string {
@@ -194,7 +193,7 @@ export function contentListLabel(
   switch (namespace) {
     case "daily_tip": {
       const text = asString(en.text);
-      return text ? truncate(text) : truncateEntityId(item.entity_id);
+      return text ? truncate(text) : "Untitled tip";
     }
     case "milestone": {
       const label = asString(en.label);
@@ -220,7 +219,7 @@ export function contentHeroTitle(
     case "daily_tip":
       return asString(en.text) || "Daily tip";
     case "milestone":
-      return asString(en.label) || `Milestone ${item.entity_id}`;
+      return asString(en.label) || `${item.entity_id} months`;
     default:
       return item.entity_id;
   }

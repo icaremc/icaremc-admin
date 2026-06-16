@@ -21,9 +21,12 @@ import {
   saveDailyTip,
   type DailyTipFormState,
 } from "@/features/dailyTips/dailyTipsSlice";
-import { namespaceLabel } from "@/lib/constants";
+import {
+  contentEntityIdLabel,
+  namespaceDescription,
+  namespaceLabel,
+} from "@/lib/constants";
 import { contentEntityPath, dailyTipPath } from "@/lib/content/contentLabels";
-import { isUuid, namespaceUsesUuidEntityId, newUuidEntityId } from "@/lib/content/entityId";
 import type { LocaleFormMap } from "@/lib/content/formTypes";
 import {
   createEmptyForm,
@@ -137,11 +140,7 @@ export default function NewContentItemPage() {
   useEffect(() => {
     dispatch(contentActions.clearContentMessages());
     setForm(createEmptyForm(namespace));
-    if (namespaceUsesUuidEntityId(namespace)) {
-      setNewEntityId(newUuidEntityId());
-    } else {
-      setNewEntityId("");
-    }
+    setNewEntityId("");
   }, [dispatch, namespace]);
 
   const handleSave = async () => {
@@ -153,16 +152,10 @@ export default function NewContentItemPage() {
       return;
     }
 
-    const resolvedEntityId = namespaceUsesUuidEntityId(namespace)
-      ? newEntityId.trim() || newUuidEntityId()
-      : newEntityId.trim();
+    const resolvedEntityId = newEntityId.trim();
 
     if (!resolvedEntityId) {
-      setFormError("Entity ID is required.");
-      return;
-    }
-    if (namespaceUsesUuidEntityId(namespace) && !isUuid(resolvedEntityId)) {
-      setFormError("This content type must use a valid UUID identifier.");
+      setFormError(`${contentEntityIdLabel(namespace)} is required.`);
       return;
     }
 
@@ -194,8 +187,8 @@ export default function NewContentItemPage() {
   return (
     <>
       <PageHero
-        title="New content item"
-        description={`${namespaceLabel(namespace)} · ${namespace}`}
+        title={`New ${namespaceLabel(namespace).toLowerCase()}`}
+        description={namespaceDescription(namespace)}
         icon={FileText}
       />
 
@@ -226,14 +219,14 @@ export default function NewContentItemPage() {
         ) : null}
 
         <div className="admin-panel space-y-6">
-          {!namespaceUsesUuidEntityId(namespace) ? (
+          {namespace === "milestone" ? (
             <div>
-              <Label htmlFor="entityId">Entity ID</Label>
+              <Label htmlFor="entityId">{contentEntityIdLabel(namespace)}</Label>
               <Input
                 id="entityId"
                 value={newEntityId}
                 onChange={(e) => setNewEntityId(e.target.value)}
-                placeholder="e.g. edd_lnmp, mission, 2"
+                placeholder="e.g. 2"
                 className="mt-1.5"
               />
             </div>

@@ -137,19 +137,7 @@ export default function ChildDetailPage() {
                 />
                 <MetaItem
                   label="Pregnancy"
-                  value={
-                    child.pregnancy_id ? (
-                      <span className="font-mono text-xs">
-                        {child.pregnancy_id.slice(0, 8)}…
-                      </span>
-                    ) : (
-                      "-"
-                    )
-                  }
-                />
-                <MetaItem
-                  label="Local ID"
-                  value={child.local_id || "-"}
+                  value={child.pregnancy_id ? "Linked" : "-"}
                 />
               </div>
               <p className="mt-4 text-xs text-gray-500">
@@ -181,7 +169,6 @@ export default function ChildDetailPage() {
                     <TableHeader>
                       <TableRow className="border-b border-white/20 bg-gradient-to-r from-violet-50/50 to-purple-50/50">
                         <TableHead>Milestone</TableHead>
-                        <TableHead>Type key</TableHead>
                         <TableHead>Achieved</TableHead>
                         <TableHead>Notes</TableHead>
                       </TableRow>
@@ -191,9 +178,6 @@ export default function ChildDetailPage() {
                         <TableRow key={row.id}>
                           <TableCell className="font-medium text-gray-900">
                             {formatMilestoneType(row.milestone_type)}
-                          </TableCell>
-                          <TableCell className="font-mono text-xs text-gray-500">
-                            {row.milestone_type}
                           </TableCell>
                           <TableCell>
                             {row.achieved_date ? (

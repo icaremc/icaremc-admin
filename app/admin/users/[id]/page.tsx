@@ -13,6 +13,7 @@ import {
   User,
 } from "lucide-react";
 import PageHero from "@/components/PageHero";
+import SendPushForm from "@/components/users/SendPushForm";
 import {
   Table,
   TableBody,
@@ -139,7 +140,6 @@ function PregnancyCard({
           <h3 className="text-lg font-semibold text-gray-900">
             Pregnancy #{pregnancy.pregnancy_number}
           </h3>
-          <p className="font-mono text-xs text-gray-500">{pregnancy.id}</p>
         </div>
         {statusBadge(pregnancy.status)}
       </div>
@@ -315,8 +315,27 @@ export default function UserDetailPage() {
                     {formatDateTime(profile.created_at)}
                   </p>
                 </div>
+                <div>
+                  <p className="text-xs font-medium uppercase text-gray-500">
+                    Push token
+                  </p>
+                  <p className="text-sm text-gray-900">
+                    {profile.fcm_token ? "Registered" : "Not registered"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase text-gray-500">
+                    Notifications
+                  </p>
+                  <p className="text-sm text-gray-900">
+                    {profile.notifications_enabled ? "Enabled" : "Disabled"}
+                  </p>
+                </div>
               </div>
-              <p className="mt-3 font-mono text-xs text-gray-400">{profile.id}</p>
+            </section>
+
+            <section className="admin-panel">
+              <SendPushForm userId={profile.id} role={profile.role} />
             </section>
 
             <section>

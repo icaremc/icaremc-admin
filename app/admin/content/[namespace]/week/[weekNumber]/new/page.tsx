@@ -106,7 +106,7 @@ export default function NewDailyTipForWeekPage() {
     <>
       <PageHero
         title={`New tip for week ${weekNumber}, day ${dayNumber ?? form.day_number}`}
-        description="Daily tips · daily_tips"
+        description="Health tip for a specific day in this pregnancy week"
         icon={FileText}
       />
 

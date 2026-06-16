@@ -20,9 +20,9 @@ import { fetchDailyTips } from "@/features/dailyTips/dailyTipsSlice";
 import { fetchContentByNamespace } from "@/features/content/contentSlice";
 import {
   CONTENT_NAMESPACES,
-  contentEntityIdLabel,
   namespaceDescription,
   namespaceLabel,
+  contentEntityIdLabel,
 } from "@/lib/constants";
 import {
   contentEditPath,
@@ -37,7 +37,6 @@ import {
   DAILY_TIP_TRIMESTERS,
   dailyTipMatchesSearch,
 } from "@/lib/content/dailyTipUi";
-import { namespaceUsesUuidEntityId } from "@/lib/content/entityId";
 import { formatDateTime } from "@/lib/format";
 import type { ContentNamespace } from "@/lib/types/database";
 import {
@@ -316,7 +315,7 @@ export default function ContentNamespacePage() {
       <>
         <PageHero
           title="Unknown content type"
-          description={`"${namespace}" is not managed in this admin portal`}
+          description="This section is not available in the admin portal"
           icon={FileText}
         />
         <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
@@ -331,13 +330,14 @@ export default function ContentNamespacePage() {
     );
   }
 
-  const colSpan = namespaceUsesUuidEntityId(namespace) ? 5 : 6;
+  const showAgeColumn = namespace === "milestone";
+  const colSpan = showAgeColumn ? 5 : 4;
 
   return (
     <>
       <PageHero
         title={namespaceLabel(namespace)}
-        description={`Namespace: ${namespace}`}
+        description={namespaceDescription(namespace)}
         icon={FileText}
         stat={{ label: "Items", value: items.length }}
       />
@@ -363,10 +363,11 @@ export default function ContentNamespacePage() {
             <TableHeader>
               <TableRow className="border-b border-white/20 bg-gradient-to-r from-emerald-50/50 to-teal-50/50">
                 <TableHead className="font-semibold text-gray-700">Item</TableHead>
-                {!namespaceUsesUuidEntityId(namespace) ? (
-                  <TableHead className="font-semibold text-gray-700">Entity ID</TableHead>
+                {showAgeColumn ? (
+                  <TableHead className="font-semibold text-gray-700">
+                    {contentEntityIdLabel(namespace)}
+                  </TableHead>
                 ) : null}
-                <TableHead className="font-semibold text-gray-700">Version</TableHead>
                 <TableHead className="font-semibold text-gray-700">Status</TableHead>
                 <TableHead className="font-semibold text-gray-700">Updated</TableHead>
                 <TableHead className="text-right font-semibold text-gray-700">
@@ -399,12 +400,11 @@ export default function ContentNamespacePage() {
                     <TableCell className="font-medium text-gray-900">
                       {contentListLabel(namespace, item)}
                     </TableCell>
-                    {!namespaceUsesUuidEntityId(namespace) ? (
+                    {showAgeColumn ? (
                       <TableCell className="font-medium text-gray-700">
                         {item.entity_id}
                       </TableCell>
                     ) : null}
-                    <TableCell>v{item.version}</TableCell>
                     <TableCell>
                       <span
                         className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${

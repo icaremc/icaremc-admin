@@ -77,7 +77,7 @@ export default function NewPregnancyWeekPage() {
     <>
       <PageHero
         title="New pregnancy week"
-        description="Create a UUID-backed week record with en / am / om translations"
+        description="Add content in English, Amharic, and Oromo"
         icon={CalendarDays}
       />
 

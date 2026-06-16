@@ -33,7 +33,7 @@ export default function PregnancyWeeksPage() {
     <>
       <PageHero
         title="Pregnancy weeks"
-        description="Normalized UUID records with per-language translations"
+        description="Week-by-week guidance in English, Amharic, and Oromo"
         icon={CalendarDays}
         stat={{ label: "Weeks", value: weeks.length }}
       />
@@ -73,7 +73,7 @@ export default function PregnancyWeeksPage() {
               ) : weeks.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="py-8 text-center text-gray-500">
-                    No pregnancy weeks yet. Run v2 migration or add a week.
+                    No pregnancy weeks yet. Add a week to get started.
                   </TableCell>
                 </TableRow>
               ) : (
