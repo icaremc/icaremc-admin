@@ -13,6 +13,10 @@ type ServiceAccountJson = {
   private_key: string;
 };
 
+function isVercelDeploy() {
+  return Boolean(process.env.VERCEL);
+}
+
 function readServiceAccount(): ServiceAccountJson {
   const jsonEnv = process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim();
   if (jsonEnv) {
@@ -39,6 +43,14 @@ function readServiceAccount(): ServiceAccountJson {
     process.env.FIREBASE_SERVICE_ACCOUNT_PATH?.trim() ||
     process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim();
 
+  if (filePath && isVercelDeploy()) {
+    throw new Error(
+      "FIREBASE_SERVICE_ACCOUNT_PATH cannot be used on Vercel. " +
+        "Remove it from Vercel env vars and set FIREBASE_SERVICE_ACCOUNT_JSON " +
+        "(paste the full service account JSON from Firebase Console).",
+    );
+  }
+
   if (filePath) {
     const resolved = path.isAbsolute(filePath)
       ? filePath
@@ -46,16 +58,13 @@ function readServiceAccount(): ServiceAccountJson {
     if (fs.existsSync(resolved)) {
       return JSON.parse(fs.readFileSync(resolved, "utf8")) as ServiceAccountJson;
     }
-    throw new Error(
-      `Firebase service account file not found at ${resolved}. ` +
-        "On Vercel, set FIREBASE_SERVICE_ACCOUNT_JSON (full JSON) or " +
-        "FIREBASE_PROJECT_ID + FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY instead of a file path.",
-    );
+    throw new Error(`Firebase service account file not found at ${resolved}`);
   }
 
   throw new Error(
-    "Firebase is not configured. For Vercel, set FIREBASE_SERVICE_ACCOUNT_JSON. " +
-      "Locally you can use FIREBASE_SERVICE_ACCOUNT_PATH pointing to your service account JSON file.",
+    isVercelDeploy()
+      ? "Set FIREBASE_SERVICE_ACCOUNT_JSON in Vercel environment variables."
+      : "Firebase is not configured. Set FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_SERVICE_ACCOUNT_PATH.",
   );
 }
 
