@@ -13,20 +13,6 @@ type ServiceAccountJson = {
   private_key: string;
 };
 
-function resolveServiceAccountPath(): string {
-  const filePath =
-    process.env.FIREBASE_SERVICE_ACCOUNT_PATH?.trim() ||
-    process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim();
-  if (!filePath) {
-    throw new Error(
-      "Missing FIREBASE_SERVICE_ACCOUNT_PATH (path to Firebase service account JSON)",
-    );
-  }
-  return path.isAbsolute(filePath)
-    ? filePath
-    : path.resolve(process.cwd(), filePath);
-}
-
 function readServiceAccount(): ServiceAccountJson {
   const jsonEnv = process.env.FIREBASE_SERVICE_ACCOUNT_JSON?.trim();
   if (jsonEnv) {
@@ -49,11 +35,28 @@ function readServiceAccount(): ServiceAccountJson {
     };
   }
 
-  const resolved = resolveServiceAccountPath();
-  if (!fs.existsSync(resolved)) {
-    throw new Error(`Firebase service account file not found: ${resolved}`);
+  const filePath =
+    process.env.FIREBASE_SERVICE_ACCOUNT_PATH?.trim() ||
+    process.env.GOOGLE_APPLICATION_CREDENTIALS?.trim();
+
+  if (filePath) {
+    const resolved = path.isAbsolute(filePath)
+      ? filePath
+      : path.resolve(process.cwd(), filePath);
+    if (fs.existsSync(resolved)) {
+      return JSON.parse(fs.readFileSync(resolved, "utf8")) as ServiceAccountJson;
+    }
+    throw new Error(
+      `Firebase service account file not found at ${resolved}. ` +
+        "On Vercel, set FIREBASE_SERVICE_ACCOUNT_JSON (full JSON) or " +
+        "FIREBASE_PROJECT_ID + FIREBASE_CLIENT_EMAIL + FIREBASE_PRIVATE_KEY instead of a file path.",
+    );
   }
-  return JSON.parse(fs.readFileSync(resolved, "utf8")) as ServiceAccountJson;
+
+  throw new Error(
+    "Firebase is not configured. For Vercel, set FIREBASE_SERVICE_ACCOUNT_JSON. " +
+      "Locally you can use FIREBASE_SERVICE_ACCOUNT_PATH pointing to your service account JSON file.",
+  );
 }
 
 function ensureFirebaseApp() {
