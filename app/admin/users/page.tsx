@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronRight, Plus, Search, Users } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
@@ -20,16 +20,12 @@ import {
   createUser,
   fetchProfiles,
   profilesActions,
-  updateProfileRole,
 } from "@/features/profiles/profilesSlice";
 import { LOCALES } from "@/lib/constants";
-import { APP_USER_ROLES, type AppUserRole } from "@/lib/roles";
 import { formatDateTime } from "@/lib/format";
 import type { Locale, Profile } from "@/lib/types/database";
 
 function pushStatusLabel(profile: Profile) {
-  if (profile.role === "partner") return { label: "—", className: "text-gray-400" };
-
   if (!profile.fcm_token) {
     return { label: "No token", className: "bg-amber-50 text-amber-700" };
   }
@@ -44,17 +40,13 @@ function pushStatusLabel(profile: Profile) {
 function PushStatusBadge({ profile }: { profile: Profile }) {
   const push = pushStatusLabel(profile);
 
-  if (push.className.startsWith("bg-")) {
-    return (
-      <span
-        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${push.className}`}
-      >
-        {push.label}
-      </span>
-    );
-  }
-
-  return <span className={push.className}>{push.label}</span>;
+  return (
+    <span
+      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${push.className}`}
+    >
+      {push.label}
+    </span>
+  );
 }
 
 const emptyForm = {
@@ -62,13 +54,13 @@ const emptyForm = {
   password: "",
   full_name: "",
   phone: "",
-  role: "mother" as AppUserRole,
   locale: "en" as Locale,
 };
 
 export default function UsersPage() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
-  const { profiles, loading, error, saving, creating } = useAppSelector(
+  const { profiles, loading, error, creating } = useAppSelector(
     (state) => state.profiles,
   );
   const [query, setQuery] = useState("");
@@ -82,13 +74,7 @@ export default function UsersPage() {
   const filtered = profiles.filter((profile) => {
     const q = query.toLowerCase();
     if (!q) return true;
-    return [
-      profile.full_name,
-      profile.phone,
-      profile.account_type,
-      profile.role,
-      profile.locale,
-    ]
+    return [profile.full_name, profile.phone, profile.locale]
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(q));
   });
@@ -103,7 +89,7 @@ export default function UsersPage() {
         password: form.password,
         full_name: form.full_name.trim() || undefined,
         phone: form.phone.trim() || undefined,
-        role: form.role,
+        role: "mother",
         locale: form.locale,
       }),
     );
@@ -117,10 +103,10 @@ export default function UsersPage() {
   return (
     <>
       <PageHero
-        title="App users"
-        description="Tap a mother to view pregnancy, weekly vitals, and children"
+        title="Parents"
+        description="Mother profiles from the app — tap a row for pregnancy, vitals, and children"
         icon={Users}
-        stat={{ label: "Total users", value: profiles.length }}
+        stat={{ label: "Total parents", value: profiles.length }}
       />
 
       <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
@@ -130,7 +116,7 @@ export default function UsersPage() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search name, phone, role..."
+              placeholder="Search name, phone, locale..."
               className="w-full rounded-[var(--radius)] border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm text-gray-900 shadow-sm placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200/50"
             />
           </div>
@@ -140,17 +126,14 @@ export default function UsersPage() {
             className="gap-2"
           >
             <Plus className="h-4 w-4" />
-            {showCreateForm ? "Close form" : "Create user"}
+            {showCreateForm ? "Close form" : "Create parent"}
           </Button>
         </div>
 
         {showCreateForm ? (
-          <form
-            onSubmit={handleCreate}
-            className="mb-6 admin-panel"
-          >
+          <form onSubmit={handleCreate} className="mb-6 admin-panel">
             <h2 className="mb-4 text-lg font-semibold text-gray-900">
-              New user
+              New parent account
             </h2>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
@@ -205,26 +188,6 @@ export default function UsersPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="create_role">Role</Label>
-                <select
-                  id="create_role"
-                  value={form.role}
-                  onChange={(e) =>
-                    setForm((current) => ({
-                      ...current,
-                      role: e.target.value as AppUserRole,
-                    }))
-                  }
-                  className="flex h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-                >
-                  {APP_USER_ROLES.map((role) => (
-                    <option key={role.value} value={role.value}>
-                      {role.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="create_locale">Locale</Label>
                 <select
                   id="create_locale"
@@ -247,7 +210,7 @@ export default function UsersPage() {
             </div>
             <div className="mt-4">
               <Button type="submit" disabled={creating}>
-                {creating ? "Creating…" : "Create user"}
+                {creating ? "Creating…" : "Create parent"}
               </Button>
             </div>
           </form>
@@ -256,7 +219,7 @@ export default function UsersPage() {
         {loading ? (
           <div className="mb-4 flex items-center gap-2 text-sm text-gray-600">
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
-            Loading users...
+            Loading parents...
           </div>
         ) : null}
         {error ? (
@@ -271,8 +234,6 @@ export default function UsersPage() {
               <TableRow className="border-b border-white/20 bg-gradient-to-r from-emerald-50/50 to-teal-50/50">
                 <TableHead className="font-semibold text-gray-700">Name</TableHead>
                 <TableHead className="font-semibold text-gray-700">Phone</TableHead>
-                <TableHead className="font-semibold text-gray-700">Account</TableHead>
-                <TableHead className="font-semibold text-gray-700">Role</TableHead>
                 <TableHead className="font-semibold text-gray-700">Locale</TableHead>
                 <TableHead className="font-semibold text-gray-700">Onboarding</TableHead>
                 <TableHead className="font-semibold text-gray-700">Push</TableHead>
@@ -283,44 +244,21 @@ export default function UsersPage() {
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="py-8 text-center text-gray-500">
-                    No users found.
+                  <TableCell colSpan={7} className="py-8 text-center text-gray-500">
+                    No parents found.
                   </TableCell>
                 </TableRow>
               ) : (
                 filtered.map((profile) => (
-                  <TableRow key={profile.id} className="group">
+                  <TableRow
+                    key={profile.id}
+                    className="group cursor-pointer hover:bg-emerald-50/60"
+                    onClick={() => router.push(`/admin/users/${profile.id}`)}
+                  >
                     <TableCell className="font-medium text-gray-900">
-                      <Link
-                        href={`/admin/users/${profile.id}`}
-                        className="text-emerald-800 hover:underline"
-                      >
-                        {profile.full_name || "Unnamed user"}
-                      </Link>
+                      {profile.full_name || "Unnamed parent"}
                     </TableCell>
                     <TableCell>{profile.phone || "-"}</TableCell>
-                    <TableCell>{profile.account_type || "-"}</TableCell>
-                    <TableCell>
-                      <select
-                        value={profile.role ?? "mother"}
-                        disabled={saving}
-                        onChange={(event) =>
-                          dispatch(
-                            updateProfileRole({
-                              id: profile.id,
-                              role: event.target.value as AppUserRole,
-                            }),
-                          )
-                        }
-                        className="rounded-md border border-gray-200 bg-white px-2 py-1 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-                      >
-                        {APP_USER_ROLES.map((role) => (
-                          <option key={role.value} value={role.value}>
-                            {role.label}
-                          </option>
-                        ))}
-                      </select>
-                    </TableCell>
                     <TableCell>{profile.locale || "-"}</TableCell>
                     <TableCell>
                       <span
@@ -340,13 +278,7 @@ export default function UsersPage() {
                       {formatDateTime(profile.created_at)}
                     </TableCell>
                     <TableCell>
-                      <Link
-                        href={`/admin/users/${profile.id}`}
-                        className="inline-flex text-emerald-600 opacity-70 transition group-hover:opacity-100"
-                        aria-label={`View ${profile.full_name ?? "user"}`}
-                      >
-                        <ChevronRight className="h-5 w-5" />
-                      </Link>
+                      <ChevronRight className="h-5 w-5 text-emerald-600 opacity-70 transition group-hover:opacity-100" />
                     </TableCell>
                   </TableRow>
                 ))

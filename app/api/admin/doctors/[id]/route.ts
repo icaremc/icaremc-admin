@@ -10,7 +10,7 @@ import type { DoctorProfile } from "@/lib/types/doctors";
 type RouteContext = { params: Promise<{ id: string }> };
 
 const DOCTOR_SELECT =
-  "*, doctor_availability_slots(*), doctor_categories(id, name, slug)";
+  "*, doctor_availability_slots(*), doctor_services(*), doctor_categories(id, name, slug)";
 
 export async function GET(_request: Request, context: RouteContext) {
   const auth = await requireAdminSession();
@@ -32,6 +32,10 @@ export async function GET(_request: Request, context: RouteContext) {
       })
       .order("start_time", {
         foreignTable: "doctor_availability_slots",
+        ascending: true,
+      })
+      .order("sort_order", {
+        foreignTable: "doctor_services",
         ascending: true,
       })
       .maybeSingle();

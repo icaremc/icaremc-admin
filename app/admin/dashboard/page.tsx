@@ -3,7 +3,6 @@
 import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
-  Activity,
   ArrowRight,
   Baby,
   BookOpen,
@@ -49,12 +48,6 @@ const quickActions = [
     icon: Heart,
   },
   {
-    href: "/admin/pregnancy",
-    label: "Pregnancies",
-    description: "Review pregnancies and gestational weeks",
-    icon: Activity,
-  },
-  {
     href: "/admin/appointments",
     label: "Appointments",
     description: "Review bookings and update status",
@@ -82,11 +75,7 @@ export default function DashboardPage() {
     return `${greetingForHour(new Date().getHours())}, ${name}`;
   }, [user?.name]);
 
-  const totalPlatformRecords =
-    stats.profiles +
-    stats.pregnancies +
-    stats.pregnancyLogs +
-    stats.children;
+  const totalPlatformRecords = stats.profiles + stats.children;
 
   return (
     <>
@@ -124,33 +113,15 @@ export default function DashboardPage() {
               Refresh
             </Button>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <StatCard
-              label="Total users"
+              label="Parents"
               value={stats.profiles}
               href="/admin/users"
               icon={Users}
               loading={loading}
               description={`${stats.adminUsers} admin${stats.adminUsers === 1 ? "" : "s"}`}
               accent="emerald"
-            />
-            <StatCard
-              label="Pregnancies"
-              value={stats.pregnancies}
-              href="/admin/pregnancy"
-              icon={Heart}
-              loading={loading}
-              description="Active and completed journeys"
-              accent="teal"
-            />
-            <StatCard
-              label="Weekly logs"
-              value={stats.pregnancyLogs}
-              href="/admin/health-logs"
-              icon={Activity}
-              loading={loading}
-              description={`${stats.recentLogs} updated this week`}
-              accent="cyan"
             />
             <StatCard
               label="Children"

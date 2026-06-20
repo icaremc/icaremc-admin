@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import {
-  Activity,
   Baby,
   BookOpen,
+  Building2,
   ChevronDown,
   ChevronRight,
   FileText,
@@ -33,15 +33,14 @@ type NavItem = {
 };
 
 const mothersItems: NavItem[] = [
-  { href: "/admin/users", label: "App users", icon: Users, matchPrefix: true },
-  { href: "/admin/pregnancy", label: "Pregnancies", icon: Heart },
+  { href: "/admin/users", label: "Parent", icon: Users, matchPrefix: true },
   { href: "/admin/children", label: "Children", icon: Baby, matchPrefix: true },
-  { href: "/admin/health-logs", label: "Weekly vitals", icon: Activity },
 ];
 
 const doctorsItems: NavItem[] = [
   { href: "/admin/doctors", label: "Doctors", icon: Stethoscope, matchPrefix: true },
-  { href: "/admin/doctor-categories", label: "Categories", icon: Tags },
+  { href: "/admin/doctor-categories", label: "Speciality", icon: Tags },
+  { href: "/admin/hospitals", label: "Hospitals", icon: Building2 },
   { href: "/admin/appointments", label: "Appointments", icon: CalendarCheck },
 ];
 

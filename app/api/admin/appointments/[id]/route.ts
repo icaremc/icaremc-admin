@@ -50,7 +50,37 @@ export async function GET(_request: Request, context: RouteContext) {
       return NextResponse.json({ error: "Appointment not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ appointment: data as Appointment });
+    const appointment = data as Appointment;
+
+    const { data: conversation, error: conversationError } = await client
+      .from("chat_conversations")
+      .select("*")
+      .eq("appointment_id", id)
+      .maybeSingle();
+
+    if (conversationError) {
+      return NextResponse.json({ error: conversationError.message }, { status: 500 });
+    }
+
+    let messages: { id: string; conversation_id: string; sender_id: string; body: string; created_at: string }[] = [];
+    if (conversation) {
+      const { data: messageRows, error: messagesError } = await client
+        .from("chat_messages")
+        .select("id, conversation_id, sender_id, body, created_at")
+        .eq("conversation_id", conversation.id)
+        .order("created_at", { ascending: true });
+
+      if (messagesError) {
+        return NextResponse.json({ error: messagesError.message }, { status: 500 });
+      }
+      messages = messageRows ?? [];
+    }
+
+    return NextResponse.json({
+      appointment,
+      conversation: conversation ?? null,
+      messages,
+    });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Server error" },

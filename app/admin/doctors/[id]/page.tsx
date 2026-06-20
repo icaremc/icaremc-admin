@@ -5,13 +5,10 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   ArrowLeft,
-  Award,
-  Building2,
   Calendar,
   CheckCircle2,
   Clock,
   FileText,
-  Phone,
   Stethoscope,
   XCircle,
 } from "lucide-react";
@@ -26,6 +23,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import SendDoctorPushForm from "@/components/doctors/SendDoctorPushForm";
+import DoctorBookingPricingPanel from "@/components/doctors/DoctorBookingPricingPanel";
+import DoctorProfileSummary from "@/components/doctors/DoctorProfileSummary";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import {
   approveDoctor,
@@ -34,10 +33,7 @@ import {
 } from "@/features/doctors/doctorDetailSlice";
 import { updateDoctorVerification } from "@/features/doctors/doctorsSlice";
 import { summarizeAvailabilitySlots } from "@/lib/availability";
-import {
-  doctorCategoryLabel,
-  doctorDisplayName,
-} from "@/lib/doctors/display";
+import { doctorDisplayName } from "@/lib/doctors/display";
 import { formatDate, formatDateTime } from "@/lib/format";
 import type { DoctorAvailabilitySlot } from "@/lib/types/doctors";
 
@@ -155,13 +151,16 @@ export default function DoctorDetailPage() {
       />
 
       <div className="mx-auto max-w-[1200px] space-y-6 px-6 py-8 lg:px-8">
-        <Link
-          href="/admin/doctors"
-          className="inline-flex items-center gap-2 text-sm text-emerald-700 hover:underline"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to doctors
-        </Link>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Link
+            href="/admin/doctors"
+            className="inline-flex items-center gap-2 text-sm text-emerald-700 hover:underline"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to doctors
+          </Link>
+          {doctor ? <SendDoctorPushForm doctorId={doctor.id} /> : null}
+        </div>
 
         {error ? (
           <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
@@ -217,41 +216,10 @@ export default function DoctorDetailPage() {
             </div>
 
             <div className="admin-panel space-y-6">
-              <h2 className="admin-section-title">Profile</h2>
+              <DoctorProfileSummary doctor={doctor} />
+
+              <h2 className="admin-section-title">Credentials & records</h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div>
-                  <p className="text-xs font-medium uppercase text-gray-500">Category</p>
-                  <p className="mt-1 flex items-center gap-2 text-sm text-gray-900">
-                    <Stethoscope className="h-4 w-4 text-emerald-600" />
-                    {doctorCategoryLabel(doctor)}
-                  </p>
-                  {doctor.doctor_categories?.slug ? (
-                    <p className="mt-0.5 text-xs text-gray-500">
-                      Filter slug: {doctor.doctor_categories.slug}
-                    </p>
-                  ) : null}
-                </div>
-                <div>
-                  <p className="text-xs font-medium uppercase text-gray-500">Hospital</p>
-                  <p className="mt-1 flex items-center gap-2 text-sm text-gray-900">
-                    <Building2 className="h-4 w-4 text-emerald-600" />
-                    {doctor.hospital || "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium uppercase text-gray-500">Phone</p>
-                  <p className="mt-1 flex items-center gap-2 text-sm text-gray-900">
-                    <Phone className="h-4 w-4 text-emerald-600" />
-                    {doctor.phone ?? "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium uppercase text-gray-500">Experience</p>
-                  <p className="mt-1 flex items-center gap-2 text-sm text-gray-900">
-                    <Award className="h-4 w-4 text-emerald-600" />
-                    {doctor.experience_years} years
-                  </p>
-                </div>
                 <div>
                   <p className="text-xs font-medium uppercase text-gray-500">License</p>
                   <p className="mt-1 flex items-center gap-2 text-sm text-gray-900">
@@ -260,9 +228,9 @@ export default function DoctorDetailPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium uppercase text-gray-500">Rating</p>
+                  <p className="text-xs font-medium uppercase text-gray-500">Category slug</p>
                   <p className="mt-1 text-sm text-gray-900">
-                    {doctor.rating > 0 ? `${doctor.rating.toFixed(1)} / 5` : "No ratings yet"}
+                    {doctor.doctor_categories?.slug ?? "—"}
                   </p>
                 </div>
                 <div>
@@ -280,12 +248,9 @@ export default function DoctorDetailPage() {
                 </div>
               </div>
 
-              {doctor.bio ? (
-                <div>
-                  <p className="mb-1 text-xs font-medium uppercase text-gray-500">Bio</p>
-                  <p className="text-sm leading-relaxed text-gray-800">{doctor.bio}</p>
-                </div>
-              ) : null}
+              {doctor.bio ? null : (
+                <p className="text-sm text-gray-500">No bio provided.</p>
+              )}
             </div>
 
             <div className="admin-panel space-y-4">
@@ -301,9 +266,11 @@ export default function DoctorDetailPage() {
               <AvailabilityTable slots={doctor.doctor_availability_slots} />
             </div>
 
-            <div className="admin-panel">
-              <SendDoctorPushForm doctorId={doctor.id} />
-            </div>
+            <DoctorBookingPricingPanel
+              doctor={doctor}
+              onSaved={() => dispatch(fetchDoctorDetail(doctorId))}
+            />
+
           </>
         ) : null}
       </div>

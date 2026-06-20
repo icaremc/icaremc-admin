@@ -4,6 +4,17 @@ export function doctorDisplayName(first: string, last: string): string {
   return `Dr. ${first} ${last}`.trim();
 }
 
+export function doctorInitials(first: string, last: string): string {
+  const firstInitial = first.trim().charAt(0);
+  const lastInitial = last.trim().charAt(0);
+  const combined = `${firstInitial}${lastInitial}`.toUpperCase();
+  return combined || "?";
+}
+
+export function doctorHasProfilePhoto(url: string | null | undefined): boolean {
+  return Boolean(url?.trim());
+}
+
 export function doctorCategoryLabel(doctor: DoctorProfile): string {
   return doctor.doctor_categories?.name ?? doctor.specialty ?? "—";
 }

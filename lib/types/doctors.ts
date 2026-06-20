@@ -20,6 +20,19 @@ export type DoctorAvailabilitySlot = {
   updated_at: string;
 };
 
+export type DoctorService = {
+  id: string;
+  doctor_id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  currency: string;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+};
+
 export type DoctorProfile = {
   id: string;
   first_name: string;
@@ -35,9 +48,14 @@ export type DoctorProfile = {
   rating: number;
   available_today: boolean;
   is_verified: boolean;
+  profile_photo_url: string | null;
+  currency: string;
+  prepayment_mode: "none" | "percent" | "full";
+  prepayment_percent: number;
   created_at: string;
   updated_at: string;
   doctor_availability_slots?: DoctorAvailabilitySlot[];
+  doctor_services?: DoctorService[];
   doctor_categories?: Pick<DoctorCategory, "id" | "name" | "slug"> | null;
 };
 
@@ -57,6 +75,17 @@ export type Appointment = {
   note: string | null;
   patient_name: string | null;
   patient_phone: string | null;
+  service_id: string | null;
+  service_name: string | null;
+  service_description: string | null;
+  service_price: number | null;
+  currency: string;
+  prepayment_mode: "none" | "percent" | "full";
+  prepayment_percent: number | null;
+  total_amount: number;
+  prepayment_amount: number;
+  amount_paid: number;
+  payment_status: "unpaid" | "partial" | "paid" | "waived";
   created_at: string;
   updated_at: string;
   doctor_profiles?: {

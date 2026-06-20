@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   Activity,
   ArrowLeft,
   Baby,
+  Building2,
+  ChevronDown,
+  ChevronUp,
   Heart,
   MapPin,
   Phone,
@@ -25,8 +28,11 @@ import {
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { fetchUserDetail } from "@/features/users/userDetailSlice";
 import { formatDate, formatDateTime, truncate } from "@/lib/format";
-import { dailyTipWeekPath } from "@/lib/content/contentLabels";
-import { formatGestationalAge, gestationalAge } from "@/lib/pregnancy";
+import {
+  formatGestationalAge,
+  gestationalAge,
+  type GestationalAge,
+} from "@/lib/pregnancy";
 import type { Pregnancy, PregnancyLog, PregnancyStatus } from "@/lib/types/database";
 
 function statusBadge(status: PregnancyStatus) {
@@ -51,22 +57,42 @@ function statusBadge(status: PregnancyStatus) {
   );
 }
 
-function VitalsGrid({ logs }: { logs: PregnancyLog[] }) {
-  const byWeek = useMemo(() => {
-    const map = new Map<number, PregnancyLog>();
-    for (const log of logs) map.set(log.week_number, log);
-    return map;
-  }, [logs]);
+function sortPregnancies(pregnancies: Pregnancy[]): Pregnancy[] {
+  return [...pregnancies].sort((a, b) => {
+    if (a.status === "active" && b.status !== "active") return -1;
+    if (b.status === "active" && a.status !== "active") return 1;
+    return b.pregnancy_number - a.pregnancy_number;
+  });
+}
 
-  const weeksWithData = [...byWeek.keys()].sort((a, b) => a - b);
+function daysUntilDue(edd: string | null): number | null {
+  if (!edd) return null;
+  const due = new Date(`${edd}T00:00:00`);
+  if (Number.isNaN(due.getTime())) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  due.setHours(0, 0, 0, 0);
+  return Math.round((due.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
+}
 
-  if (weeksWithData.length === 0) {
-    return (
-      <p className="text-sm text-gray-500">
-        No weekly vitals logged yet (weeks 1–40).
-      </p>
-    );
-  }
+function dueDateLabel(edd: string | null): string | null {
+  const days = daysUntilDue(edd);
+  if (days === null) return null;
+  if (days === 0) return "Due today";
+  if (days > 0) return `${days} day${days === 1 ? "" : "s"} until due date`;
+  const overdue = Math.abs(days);
+  return `${overdue} day${overdue === 1 ? "" : "s"} past due date`;
+}
+
+function pregnancyProgress(age: GestationalAge): number {
+  return Math.min(100, Math.round((age.week / 40) * 100));
+}
+
+function VitalsTable({ logs }: { logs: PregnancyLog[] }) {
+  const sorted = useMemo(
+    () => [...logs].sort((a, b) => b.week_number - a.week_number),
+    [logs],
+  );
 
   return (
     <div className="admin-table-wrap">
@@ -75,48 +101,65 @@ function VitalsGrid({ logs }: { logs: PregnancyLog[] }) {
           <TableRow className="border-b border-white/20 bg-gradient-to-r from-emerald-50/50 to-teal-50/50">
             <TableHead>Week</TableHead>
             <TableHead>Weight</TableHead>
-            <TableHead>Height</TableHead>
             <TableHead>Blood pressure</TableHead>
-            <TableHead>Temp</TableHead>
             <TableHead>Symptoms</TableHead>
             <TableHead>Notes</TableHead>
-            <TableHead>Updated</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {weeksWithData.map((week) => {
-            const log = byWeek.get(week)!;
-            return (
-              <TableRow key={log.id}>
-                <TableCell className="font-medium">Week {week}</TableCell>
-                <TableCell>
-                  {log.weight != null ? `${log.weight} kg` : "-"}
-                </TableCell>
-                <TableCell>
-                  {log.height != null ? `${log.height} cm` : "-"}
-                </TableCell>
-                <TableCell>
-                  {log.blood_pressure_systolic != null
-                    ? `${log.blood_pressure_systolic}/${log.blood_pressure_diastolic ?? "-"}`
-                    : "-"}
-                </TableCell>
-                <TableCell>
-                  {log.temperature != null ? `${log.temperature} °C` : "-"}
-                </TableCell>
-                <TableCell>
-                  {log.symptoms.length ? log.symptoms.join(", ") : "-"}
-                </TableCell>
-                <TableCell className="text-gray-600">
-                  {truncate(log.notes ?? "", 48)}
-                </TableCell>
-                <TableCell className="text-gray-500 text-xs">
-                  {formatDateTime(log.updated_at)}
-                </TableCell>
-              </TableRow>
-            );
-          })}
+          {sorted.map((log) => (
+            <TableRow key={log.id}>
+              <TableCell className="font-medium">Week {log.week_number}</TableCell>
+              <TableCell>{log.weight != null ? `${log.weight} kg` : "—"}</TableCell>
+              <TableCell>
+                {log.blood_pressure_systolic != null
+                  ? `${log.blood_pressure_systolic}/${log.blood_pressure_diastolic ?? "—"}`
+                  : "—"}
+              </TableCell>
+              <TableCell className="max-w-[180px]">
+                {log.symptoms.length ? log.symptoms.join(", ") : "—"}
+              </TableCell>
+              <TableCell className="max-w-[200px] text-gray-600">
+                {log.notes ? truncate(log.notes, 64) : "—"}
+              </TableCell>
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
+    </div>
+  );
+}
+
+function LatestVitalSummary({ log }: { log: PregnancyLog }) {
+  return (
+    <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-gray-700">
+      <span>
+        <span className="text-gray-500">Week</span>{" "}
+        <span className="font-medium text-gray-900">{log.week_number}</span>
+      </span>
+      {log.weight != null ? (
+        <span>
+          <span className="text-gray-500">Weight</span>{" "}
+          <span className="font-medium text-gray-900">{log.weight} kg</span>
+        </span>
+      ) : null}
+      {log.blood_pressure_systolic != null ? (
+        <span>
+          <span className="text-gray-500">BP</span>{" "}
+          <span className="font-medium text-gray-900">
+            {log.blood_pressure_systolic}/{log.blood_pressure_diastolic ?? "—"}
+          </span>
+        </span>
+      ) : null}
+      {log.symptoms.length > 0 ? (
+        <span>
+          <span className="text-gray-500">Symptoms</span>{" "}
+          <span className="font-medium text-gray-900">{log.symptoms.join(", ")}</span>
+        </span>
+      ) : null}
+      <span className="text-xs text-gray-400">
+        Updated {formatDateTime(log.updated_at)}
+      </span>
     </div>
   );
 }
@@ -124,101 +167,217 @@ function VitalsGrid({ logs }: { logs: PregnancyLog[] }) {
 function PregnancyCard({
   pregnancy,
   logs,
+  defaultExpanded = false,
 }: {
   pregnancy: Pregnancy;
   logs: PregnancyLog[];
+  defaultExpanded?: boolean;
 }) {
   const isActive = pregnancy.status === "active";
+  const [expanded, setExpanded] = useState(defaultExpanded);
+  const [vitalsOpen, setVitalsOpen] = useState(isActive && logs.length > 0);
+
   const age = isActive
     ? gestationalAge(pregnancy.lmp_date, pregnancy.edd)
     : null;
+  const dueLabel = isActive ? dueDateLabel(pregnancy.edd) : null;
+  const latestLog = useMemo(
+    () =>
+      logs.length > 0
+        ? [...logs].sort((a, b) => b.week_number - a.week_number)[0]
+        : null,
+    [logs],
+  );
+
+  const hasCareDetails = pregnancy.hospital || pregnancy.location;
+  const hasConditions = pregnancy.conditions.length > 0;
+
+  if (!isActive && !expanded) {
+    return (
+      <button
+        type="button"
+        onClick={() => setExpanded(true)}
+        className="admin-panel flex w-full items-center justify-between gap-4 text-left transition hover:border-emerald-200 hover:bg-emerald-50/30"
+      >
+        <div className="min-w-0 space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-medium text-gray-900">
+              Pregnancy #{pregnancy.pregnancy_number}
+            </span>
+            {statusBadge(pregnancy.status)}
+            {!pregnancy.is_first_pregnancy ? (
+              <span className="text-xs text-gray-500">Repeat pregnancy</span>
+            ) : null}
+          </div>
+          <p className="text-sm text-gray-600">
+            {pregnancy.edd ? `Due ${formatDate(pregnancy.edd)}` : "No due date recorded"}
+            {pregnancy.completed_at
+              ? ` · Ended ${formatDate(pregnancy.completed_at)}`
+              : ""}
+          </p>
+        </div>
+        <ChevronDown className="h-5 w-5 shrink-0 text-gray-400" />
+      </button>
+    );
+  }
 
   return (
-    <div className="admin-panel space-y-4">
+    <div className="admin-panel space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">
-            Pregnancy #{pregnancy.pregnancy_number}
-          </h3>
-        </div>
-        {statusBadge(pregnancy.status)}
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div>
-          <p className="text-xs font-medium uppercase text-gray-500">LMP</p>
-          <p className="text-sm text-gray-900">{formatDate(pregnancy.lmp_date)}</p>
-        </div>
-        <div>
-          <p className="text-xs font-medium uppercase text-gray-500">EDD</p>
-          <p className="text-sm text-gray-900">{formatDate(pregnancy.edd)}</p>
-        </div>
-        <div>
-          <p className="text-xs font-medium uppercase text-gray-500">
-            Gestational age
-          </p>
-          <p className="text-sm text-gray-900">
-            {age ? formatGestationalAge(age) : "-"}
-          </p>
-        </div>
-        <div>
-          <p className="text-xs font-medium uppercase text-gray-500">
-            First pregnancy
-          </p>
-          <p className="text-sm text-gray-900">
-            {pregnancy.is_first_pregnancy ? "Yes" : "No"}
-          </p>
-        </div>
-      </div>
-
-      {(pregnancy.location || pregnancy.hospital) && (
-        <div className="flex flex-wrap gap-4 text-sm text-gray-700">
-          {pregnancy.location ? (
-            <span className="inline-flex items-center gap-1">
-              <MapPin className="h-4 w-4 text-emerald-600" />
-              {pregnancy.location}
-            </span>
+        <div className="space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-base font-semibold text-gray-900">
+              {isActive
+                ? "Current pregnancy"
+                : `Pregnancy #${pregnancy.pregnancy_number}`}
+            </h3>
+            {statusBadge(pregnancy.status)}
+            {pregnancy.is_first_pregnancy ? (
+              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                First pregnancy
+              </span>
+            ) : null}
+          </div>
+          {!isActive ? (
+            <p className="text-sm text-gray-500">
+              {pregnancy.completed_at
+                ? `Ended ${formatDate(pregnancy.completed_at)}`
+                : "Past pregnancy record"}
+            </p>
           ) : null}
+        </div>
+        {!isActive ? (
+          <button
+            type="button"
+            onClick={() => setExpanded(false)}
+            className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700"
+          >
+            Collapse
+            <ChevronUp className="h-4 w-4" />
+          </button>
+        ) : null}
+      </div>
+
+      {isActive && age ? (
+        <div className="rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/80 to-teal-50/50 p-4">
+          <p className="text-2xl font-semibold tracking-tight text-emerald-900">
+            {formatGestationalAge(age)}
+          </p>
+          {dueLabel ? (
+            <p className="mt-1 text-sm font-medium text-emerald-800">{dueLabel}</p>
+          ) : null}
+          <div className="mt-3">
+            <div className="mb-1 flex justify-between text-xs text-emerald-800/80">
+              <span>Progress</span>
+              <span>{pregnancyProgress(age)}%</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-emerald-100">
+              <div
+                className="h-full rounded-full bg-emerald-600 transition-all"
+                style={{ width: `${pregnancyProgress(age)}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div>
+          <dt className="text-xs font-medium uppercase text-gray-500">Due date</dt>
+          <dd className="mt-0.5 text-sm font-medium text-gray-900">
+            {formatDate(pregnancy.edd)}
+          </dd>
+        </div>
+        <div>
+          <dt className="text-xs font-medium uppercase text-gray-500">
+            Last menstrual period
+          </dt>
+          <dd className="mt-0.5 text-sm font-medium text-gray-900">
+            {formatDate(pregnancy.lmp_date)}
+          </dd>
+        </div>
+        {!isActive && pregnancy.completed_at ? (
+          <div>
+            <dt className="text-xs font-medium uppercase text-gray-500">Ended</dt>
+            <dd className="mt-0.5 text-sm font-medium text-gray-900">
+              {formatDate(pregnancy.completed_at)}
+            </dd>
+          </div>
+        ) : null}
+      </dl>
+
+      {hasCareDetails ? (
+        <div className="flex flex-col gap-2 rounded-lg border border-gray-100 bg-gray-50/60 px-4 py-3 sm:flex-row sm:flex-wrap sm:gap-6">
           {pregnancy.hospital ? (
-            <span>{pregnancy.hospital}</span>
+            <div className="flex items-start gap-2 text-sm text-gray-800">
+              <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+              <span>{pregnancy.hospital}</span>
+            </div>
+          ) : null}
+          {pregnancy.location ? (
+            <div className="flex items-start gap-2 text-sm text-gray-800">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+              <span>{pregnancy.location}</span>
+            </div>
           ) : null}
         </div>
-      )}
+      ) : null}
 
-      {pregnancy.conditions.length > 0 ? (
+      {hasConditions ? (
         <div>
-          <p className="mb-1 text-xs font-medium uppercase text-gray-500">
-            Conditions
-          </p>
-          <p className="text-sm text-gray-800">
+          <p className="text-xs font-medium uppercase text-gray-500">Conditions</p>
+          <p className="mt-1 text-sm text-gray-800">
             {pregnancy.conditions.join(", ")}
           </p>
         </div>
       ) : null}
 
-      {age ? (
-        <div className="flex flex-wrap gap-3 text-sm">
-          <Link
-            href={`/admin/pregnancy-weeks/${age.week}`}
-            className="text-emerald-700 hover:underline"
-          >
-            Week {age.week} CMS content
-          </Link>
-          <Link
-            href={dailyTipWeekPath(age.week)}
-            className="text-emerald-700 hover:underline"
-          >
-            Daily tips for week {age.week}
-          </Link>
-        </div>
-      ) : null}
+      <div className="border-t border-gray-100 pt-4">
+        <button
+          type="button"
+          onClick={() => setVitalsOpen((open) => !open)}
+          className="flex w-full items-center justify-between gap-3 text-left"
+        >
+          <span className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+            <Activity className="h-4 w-4 text-emerald-600" />
+            Weekly vitals
+            <span className="font-normal text-gray-500">
+              ({logs.length} week{logs.length === 1 ? "" : "s"} logged)
+            </span>
+          </span>
+          {vitalsOpen ? (
+            <ChevronUp className="h-4 w-4 text-gray-400" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-gray-400" />
+          )}
+        </button>
 
-      <div>
-        <h4 className="admin-section-title mb-3 flex items-center gap-2">
-          <Activity className="h-4 w-4 text-emerald-600" />
-          Weekly vitals ({logs.length} weeks logged)
-        </h4>
-        <VitalsGrid logs={logs} />
+        {!vitalsOpen && latestLog ? (
+          <div className="mt-3 rounded-lg border border-gray-100 bg-white px-4 py-3">
+            <p className="mb-2 text-xs font-medium uppercase text-gray-500">
+              Latest entry
+            </p>
+            <LatestVitalSummary log={latestLog} />
+          </div>
+        ) : null}
+
+        {!vitalsOpen && !latestLog ? (
+          <p className="mt-3 text-sm text-gray-500">
+            No vitals logged yet in the mobile app.
+          </p>
+        ) : null}
+
+        {vitalsOpen ? (
+          <div className="mt-3">
+            {logs.length > 0 ? (
+              <VitalsTable logs={logs} />
+            ) : (
+              <p className="text-sm text-gray-500">
+                No vitals logged yet in the mobile app.
+              </p>
+            )}
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -235,28 +394,43 @@ export default function UserDetailPage() {
   }, [dispatch, userId]);
 
   const profile = detail?.profile;
-  const activePregnancy = detail?.pregnancies.find((p) => p.status === "active");
+  const sortedPregnancies = detail ? sortPregnancies(detail.pregnancies) : [];
+  const activePregnancy = sortedPregnancies.find((p) => p.status === "active");
+  const pastPregnancyCount = sortedPregnancies.filter((p) => p.status !== "active").length;
 
   return (
     <>
       <PageHero
-        title={profile?.full_name || "Mother profile"}
-        description="Pregnancy journey, weekly vitals, and children"
+        title={profile?.full_name || "Parent profile"}
+        description="Profile details, pregnancy journey, weekly vitals, and children"
         icon={User}
         stat={{
-          label: "Pregnancies",
-          value: detail?.pregnancies.length ?? 0,
+          label: activePregnancy
+            ? "Current week"
+            : "Pregnancies",
+          value: activePregnancy
+            ? (() => {
+                const age = gestationalAge(
+                  activePregnancy.lmp_date,
+                  activePregnancy.edd,
+                );
+                return age ? `Week ${age.week}` : "—";
+              })()
+            : (detail?.pregnancies.length ?? 0),
         }}
       />
 
       <div className="mx-auto max-w-[1200px] space-y-6 px-6 py-8 lg:px-8">
-        <Link
-          href="/admin/users"
-          className="inline-flex items-center gap-2 text-sm text-emerald-700 hover:underline"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to users
-        </Link>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Link
+            href="/admin/users"
+            className="inline-flex items-center gap-2 text-sm text-emerald-700 hover:underline"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to parents
+          </Link>
+          {profile ? <SendPushForm userId={profile.id} role="mother" /> : null}
+        </div>
 
         {error ? (
           <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
@@ -267,7 +441,7 @@ export default function UserDetailPage() {
         {loading && !detail ? (
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
-            Loading mother details…
+            Loading parent details…
           </div>
         ) : null}
 
@@ -290,12 +464,6 @@ export default function UserDetailPage() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium uppercase text-gray-500">Role</p>
-                  <p className="text-sm capitalize text-gray-900">
-                    {profile.role ?? "mother"}
-                  </p>
-                </div>
-                <div>
                   <p className="text-xs font-medium uppercase text-gray-500">Locale</p>
                   <p className="text-sm uppercase text-gray-900">
                     {profile.locale || "-"}
@@ -310,9 +478,25 @@ export default function UserDetailPage() {
                   </p>
                 </div>
                 <div>
+                  <p className="text-xs font-medium uppercase text-gray-500">
+                    Dark mode
+                  </p>
+                  <p className="text-sm text-gray-900">
+                    {profile.dark_mode ? "On" : "Off"}
+                  </p>
+                </div>
+                <div>
                   <p className="text-xs font-medium uppercase text-gray-500">Joined</p>
                   <p className="text-sm text-gray-900">
                     {formatDateTime(profile.created_at)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium uppercase text-gray-500">
+                    Last updated
+                  </p>
+                  <p className="text-sm text-gray-900">
+                    {formatDateTime(profile.updated_at)}
                   </p>
                 </div>
                 <div>
@@ -334,24 +518,34 @@ export default function UserDetailPage() {
               </div>
             </section>
 
-            <section className="admin-panel">
-              <SendPushForm userId={profile.id} role={profile.role} />
-            </section>
-
             <section>
-              <h2 className="admin-section-title mb-4 flex items-center gap-2">
-                <Heart className="h-5 w-5 text-emerald-600" />
-                Pregnancies
-              </h2>
-              {detail.pregnancies.length === 0 ? (
-                <p className="text-sm text-gray-500">No pregnancy records.</p>
+              <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <h2 className="admin-section-title flex items-center gap-2">
+                    <Heart className="h-5 w-5 text-emerald-600" />
+                    Pregnancy
+                  </h2>
+                  {pastPregnancyCount > 0 ? (
+                    <p className="mt-1 text-sm text-gray-500">
+                      {activePregnancy
+                        ? `1 active · ${pastPregnancyCount} past`
+                        : `${pastPregnancyCount} past record${pastPregnancyCount === 1 ? "" : "s"}`}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+              {sortedPregnancies.length === 0 ? (
+                <div className="admin-panel text-sm text-gray-500">
+                  No pregnancy recorded for this parent yet.
+                </div>
               ) : (
-                <div className="space-y-6">
-                  {detail.pregnancies.map((pregnancy) => (
+                <div className="space-y-4">
+                  {sortedPregnancies.map((pregnancy) => (
                     <PregnancyCard
                       key={pregnancy.id}
                       pregnancy={pregnancy}
                       logs={detail.logsByPregnancy[pregnancy.id] ?? []}
+                      defaultExpanded={pregnancy.status === "active"}
                     />
                   ))}
                 </div>
@@ -408,13 +602,6 @@ export default function UserDetailPage() {
                 </div>
               )}
             </section>
-
-            {activePregnancy && detail.logsByPregnancy[activePregnancy.id]?.length === 0 ? (
-              <p className="text-sm text-amber-700">
-                Active pregnancy has no weekly health logs yet. The mother can save
-                vitals in the mobile app Health tracker.
-              </p>
-            ) : null}
           </>
         ) : null}
       </div>

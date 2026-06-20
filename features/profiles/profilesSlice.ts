@@ -31,23 +31,15 @@ async function readApiError(response: Response): Promise<string> {
 export const fetchProfiles = createAsyncThunk(
   "profiles/fetchAll",
   async (_, { rejectWithValue }) => {
-    const [{ data: profiles, error: profilesError }, { data: admins, error: adminsError }] =
-      await Promise.all([
-        supabase
-          .from("profiles")
-          .select("*")
-          .order("created_at", { ascending: false }),
-        supabase.from("admin_users").select("id"),
-      ]);
+    const { data: profiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("role", "mother")
+      .order("created_at", { ascending: false });
 
     if (profilesError) return rejectWithValue(profilesError.message);
-    if (adminsError) return rejectWithValue(adminsError.message);
 
-    const adminIds = new Set((admins ?? []).map((row) => row.id));
-
-    return ((profiles ?? []) as Profile[]).filter(
-      (profile) => !adminIds.has(profile.id),
-    );
+    return (profiles ?? []) as Profile[];
   },
 );
 

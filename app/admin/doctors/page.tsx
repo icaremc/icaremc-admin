@@ -24,6 +24,7 @@ import {
   summarizeAvailabilitySlots,
 } from "@/lib/availability";
 import { doctorCategoryLabel, doctorDisplayName } from "@/lib/doctors/display";
+import DoctorProfileAvatar from "@/components/doctors/DoctorProfileAvatar";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -136,9 +137,21 @@ export default function DoctorsPage() {
                     className="cursor-pointer hover:bg-emerald-50/60"
                     onClick={() => router.push(`/admin/doctors/${doctor.id}`)}
                   >
-                    <TableCell className="font-medium">
-                      {doctorDisplayName(doctor.first_name, doctor.last_name)}
-                      <div className="text-xs text-gray-500">{doctor.phone ?? "—"}</div>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <DoctorProfileAvatar
+                          firstName={doctor.first_name}
+                          lastName={doctor.last_name}
+                          photoUrl={doctor.profile_photo_url}
+                          size="sm"
+                        />
+                        <div>
+                          <div className="font-medium">
+                            {doctorDisplayName(doctor.first_name, doctor.last_name)}
+                          </div>
+                          <div className="text-xs text-gray-500">{doctor.phone ?? "—"}</div>
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell>{doctorCategoryLabel(doctor)}</TableCell>
                     <TableCell>{doctor.hospital}</TableCell>

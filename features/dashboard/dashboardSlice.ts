@@ -37,6 +37,16 @@ async function countTable(table: string): Promise<number> {
   return count ?? 0;
 }
 
+async function countMotherProfiles(): Promise<number> {
+  const { count, error } = await supabase
+    .from("profiles")
+    .select("*", { count: "exact", head: true })
+    .eq("role", "mother");
+
+  if (error) throw error;
+  return count ?? 0;
+}
+
 /** Returns 0 when table is missing (mobile-only schema). */
 async function countTableOptional(table: string): Promise<number> {
   try {
@@ -116,7 +126,7 @@ export const fetchDashboardStats = createAsyncThunk(
         bookingStats,
         doctors,
       ] = await Promise.all([
-        countTable("profiles"),
+        countMotherProfiles(),
         countMilestones(),
         countTableOptional("daily_tips"),
         countTableOptional("pregnancy_weeks"),
