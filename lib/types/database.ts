@@ -90,6 +90,59 @@ export type PregnancyWeekSection = {
   is_urgent?: boolean;
 };
 
+export type ChildGrowthGrowthData = {
+  notes?: string;
+  boys?: {
+    weight_range?: string;
+    length_range?: string;
+    head_circumference_range?: string;
+    weight_average?: string;
+    length_average?: string;
+    head_average?: string;
+  };
+  girls?: {
+    weight_range?: string;
+    length_range?: string;
+    head_circumference_range?: string;
+    weight_average?: string;
+    length_average?: string;
+    head_average?: string;
+  };
+};
+
+export type ChildGrowthMilestoneCategory = {
+  title: string;
+  items?: string[];
+};
+
+export type ChildGrowthPeriod = {
+  id: string;
+  age_months: number;
+  age_label: string;
+  age_group: string;
+  image_note: string | null;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+  child_growth_period_translations?: ChildGrowthPeriodTranslation[];
+};
+
+export type ChildGrowthPeriodTranslation = {
+  id: string;
+  period_id: string;
+  language_code: Locale;
+  title: string;
+  subtitle: string | null;
+  growth: ChildGrowthGrowthData;
+  vaccines: PregnancyWeekSection[];
+  milestones: ChildGrowthMilestoneCategory[];
+  red_flags: PregnancyWeekSection[];
+  nutrition: PregnancyWeekSection[];
+  visit_reminders: PregnancyWeekSection[];
+  created_at: string;
+  updated_at: string;
+};
+
 export type PregnancyLog = {
   id: string;
   pregnancy_id: string;

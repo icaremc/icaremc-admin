@@ -19,6 +19,10 @@ export function doctorHasCredentialImage(url: string | null | undefined): boolea
   return Boolean(url?.trim());
 }
 
+export function specialityHasImage(url: string | null | undefined): boolean {
+  return Boolean(url?.trim());
+}
+
 export function doctorHasServiceImage(url: string | null | undefined): boolean {
   return Boolean(url?.trim());
 }

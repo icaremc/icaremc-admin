@@ -190,7 +190,7 @@ function DoctorPersonalDetails({ doctor }: { doctor: DoctorProfile }) {
             icon={FileText}
           />
           <DetailField
-            label="Category"
+            label="Speciality"
             value={doctor.doctor_categories?.name ?? doctor.specialty ?? "—"}
           />
           <DetailField label="Joined" value={formatDate(doctor.created_at)} icon={Calendar} />

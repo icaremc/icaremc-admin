@@ -29,20 +29,21 @@ export const CONTENT_SECTIONS = [
     addLabel: "Add week",
   },
   {
+    key: "child_growth",
+    label: "Child milestones",
+    description:
+      "Growth, vaccines, milestones, red flags, nutrition, and visit reminders (0–18 years)",
+    href: "/admin/child-growth",
+    addHref: "/admin/child-growth/new",
+    addLabel: "Add period",
+  },
+  {
     key: "daily_tips",
     label: "Daily tips",
     description: "One tip per day within each pregnancy week (days 1–7)",
     href: "/admin/content/daily_tip",
     addHref: "/admin/content/daily_tip/new",
     addLabel: "Add tip",
-  },
-  {
-    key: "milestones",
-    label: "Child milestones",
-    description: "Growth standards and developmental checkpoints by age",
-    href: "/admin/content/milestone",
-    addHref: "/admin/content/milestone/new",
-    addLabel: "Add milestone",
   },
 ] as const;
 

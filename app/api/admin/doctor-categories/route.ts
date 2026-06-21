@@ -1,17 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireAdminSession } from "@/lib/adminAuth";
 import { slugifyCategoryName } from "@/lib/doctors/display";
+import { uploadSpecialityImage } from "@/lib/specialities/storage";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
 import type { DoctorCategory } from "@/lib/types/doctors";
 
-function parseCreateBody(body: unknown): { name: string } | string {
-  if (!body || typeof body !== "object") return "Invalid request body";
-
-  const data = body as Record<string, unknown>;
-  const name = typeof data.name === "string" ? data.name.trim() : "";
-  if (!name) return "Name is required";
-
-  return { name };
+function readTextField(formData: FormData, key: string): string {
+  const value = formData.get(key);
+  return typeof value === "string" ? value.trim() : "";
 }
 
 async function nextSortOrder(
@@ -61,33 +57,35 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
-  let body: unknown;
+  let formData: FormData;
   try {
-    body = await request.json();
+    formData = await request.formData();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid form data" }, { status: 400 });
   }
 
-  const parsed = parseCreateBody(body);
-  if (typeof parsed === "string") {
-    return NextResponse.json({ error: parsed }, { status: 400 });
+  const name = readTextField(formData, "name");
+  if (!name) {
+    return NextResponse.json({ error: "Name is required" }, { status: 400 });
   }
 
-  const slug = slugifyCategoryName(parsed.name);
+  const slug = slugifyCategoryName(name);
   if (!slug) {
     return NextResponse.json(
-      { error: "Category name must contain letters or numbers" },
+      { error: "Speciality name must contain letters or numbers" },
       { status: 400 },
     );
   }
 
+  const image = formData.get("image");
+
   try {
     const client = createServiceSupabaseClient();
     const sortOrder = await nextSortOrder(client);
-    const { data, error } = await client
+    const { data: category, error } = await client
       .from("doctor_categories")
       .insert({
-        name: parsed.name,
+        name,
         slug,
         sort_order: sortOrder,
         is_active: true,
@@ -98,14 +96,30 @@ export async function POST(request: Request) {
     if (error) {
       if (error.code === "23505") {
         return NextResponse.json(
-          { error: "A category with this name already exists" },
+          { error: "A speciality with this name already exists" },
           { status: 400 },
         );
       }
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ category: data as DoctorCategory }, { status: 201 });
+    if (image instanceof File && image.size > 0) {
+      const imageUrl = await uploadSpecialityImage(client, category.id, image);
+      const { data: updated, error: updateError } = await client
+        .from("doctor_categories")
+        .update({ image_url: imageUrl, updated_at: new Date().toISOString() })
+        .eq("id", category.id)
+        .select("*")
+        .single();
+
+      if (updateError) {
+        return NextResponse.json({ error: updateError.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ category: updated as DoctorCategory }, { status: 201 });
+    }
+
+    return NextResponse.json({ category: category as DoctorCategory }, { status: 201 });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Server error" },

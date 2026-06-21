@@ -104,7 +104,7 @@ export default function DoctorsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Doctor</TableHead>
-                <TableHead>Category</TableHead>
+                <TableHead>Speciality</TableHead>
                 <TableHead>Hospital</TableHead>
                 <TableHead>Experience</TableHead>
                 <TableHead>Availability</TableHead>

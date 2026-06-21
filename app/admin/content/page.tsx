@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
-  Baby,
   BookOpen,
   Heart,
   Lightbulb,
   Plus,
+  TrendingUp,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import PageHero from "@/components/PageHero";
@@ -27,13 +27,13 @@ type SectionStats = {
 type ContentOverviewStats = {
   pregnancyWeeks: SectionStats;
   dailyTips: SectionStats;
-  milestones: SectionStats;
+  childGrowth: SectionStats;
 };
 
 const emptyStats: ContentOverviewStats = {
   pregnancyWeeks: { total: 0, active: 0 },
   dailyTips: { total: 0, active: 0 },
-  milestones: { total: 0, active: 0 },
+  childGrowth: { total: 0, active: 0 },
 };
 
 const sectionMeta: Record<
@@ -41,8 +41,8 @@ const sectionMeta: Record<
   { icon: LucideIcon; accent: "emerald" | "teal" | "violet" }
 > = {
   pregnancy_weeks: { icon: Heart, accent: "emerald" },
+  child_growth: { icon: TrendingUp, accent: "emerald" },
   daily_tips: { icon: Lightbulb, accent: "teal" },
-  milestones: { icon: Baby, accent: "violet" },
 };
 
 async function countRows(
@@ -62,21 +62,18 @@ async function fetchContentStats(): Promise<ContentOverviewStats> {
   const [
     pregnancyWeeksTotal,
     pregnancyWeeksPublished,
+    childGrowthTotal,
+    childGrowthPublished,
     dailyTipsTotal,
     dailyTipsActive,
-    milestonesTotal,
-    milestonesPublished,
     dailyTipsRows,
   ] = await Promise.all([
     countRows("pregnancy_weeks"),
     countRows("pregnancy_weeks", [{ column: "is_published", value: true }]),
+    countRows("child_growth_periods"),
+    countRows("child_growth_periods", [{ column: "is_published", value: true }]),
     countRows("daily_tips"),
     countRows("daily_tips", [{ column: "is_active", value: true }]),
-    countRows("content_translations", [{ column: "namespace", value: "milestone" }]),
-    countRows("content_translations", [
-      { column: "namespace", value: "milestone" },
-      { column: "is_published", value: true },
-    ]),
     supabase.from("daily_tips").select("week_number").eq("is_active", true),
   ]);
 
@@ -90,15 +87,15 @@ async function fetchContentStats(): Promise<ContentOverviewStats> {
       active: pregnancyWeeksPublished,
       detail: `${pregnancyWeeksPublished} published of 42 weeks`,
     },
+    childGrowth: {
+      total: childGrowthTotal,
+      active: childGrowthPublished,
+      detail: `${childGrowthPublished} published checkpoints`,
+    },
     dailyTips: {
       total: dailyTipsTotal,
       active: dailyTipsActive,
       detail: `${weeksWithTips} week${weeksWithTips === 1 ? "" : "s"} with tips`,
-    },
-    milestones: {
-      total: milestonesTotal,
-      active: milestonesPublished,
-      detail: `${milestonesPublished} published`,
     },
   };
 }
@@ -110,10 +107,10 @@ function statsForSection(
   switch (key) {
     case "pregnancy_weeks":
       return stats.pregnancyWeeks;
+    case "child_growth":
+      return stats.childGrowth;
     case "daily_tips":
       return stats.dailyTips;
-    case "milestones":
-      return stats.milestones;
   }
 }
 
@@ -147,7 +144,10 @@ export default function ContentIndexPage() {
   }, []);
 
   const totalItems = useMemo(
-    () => stats.pregnancyWeeks.total + stats.dailyTips.total + stats.milestones.total,
+    () =>
+      stats.pregnancyWeeks.total +
+      stats.childGrowth.total +
+      stats.dailyTips.total,
     [stats],
   );
 

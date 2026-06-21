@@ -199,7 +199,7 @@ export default function ChildrenPage() {
 
         <p className="mt-4 text-xs text-gray-500">
           Milestone checklist content is managed under{" "}
-          <Link href="/admin/content/milestone" className="text-emerald-700 hover:underline">
+          <Link href="/admin/child-growth" className="text-emerald-700 hover:underline">
             Content → Child milestones
           </Link>
           . Per-child progress appears on each child&apos;s detail page.

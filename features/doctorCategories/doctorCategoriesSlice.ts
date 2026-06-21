@@ -40,11 +40,10 @@ export const fetchDoctorCategories = createAsyncThunk(
 
 export const createDoctorCategory = createAsyncThunk(
   "doctorCategories/create",
-  async (payload: { name: string }, { rejectWithValue }) => {
+  async (formData: FormData, { rejectWithValue }) => {
     const response = await fetch("/api/admin/doctor-categories", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: formData,
     });
     if (!response.ok) {
       return rejectWithValue(await readApiError(response));
@@ -59,17 +58,20 @@ export const updateDoctorCategory = createAsyncThunk(
   async (
     payload: {
       id: string;
-      name?: string;
-      sort_order?: number;
-      is_active?: boolean;
+      formData?: FormData;
+      json?: {
+        name?: string;
+        sort_order?: number;
+        is_active?: boolean;
+      };
     },
     { rejectWithValue },
   ) => {
-    const { id, ...updates } = payload;
+    const { id, formData, json } = payload;
     const response = await fetch(`/api/admin/doctor-categories/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updates),
+      headers: formData ? undefined : { "Content-Type": "application/json" },
+      body: formData ?? JSON.stringify(json ?? {}),
     });
     if (!response.ok) {
       return rejectWithValue(await readApiError(response));

@@ -22,6 +22,7 @@ import {
   Stethoscope,
   CalendarCheck,
   Tags,
+  TrendingUp,
   Users,
   Wallet,
   type LucideIcon,
@@ -56,7 +57,8 @@ const doctorsItems: NavItem[] = [
 const contentItems: NavItem[] = [
   { href: "/admin/content", label: "Overview", icon: BookOpen },
   { href: "/admin/pregnancy-weeks", label: "Pregnancy weeks", icon: Heart, matchPrefix: true },
-  ...CONTENT_NAMESPACES.map((item) => ({
+  { href: "/admin/child-growth", label: "Child milestones", icon: TrendingUp, matchPrefix: true },
+  ...CONTENT_NAMESPACES.filter((item) => item.value !== "milestone").map((item) => ({
     href: `/admin/content/${item.value}`,
     label: item.label,
     icon: FileText,

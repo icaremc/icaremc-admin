@@ -9,6 +9,7 @@ export function routePermission(pathname: string): AdminPermission {
   if (
     pathname.startsWith("/admin/content") ||
     pathname.startsWith("/admin/pregnancy-weeks") ||
+    pathname.startsWith("/admin/child-growth") ||
     pathname.startsWith("/admin/pregnancy/")
   ) {
     return "manage_content";
