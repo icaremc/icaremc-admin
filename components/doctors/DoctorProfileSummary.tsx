@@ -35,15 +35,6 @@ export default function DoctorProfileSummary({ doctor }: DoctorProfileSummaryPro
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h2 className="text-2xl font-semibold text-gray-900">{name}</h2>
-              <span
-                className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                  doctor.is_verified
-                    ? "bg-emerald-100 text-emerald-800"
-                    : "bg-amber-100 text-amber-800"
-                }`}
-              >
-                {doctor.is_verified ? "Verified" : "Pending approval"}
-              </span>
             </div>
             <p className="mt-1 flex items-center gap-2 text-sm font-medium text-emerald-700">
               <Stethoscope className="h-4 w-4" />

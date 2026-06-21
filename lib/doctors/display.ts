@@ -15,6 +15,14 @@ export function doctorHasProfilePhoto(url: string | null | undefined): boolean {
   return Boolean(url?.trim());
 }
 
+export function doctorHasCredentialImage(url: string | null | undefined): boolean {
+  return Boolean(url?.trim());
+}
+
+export function doctorHasServiceImage(url: string | null | undefined): boolean {
+  return Boolean(url?.trim());
+}
+
 export function doctorCategoryLabel(doctor: DoctorProfile): string {
   return doctor.doctor_categories?.name ?? doctor.specialty ?? "—";
 }

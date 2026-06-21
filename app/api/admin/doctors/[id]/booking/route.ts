@@ -5,8 +5,6 @@ import { createServiceSupabaseClient } from "@/lib/supabase/service";
 type RouteContext = { params: Promise<{ id: string }> };
 
 type BookingBody = {
-  prepayment_mode?: "none" | "percent" | "full";
-  prepayment_percent?: number;
   currency?: string;
   services?: Array<{
     id?: string;
@@ -34,23 +32,13 @@ export async function PATCH(request: Request, context: RouteContext) {
   try {
     const client = createServiceSupabaseClient();
 
-    if (
-      body.prepayment_mode ||
-      body.prepayment_percent !== undefined ||
-      body.currency
-    ) {
-      const update: Record<string, unknown> = {
-        updated_at: new Date().toISOString(),
-      };
-      if (body.prepayment_mode) update.prepayment_mode = body.prepayment_mode;
-      if (body.prepayment_percent !== undefined) {
-        update.prepayment_percent = body.prepayment_percent;
-      }
-      if (body.currency) update.currency = body.currency;
-
+    if (body.currency) {
       const { error } = await client
         .from("doctor_profiles")
-        .update(update)
+        .update({
+          currency: body.currency,
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", id);
       if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
@@ -58,6 +46,33 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
 
     if (body.services) {
+      const { data: existingServices, error: existingError } = await client
+        .from("doctor_services")
+        .select("id")
+        .eq("doctor_id", id);
+
+      if (existingError) {
+        return NextResponse.json({ error: existingError.message }, { status: 500 });
+      }
+
+      const keptIds = new Set(
+        body.services.filter((service) => service.id).map((service) => service.id),
+      );
+      const removedIds = (existingServices ?? [])
+        .map((row) => row.id as string)
+        .filter((serviceId) => !keptIds.has(serviceId));
+
+      if (removedIds.length > 0) {
+        const { error: deleteError } = await client
+          .from("doctor_services")
+          .delete()
+          .in("id", removedIds)
+          .eq("doctor_id", id);
+        if (deleteError) {
+          return NextResponse.json({ error: deleteError.message }, { status: 500 });
+        }
+      }
+
       for (const [index, service] of body.services.entries()) {
         const payload = {
           doctor_id: id,

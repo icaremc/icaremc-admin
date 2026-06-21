@@ -27,6 +27,7 @@ export type DoctorService = {
   description: string | null;
   price: number;
   currency: string;
+  image_url: string | null;
   is_active: boolean;
   sort_order: number;
   created_at: string;
@@ -42,6 +43,8 @@ export type DoctorProfile = {
   category_id: string | null;
   hospital: string;
   license_number: string | null;
+  license_image_url: string | null;
+  degree_image_url: string | null;
   experience_years: number;
   availability: string;
   bio: string | null;
