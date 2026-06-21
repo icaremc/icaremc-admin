@@ -1,6 +1,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { supabase } from "@/lib/supabaseClient";
 import { fetchAdminAccess } from "@/lib/adminAccess";
+import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
+import { logAdminPortalEvent } from "@/lib/client/logAdminActivity";
 import type { AdminRole } from "@/lib/types/database";
 
 type AuthUser = {
@@ -80,6 +82,11 @@ export const login = createAsyncThunk<
     await supabase.auth.signOut();
     return rejectWithValue(UNAUTHORIZED_MESSAGE);
   }
+
+  void logAdminPortalEvent({
+    event_type: ADMIN_ACTIVITY_EVENTS.LOGIN,
+    event_label: "Admin logged in",
+  });
 
   return {
     user: authUserFromSession(data.user, access, trimmed),

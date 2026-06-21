@@ -1,26 +1,35 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import Link from "next/link";
+import { Suspense, useEffect, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
-  ArrowRight,
   Baby,
-  BookOpen,
+  BarChart3,
   CalendarCheck,
-  FileText,
-  Heart,
+  DollarSign,
   LayoutDashboard,
-  Lightbulb,
-  Plus,
   Stethoscope,
+  TrendingDown,
+  TrendingUp,
   Users,
+  Wallet,
 } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import StatCard from "@/components/StatCard";
+import {
+  DashboardAreaChart,
+  DashboardBarChart,
+} from "@/components/dashboard/DashboardCharts";
 import { Button } from "@/components/ui/button";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
+import {
+  fetchDashboardAnalytics,
+  setDashboardRange,
+} from "@/features/dashboard/dashboardAnalyticsSlice";
 import { fetchDashboardStats } from "@/features/dashboard/dashboardSlice";
-import { CONTENT_NAMESPACES } from "@/lib/constants";
+import { formatMoney } from "@/lib/appointments/display";
+import type { DashboardRange } from "@/lib/dashboard/analytics";
+import { parseDashboardRange } from "@/lib/dashboard/analytics";
 
 function greetingForHour(hour: number): string {
   if (hour < 12) return "Good morning";
@@ -28,251 +37,233 @@ function greetingForHour(hour: number): string {
   return "Good evening";
 }
 
-const quickActions = [
-  {
-    href: "/admin/admins",
-    label: "Create admin",
-    description: "Add portal accounts with admin roles",
-    icon: Plus,
-  },
-  {
-    href: "/admin/content/daily_tip",
-    label: "Daily tips",
-    description: "Manage week-based health tips",
-    icon: Lightbulb,
-  },
-  {
-    href: "/admin/pregnancy-weeks",
-    label: "Pregnancy weeks",
-    description: "Edit week-by-week guidance",
-    icon: Heart,
-  },
-  {
-    href: "/admin/appointments",
-    label: "Appointments",
-    description: "Review bookings and update status",
-    icon: CalendarCheck,
-  },
-  {
-    href: "/admin/doctors",
-    label: "Doctors",
-    description: "Approve doctor profiles and categories",
-    icon: Stethoscope,
-  },
+const RANGE_OPTIONS: Array<{ id: DashboardRange; label: string }> = [
+  { id: "today", label: "Today" },
+  { id: "7d", label: "7D" },
+  { id: "30d", label: "30D" },
+  { id: "all", label: "All" },
 ];
 
-export default function DashboardPage() {
+function DashboardContent() {
   const dispatch = useAppDispatch();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const user = useAppSelector((state) => state.auth.user);
   const { stats, loading, error } = useAppSelector((state) => state.dashboard);
+  const {
+    analytics,
+    loading: analyticsLoading,
+    error: analyticsError,
+    range,
+  } = useAppSelector((state) => state.dashboardAnalytics);
+
+  const urlRange = useMemo(
+    () => parseDashboardRange(searchParams.get("range")),
+    [searchParams],
+  );
 
   useEffect(() => {
     dispatch(fetchDashboardStats());
   }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(setDashboardRange(urlRange));
+    dispatch(fetchDashboardAnalytics(urlRange));
+  }, [dispatch, urlRange]);
 
   const greeting = useMemo(() => {
     const name = user?.name?.split(" ")[0] || "Admin";
     return `${greetingForHour(new Date().getHours())}, ${name}`;
   }, [user?.name]);
 
-  const totalPlatformRecords = stats.profiles + stats.children;
+  const commissionTrendUp = (analytics?.commissionChange ?? 0) >= 0;
+
+  function handleRangeChange(nextRange: DashboardRange) {
+    const next = new URLSearchParams(searchParams.toString());
+    next.set("range", nextRange);
+    router.replace(`/admin/dashboard?${next.toString()}`);
+    dispatch(setDashboardRange(nextRange));
+    dispatch(fetchDashboardAnalytics(nextRange));
+  }
+
+  function refreshAll() {
+    dispatch(fetchDashboardStats());
+    dispatch(fetchDashboardAnalytics(range));
+  }
 
   return (
     <>
-      <PageHero
-        title={greeting}
-        description="Overview of ICare MC content, users, and health tracking"
-        icon={LayoutDashboard}
-        stat={{
-          label: "Platform records",
-          value: loading ? "…" : totalPlatformRecords.toLocaleString(),
-        }}
-      />
+      <PageHero title={greeting} icon={LayoutDashboard} />
 
       <div className="mx-auto max-w-[1200px] space-y-8 px-6 py-8 lg:px-8">
-        {error ? (
+        {error || analyticsError ? (
           <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
-            {error}
+            {error ?? analyticsError}
           </div>
         ) : null}
 
-        <section>
-          <div className="mb-4 flex items-end justify-between gap-4">
-            <div>
-              <h2 className="admin-section-title">Platform activity</h2>
-              <p className="admin-section-desc">
-                Users and health data from the mobile app
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={loading}
-              onClick={() => dispatch(fetchDashboardStats())}
-            >
-              Refresh
-            </Button>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-2">
+            {RANGE_OPTIONS.map((option) => (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => handleRangeChange(option.id)}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                  range === option.id
+                    ? "bg-emerald-600 text-white"
+                    : "border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <StatCard
-              label="Parents"
-              value={stats.profiles}
-              href="/admin/users"
-              icon={Users}
-              loading={loading}
-              description={`${stats.adminUsers} admin${stats.adminUsers === 1 ? "" : "s"}`}
-              accent="emerald"
-            />
-            <StatCard
-              label="Children"
-              value={stats.children}
-              href="/admin/children"
-              icon={Baby}
-              loading={loading}
-              description="Birth records from mobile app"
-              accent="amber"
-            />
-          </div>
-        </section>
-
-        <section>
-          <div className="mb-4">
-            <h2 className="admin-section-title">Doctors & bookings</h2>
-            <p className="admin-section-desc">
-              ICare Doctors profiles and patient appointments
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            <StatCard
-              label="Appointments"
-              value={stats.appointments}
-              href="/admin/appointments"
-              icon={CalendarCheck}
-              loading={loading}
-              description={`${stats.pendingAppointments} pending review`}
-              accent="emerald"
-            />
-            <StatCard
-              label="Pending bookings"
-              value={stats.pendingAppointments}
-              href="/admin/appointments"
-              icon={CalendarCheck}
-              loading={loading}
-              description="Awaiting doctor confirmation"
-              accent="amber"
-            />
-            <StatCard
-              label="Doctors"
-              value={stats.doctors}
-              href="/admin/doctors"
-              icon={Stethoscope}
-              loading={loading}
-              description="Manage verification and categories"
-              accent="teal"
-            />
-          </div>
-        </section>
-
-        <section>
-          <div className="mb-4">
-            <h2 className="admin-section-title">Content</h2>
-            <p className="admin-section-desc">
-              CMS items synced to the mobile app
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            <StatCard
-              label="Content items"
-              value={stats.contentItems}
-              href="/admin/content"
-              icon={BookOpen}
-              loading={loading}
-              description="Tips, weeks, and milestones"
-              accent="violet"
-            />
-            <StatCard
-              label="Pregnancy weeks"
-              value={stats.pregnancyWeeks}
-              href="/admin/pregnancy-weeks"
-              icon={Heart}
-              loading={loading}
-              description="Published week guides"
-              accent="emerald"
-            />
-            <StatCard
-              label="Children"
-              value={stats.children}
-              href="/admin/children"
-              icon={Baby}
-              loading={loading}
-              description="Linked to pregnancies"
-              accent="teal"
-            />
-          </div>
-        </section>
-
-        <div className="grid gap-8 lg:grid-cols-2">
-          <section className="admin-panel">
-            <h2 className="admin-section-title">Quick actions</h2>
-            <p className="admin-section-desc mt-1">
-              Common admin tasks
-            </p>
-            <ul className="mt-4 space-y-2">
-              {quickActions.map((action) => (
-                <li key={action.href}>
-                  <Link
-                    href={action.href}
-                    className="group flex items-center gap-3 rounded-[var(--radius)] border border-gray-200 bg-gray-50 px-4 py-3 transition-colors hover:border-emerald-200 hover:bg-emerald-50/50"
-                  >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-[var(--radius)] bg-white text-emerald-600 shadow-sm ring-1 ring-gray-200">
-                      <action.icon className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-gray-900">{action.label}</p>
-                      <p className="truncate text-xs text-gray-500">
-                        {action.description}
-                      </p>
-                    </div>
-                    <ArrowRight className="h-4 w-4 shrink-0 text-gray-400 transition-transform group-hover:translate-x-0.5 group-hover:text-emerald-600" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          <section className="admin-panel">
-            <h2 className="admin-section-title">
-              Content libraries
-            </h2>
-            <p className="admin-section-desc mt-1">
-              Localized content in English, Amharic, and Oromo
-            </p>
-            <ul className="mt-4 space-y-2">
-              {CONTENT_NAMESPACES.map((item) => (
-                <li key={item.value}>
-                  <Link
-                    href={`/admin/content/${item.value}`}
-                    className="group flex items-start gap-3 rounded-[var(--radius)] border border-gray-200 px-4 py-3 transition-colors hover:border-emerald-200 hover:bg-emerald-50/50"
-                  >
-                    <FileText className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-gray-900">{item.label}</p>
-                      <p className="text-xs text-gray-500">{item.description}</p>
-                    </div>
-                    <ArrowRight className="h-4 w-4 shrink-0 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={loading || analyticsLoading}
+            onClick={refreshAll}
+          >
+            Refresh
+          </Button>
         </div>
 
-        {user?.email ? (
-          <p className="text-center text-xs text-gray-400">
-            Signed in as {user.email}
-          </p>
-        ) : null}
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            label="Transactions"
+            value={
+              analyticsLoading
+                ? "…"
+                : (analytics?.totalTransactions ?? 0).toLocaleString()
+            }
+            href="/admin/finance/wallet-transactions"
+            icon={Wallet}
+            loading={analyticsLoading}
+            accent="teal"
+          />
+          <StatCard
+            label="Payment volume"
+            value={
+              analyticsLoading
+                ? "…"
+                : formatMoney(analytics?.totalPaymentVolume ?? 0, "ETB")
+            }
+            href="/admin/finance/payment"
+            icon={DollarSign}
+            loading={analyticsLoading}
+            accent="emerald"
+          />
+          <StatCard
+            label="Commission"
+            value={
+              analyticsLoading
+                ? "…"
+                : formatMoney(analytics?.totalCommission ?? 0, "ETB")
+            }
+            href="/admin/finance/settings"
+            icon={TrendingUp}
+            loading={analyticsLoading}
+            accent="violet"
+          />
+          <div className="rounded-[var(--radius)] border border-gray-200 bg-white p-5 shadow-sm">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Commission growth</p>
+                <p className="mt-2 font-heading text-3xl font-bold tabular-nums text-violet-700">
+                  {analyticsLoading ? (
+                    <span className="inline-block h-8 w-16 animate-pulse rounded-md bg-gray-200" />
+                  ) : (
+                    `${(analytics?.commissionChange ?? 0).toFixed(1)}%`
+                  )}
+                </p>
+              </div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius)] bg-violet-50 text-violet-600 ring-1 ring-inset ring-violet-100">
+                {commissionTrendUp ? (
+                  <TrendingUp className="h-5 w-5" />
+                ) : (
+                  <TrendingDown className="h-5 w-5" />
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-2">
+          <div className="admin-panel">
+            <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
+              <BarChart3 className="h-5 w-5 text-emerald-600" />
+              Payments
+            </h3>
+            <DashboardBarChart
+              buckets={analytics?.paymentChart ?? []}
+              emptyLabel="No payments in this period"
+              valueLabel="Amount"
+              isCurrency
+            />
+          </div>
+          <div className="admin-panel">
+            <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
+              <TrendingUp className="h-5 w-5 text-violet-600" />
+              Commission
+            </h3>
+            <DashboardAreaChart
+              buckets={analytics?.commissionChart ?? []}
+              emptyLabel="No commission in this period"
+              valueLabel="Commission"
+            />
+          </div>
+        </section>
+
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            label="Parents"
+            value={stats.profiles}
+            href="/admin/users"
+            icon={Users}
+            loading={loading}
+            accent="emerald"
+          />
+          <StatCard
+            label="Children"
+            value={stats.children}
+            href="/admin/children"
+            icon={Baby}
+            loading={loading}
+            accent="amber"
+          />
+          <StatCard
+            label="Appointments"
+            value={stats.appointments}
+            href="/admin/appointments"
+            icon={CalendarCheck}
+            loading={loading}
+            accent="teal"
+          />
+          <StatCard
+            label="Doctors"
+            value={stats.doctors}
+            href="/admin/doctors"
+            icon={Stethoscope}
+            loading={loading}
+            accent="violet"
+          />
+        </section>
       </div>
     </>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[40vh] items-center justify-center text-sm text-gray-500">
+          Loading dashboard…
+        </div>
+      }
+    >
+      <DashboardContent />
+    </Suspense>
   );
 }

@@ -21,7 +21,11 @@ import {
   fetchAdmins,
   updateAdmin,
 } from "@/features/admins/adminsSlice";
-import { ADMIN_ROLES, adminRoleLabel } from "@/lib/adminRoles";
+import {
+  ADMIN_PERMISSIONS,
+  ADMIN_ROLES,
+  adminRoleLabel,
+} from "@/lib/adminRoles";
 import { formatDateTime } from "@/lib/format";
 import type { AdminRole } from "@/lib/types/database";
 
@@ -285,6 +289,38 @@ export default function AdminsPage() {
             </TableBody>
           </Table>
         </div>
+
+        <section className="mt-10">
+          <h2 className="font-heading text-lg font-semibold text-gray-900">
+            Role permissions
+          </h2>
+          <p className="mt-1 text-sm text-gray-600">
+            Each portal role grants access to specific sections. Navigation and
+            API routes enforce these permissions.
+          </p>
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            {ADMIN_ROLES.map((role) => (
+              <div
+                key={role.value}
+                className="rounded-[var(--radius)] border border-gray-200 bg-white p-4"
+              >
+                <h3 className="font-medium text-gray-900">{role.label}</h3>
+                <p className="mt-1 text-sm text-gray-600">{role.description}</p>
+                <ul className="mt-3 flex flex-wrap gap-1.5">
+                  {role.permissions.map((permission) => (
+                    <li
+                      key={permission}
+                      className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700"
+                    >
+                      {ADMIN_PERMISSIONS.find((p) => p.value === permission)
+                        ?.label ?? permission}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
     </>
   );

@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
+import { logAdminActivity } from "@/lib/activityLog";
 import { requireAdminSession, requireSuperAdminSession } from "@/lib/adminAuth";
 import { isAdminRole, type CreateAdminInput } from "@/lib/adminRoles";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
@@ -104,6 +106,20 @@ export async function POST(request: Request) {
     { onConflict: "id" },
   );
 
+  await logAdminActivity(
+    {
+      actorId: auth.user.id,
+      actorEmail: auth.user.email ?? null,
+      actorRole: auth.adminRole,
+      eventType: ADMIN_ACTIVITY_EVENTS.ADMIN_CREATED,
+      eventLabel: `Created admin ${parsed.email}`,
+      resourceType: "admin_user",
+      resourceId: created.user.id,
+      metadata: { admin_role: parsed.admin_role, email: parsed.email },
+    },
+    request,
+  );
+
   return NextResponse.json({ admin: adminUser as AdminUser }, { status: 201 });
 }
 
@@ -155,6 +171,20 @@ export async function PATCH(request: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
+
+  await logAdminActivity(
+    {
+      actorId: auth.user.id,
+      actorEmail: auth.user.email ?? null,
+      actorRole: auth.adminRole,
+      eventType: ADMIN_ACTIVITY_EVENTS.ADMIN_UPDATED,
+      eventLabel: `Updated admin ${(data as AdminUser).email}`,
+      resourceType: "admin_user",
+      resourceId: id,
+      metadata: updates,
+    },
+    request,
+  );
 
   return NextResponse.json({ admin: data as AdminUser });
 }

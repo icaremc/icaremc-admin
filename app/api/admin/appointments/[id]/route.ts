@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
+import { logAdminActivity } from "@/lib/activityLog";
 import { requireAdminSession } from "@/lib/adminAuth";
 import {
   appointmentStatusPushMessage,
@@ -207,6 +209,27 @@ export async function PATCH(request: Request, context: RouteContext) {
       });
       pushResults.doctor = doctorPush;
     }
+
+    await logAdminActivity(
+      {
+        actorId: auth.user.id,
+        actorEmail: auth.user.email ?? null,
+        actorName:
+          (auth.user.user_metadata?.full_name as string | undefined) ?? null,
+        actorRole: auth.adminRole,
+        eventType: ADMIN_ACTIVITY_EVENTS.APPOINTMENT_STATUS,
+        eventLabel: `Appointment ${previous.status} → ${status}`,
+        resourceType: "appointment",
+        resourceId: id,
+        metadata: {
+          previous_status: previous.status,
+          new_status: status,
+          patient_id: appointment.patient_id,
+          doctor_id: appointment.doctor_id,
+        },
+      },
+      request,
+    );
 
     return NextResponse.json({ appointment, push: pushResults });
   } catch (error) {

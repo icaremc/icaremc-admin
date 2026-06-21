@@ -5,25 +5,34 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   Baby,
+  Activity,
   BookOpen,
   Building2,
   ChevronDown,
   ChevronRight,
+  CreditCard,
+  DollarSign,
   FileText,
   Heart,
   LayoutDashboard,
   LogOut,
   Megaphone,
+  Settings2,
   Shield,
   Stethoscope,
   CalendarCheck,
   Tags,
   Users,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { CONTENT_NAMESPACES } from "@/lib/constants";
+import { canAccessRoute } from "@/lib/adminNav";
 import { cn } from "@/lib/utils";
+import { useAppSelector } from "@/app/store/hooks";
+import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
+import { logAdminPortalEvent } from "@/lib/client/logAdminActivity";
 
 type NavItem = {
   href: string;
@@ -55,7 +64,16 @@ const contentItems: NavItem[] = [
   })),
 ];
 
+const financeItems: NavItem[] = [
+  { href: "/admin/finance/payout-request", label: "Payout request", icon: DollarSign },
+  { href: "/admin/finance/payment", label: "Payment", icon: CreditCard },
+  { href: "/admin/finance/payment-settings", label: "Payment settings", icon: CreditCard },
+  { href: "/admin/finance/wallet-transactions", label: "Wallet transactions", icon: Wallet },
+  { href: "/admin/finance/settings", label: "Finance settings", icon: Settings2 },
+];
+
 const adminItems: NavItem[] = [
+  { href: "/admin/activity", label: "Activity log", icon: Activity },
   { href: "/admin/push", label: "Push notifications", icon: Megaphone },
   { href: "/admin/admins", label: "Portal admins", icon: Shield },
 ];
@@ -170,6 +188,24 @@ function FlatSection({ title, children }: { title: string; children: ReactNode }
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const adminRole = useAppSelector((state) => state.auth.user?.adminRole);
+
+  const showDashboard = canAccessRoute(adminRole, "/admin/dashboard");
+  const visibleMothers = mothersItems.filter((item) =>
+    canAccessRoute(adminRole, item.href),
+  );
+  const visibleDoctors = doctorsItems.filter((item) =>
+    canAccessRoute(adminRole, item.href),
+  );
+  const visibleContent = contentItems.filter((item) =>
+    canAccessRoute(adminRole, item.href),
+  );
+  const visibleFinance = financeItems.filter((item) =>
+    canAccessRoute(adminRole, item.href),
+  );
+  const visibleAdmin = adminItems.filter((item) =>
+    canAccessRoute(adminRole, item.href),
+  );
 
   return (
     <aside className="fixed left-0 top-0 z-40 flex h-screen w-[260px] flex-col border-r border-gray-200 bg-white">
@@ -186,48 +222,70 @@ export default function Sidebar() {
         <nav>
           <ul className="space-y-0.5">
             <li>
-              <Link
-                href="/admin/dashboard"
-                className={cn(
-                  "group flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-[15px] transition-colors",
-                  navClass(pathname === "/admin/dashboard"),
-                )}
-              >
-                <LayoutDashboard
-                  className={cn("h-4 w-4", iconClass(pathname === "/admin/dashboard"))}
-                />
-                <span>Dashboard</span>
-              </Link>
+              {showDashboard ? (
+                <Link
+                  href="/admin/dashboard"
+                  className={cn(
+                    "group flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-[15px] transition-colors",
+                    navClass(pathname === "/admin/dashboard"),
+                  )}
+                >
+                  <LayoutDashboard
+                    className={cn(
+                      "h-4 w-4",
+                      iconClass(pathname === "/admin/dashboard"),
+                    )}
+                  />
+                  <span>Dashboard</span>
+                </Link>
+              ) : null}
             </li>
 
-            <NavSection
-              title="Mothers"
-              items={mothersItems}
-              defaultOpen={sectionActive(pathname, mothersItems)}
-              compact
-            />
+            {visibleMothers.length > 0 ? (
+              <NavSection
+                title="Mothers"
+                items={visibleMothers}
+                defaultOpen={sectionActive(pathname, visibleMothers)}
+                compact
+              />
+            ) : null}
 
-            <NavSection
-              title="Doctors"
-              items={doctorsItems}
-              defaultOpen={sectionActive(pathname, doctorsItems)}
-              compact
-            />
+            {visibleDoctors.length > 0 ? (
+              <NavSection
+                title="Doctors"
+                items={visibleDoctors}
+                defaultOpen={sectionActive(pathname, visibleDoctors)}
+                compact
+              />
+            ) : null}
 
-            <NavSection
-              title="Content"
-              items={contentItems}
-              defaultOpen={sectionActive(pathname, contentItems)}
-              compact
-            />
+            {visibleContent.length > 0 ? (
+              <NavSection
+                title="Content"
+                items={visibleContent}
+                defaultOpen={sectionActive(pathname, visibleContent)}
+                compact
+              />
+            ) : null}
 
-            <FlatSection title="Administration">
-              {adminItems.map((item) => (
-                <li key={item.href}>
-                  <NavLink item={item} />
-                </li>
-              ))}
-            </FlatSection>
+            {visibleFinance.length > 0 ? (
+              <NavSection
+                title="Finance"
+                items={visibleFinance}
+                defaultOpen={sectionActive(pathname, visibleFinance)}
+                compact
+              />
+            ) : null}
+
+            {visibleAdmin.length > 0 ? (
+              <FlatSection title="Administration">
+                {visibleAdmin.map((item) => (
+                  <li key={item.href}>
+                    <NavLink item={item} />
+                  </li>
+                ))}
+              </FlatSection>
+            ) : null}
           </ul>
         </nav>
       </div>
@@ -236,6 +294,10 @@ export default function Sidebar() {
         <button
           type="button"
           onClick={async () => {
+            await logAdminPortalEvent({
+              event_type: ADMIN_ACTIVITY_EVENTS.LOGOUT,
+              event_label: "Admin logged out",
+            });
             await supabase.auth.signOut();
             location.href = "/";
           }}

@@ -4,6 +4,7 @@ export type PushDeliveryInput = {
   route?: string;
   type?: "chat" | "booking" | "account";
   tab?: string;
+  conversation_id?: string;
 };
 
 export function buildFcmData(input: PushDeliveryInput): Record<string, string> {
@@ -12,5 +13,8 @@ export function buildFcmData(input: PushDeliveryInput): Record<string, string> {
     route: input.route?.trim() || "/main",
   };
   if (input.tab?.trim()) data.tab = input.tab.trim();
+  if (input.conversation_id?.trim()) {
+    data.conversation_id = input.conversation_id.trim();
+  }
   return data;
 }

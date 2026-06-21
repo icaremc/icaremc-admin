@@ -1,10 +1,12 @@
 import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 type PageHeroProps = {
   title: string;
   description?: string;
   icon: LucideIcon;
   stat?: { label: string; value: string | number };
+  actions?: ReactNode;
 };
 
 export default function PageHero({
@@ -12,6 +14,7 @@ export default function PageHero({
   description,
   icon: Icon,
   stat,
+  actions,
 }: PageHeroProps) {
   return (
     <header className="border-b border-gray-200 bg-white">
@@ -31,14 +34,17 @@ export default function PageHero({
             </p>
           ) : null}
         </div>
-        {stat ? (
-          <div className="shrink-0 rounded-[var(--radius)] border border-gray-200 bg-gray-50 px-4 py-3 text-right">
-            <div className="text-sm text-gray-500">{stat.label}</div>
-            <div className="font-heading text-2xl font-bold tabular-nums tracking-normal text-gray-900">
-              {stat.value}
+        <div className="flex shrink-0 flex-col items-end gap-3">
+          {actions}
+          {stat ? (
+            <div className="rounded-[var(--radius)] border border-gray-200 bg-gray-50 px-4 py-3 text-right">
+              <div className="text-sm text-gray-500">{stat.label}</div>
+              <div className="font-heading text-2xl font-bold tabular-nums tracking-normal text-gray-900">
+                {stat.value}
+              </div>
             </div>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
       </div>
     </header>
   );

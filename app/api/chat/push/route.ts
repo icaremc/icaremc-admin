@@ -112,6 +112,7 @@ export async function POST(request: Request) {
           route: "/main",
           type: "chat",
           tab: "2",
+          conversation_id: message.conversation_id,
         },
       });
 
@@ -157,6 +158,7 @@ export async function POST(request: Request) {
         route: "/main",
         type: "chat",
         tab: "3",
+        conversation_id: message.conversation_id,
       },
     });
 
