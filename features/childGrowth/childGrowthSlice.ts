@@ -1,9 +1,11 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import {
   EMPTY_GROWTH,
+  EMPTY_GROWTH_METRIC,
   EMPTY_MILESTONE_CATEGORY,
   EMPTY_PREGNANCY_SECTION,
   type GrowthFields,
+  type GrowthMetricSexFields,
   type MilestoneCategoryFields,
   type PregnancySectionFields,
 } from "@/lib/content/formTypes";
@@ -14,6 +16,8 @@ import {
 import { supabase } from "@/lib/supabaseClient";
 import type {
   ChildGrowthGrowthData,
+  ChildGrowthMetrics,
+  ChildGrowthMetricSex,
   ChildGrowthMilestoneCategory,
   ChildGrowthPeriod,
   ChildGrowthPeriodTranslation,
@@ -38,12 +42,18 @@ export type ChildGrowthPeriodFormTranslation = {
   visit_reminders: PregnancySectionFields[];
 };
 
+export type ChildGrowthMetricsForm = {
+  boys: GrowthMetricSexFields;
+  girls: GrowthMetricSexFields;
+};
+
 export type ChildGrowthPeriodFormState = {
   age_months: number;
   age_label: string;
   age_group: ChildAgeGroup;
   image_note: string;
   is_published: boolean;
+  growth_metrics: ChildGrowthMetricsForm;
   translations: Record<Locale, ChildGrowthPeriodFormTranslation>;
 };
 
@@ -119,6 +129,68 @@ function parseGrowth(raw: unknown): ChildGrowthFormGrowth {
     boys: parseGrowthFields(map.boys),
     girls: parseGrowthFields(map.girls),
   };
+}
+
+const METRIC_KEYS: (keyof GrowthMetricSexFields)[] = [
+  "weight_kg",
+  "weight_min",
+  "weight_max",
+  "height_cm",
+  "height_min",
+  "height_max",
+  "hc_cm",
+  "hc_min",
+  "hc_max",
+];
+
+function parseMetricSex(raw: unknown): GrowthMetricSexFields {
+  if (!raw || typeof raw !== "object") return { ...EMPTY_GROWTH_METRIC };
+  const map = raw as Record<string, unknown>;
+  const result = { ...EMPTY_GROWTH_METRIC };
+  for (const key of METRIC_KEYS) {
+    const value = map[key];
+    if (typeof value === "number" && Number.isFinite(value)) {
+      result[key] = String(value);
+    } else if (typeof value === "string" && value.trim()) {
+      result[key] = value.trim();
+    }
+  }
+  return result;
+}
+
+function parseMetrics(raw: unknown): ChildGrowthMetricsForm {
+  if (!raw || typeof raw !== "object") {
+    return { boys: { ...EMPTY_GROWTH_METRIC }, girls: { ...EMPTY_GROWTH_METRIC } };
+  }
+  const map = raw as Record<string, unknown>;
+  return {
+    boys: parseMetricSex(map.boys),
+    girls: parseMetricSex(map.girls),
+  };
+}
+
+function serializeMetricSex(fields: GrowthMetricSexFields): ChildGrowthMetricSex | undefined {
+  const result: ChildGrowthMetricSex = {};
+  let hasValue = false;
+  for (const key of METRIC_KEYS) {
+    const raw = fields[key].trim();
+    if (!raw) continue;
+    const num = Number(raw);
+    if (Number.isFinite(num)) {
+      result[key] = num;
+      hasValue = true;
+    }
+  }
+  return hasValue ? result : undefined;
+}
+
+function serializeMetrics(metrics: ChildGrowthMetricsForm): ChildGrowthMetrics {
+  const boys = serializeMetricSex(metrics.boys);
+  const girls = serializeMetricSex(metrics.girls);
+  const result: ChildGrowthMetrics = {};
+  if (boys) result.boys = boys;
+  if (girls) result.girls = girls;
+  return result;
 }
 
 function parseMilestones(raw: unknown): MilestoneCategoryFields[] {
@@ -261,6 +333,7 @@ export function periodToForm(period: ChildGrowthPeriod): ChildGrowthPeriodFormSt
     age_group: (period.age_group as ChildAgeGroup) || ageGroupForMonths(period.age_months),
     image_note: period.image_note ?? "",
     is_published: period.is_published,
+    growth_metrics: parseMetrics(period.growth_metrics),
     translations,
   };
 }
@@ -285,6 +358,10 @@ export function createEmptyForm(
     age_group: ageGroupForMonths(ageMonths),
     image_note: "",
     is_published: true,
+    growth_metrics: {
+      boys: { ...EMPTY_GROWTH_METRIC },
+      girls: { ...EMPTY_GROWTH_METRIC },
+    },
     translations: {
       en: makeTranslation(),
       am: makeTranslation(),
@@ -379,6 +456,7 @@ export const saveChildGrowthPeriod = createAsyncThunk(
       age_label: form.age_label.trim(),
       age_group: form.age_group || ageGroupForMonths(form.age_months),
       image_note: form.image_note.trim() || null,
+      growth_metrics: serializeMetrics(form.growth_metrics),
       is_published: form.is_published,
     };
 

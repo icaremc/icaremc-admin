@@ -115,12 +115,30 @@ export type ChildGrowthMilestoneCategory = {
   items?: string[];
 };
 
+export type ChildGrowthMetricSex = {
+  weight_kg?: number;
+  weight_min?: number;
+  weight_max?: number;
+  height_cm?: number;
+  height_min?: number;
+  height_max?: number;
+  hc_cm?: number;
+  hc_min?: number;
+  hc_max?: number;
+};
+
+export type ChildGrowthMetrics = {
+  boys?: ChildGrowthMetricSex;
+  girls?: ChildGrowthMetricSex;
+};
+
 export type ChildGrowthPeriod = {
   id: string;
   age_months: number;
   age_label: string;
   age_group: string;
   image_note: string | null;
+  growth_metrics: ChildGrowthMetrics;
   is_published: boolean;
   created_at: string;
   updated_at: string;

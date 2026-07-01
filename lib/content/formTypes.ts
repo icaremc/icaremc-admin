@@ -23,6 +23,31 @@ export type MilestoneCategoryFields = {
   itemsText: string;
 };
 
+/** Locale-independent numeric growth reference (powers auto-calc + chart). */
+export type GrowthMetricSexFields = {
+  weight_kg: string;
+  weight_min: string;
+  weight_max: string;
+  height_cm: string;
+  height_min: string;
+  height_max: string;
+  hc_cm: string;
+  hc_min: string;
+  hc_max: string;
+};
+
+export const EMPTY_GROWTH_METRIC: GrowthMetricSexFields = {
+  weight_kg: "",
+  weight_min: "",
+  weight_max: "",
+  height_cm: "",
+  height_min: "",
+  height_max: "",
+  hc_cm: "",
+  hc_min: "",
+  hc_max: "",
+};
+
 export const EMPTY_GROWTH: GrowthFields = {
   weight_range: "",
   length_range: "",

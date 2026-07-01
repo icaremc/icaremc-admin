@@ -1,16 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { TrendingUp } from "lucide-react";
 import ChildGrowthPeriodForm from "@/components/content/ChildGrowthPeriodForm";
 import PageHero from "@/components/PageHero";
-import { Button } from "@/components/ui/button";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import {
   childGrowthActions,
-  deleteChildGrowthPeriod,
   fetchChildGrowthPeriod,
   periodToForm,
   saveChildGrowthPeriod,
@@ -19,7 +17,6 @@ import {
 
 export default function ChildGrowthPeriodEditPage() {
   const params = useParams<{ ageMonths: string }>();
-  const router = useRouter();
   const dispatch = useAppDispatch();
   const { selected, loading, saving, error, success } = useAppSelector(
     (state) => state.childGrowth,
@@ -50,21 +47,12 @@ export default function ChildGrowthPeriodEditPage() {
       return;
     }
 
+    // Stay on the page after saving so the admin can keep filling other tabs.
     const result = await dispatch(saveChildGrowthPeriod(form));
-    if (saveChildGrowthPeriod.fulfilled.match(result)) {
-      router.replace(`/admin/child-growth/${result.payload.age_months}`);
-    }
     if (saveChildGrowthPeriod.rejected.match(result)) {
       setFormError(result.payload as string);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!selected?.id) return;
-    if (!window.confirm("Delete this growth period?")) return;
-    const result = await dispatch(deleteChildGrowthPeriod(selected.id));
-    if (deleteChildGrowthPeriod.fulfilled.match(result)) {
-      router.replace("/admin/child-growth");
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -111,28 +99,14 @@ export default function ChildGrowthPeriodEditPage() {
         {loading || !form ? (
           <p className="text-sm text-gray-600">Loading…</p>
         ) : (
-          <div className="admin-panel space-y-6">
-            <label className="flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={form.is_published}
-                onChange={(e) =>
-                  setForm({ ...form, is_published: e.target.checked })
-                }
-              />
-              Published (visible in mobile app)
-            </label>
-
-            <ChildGrowthPeriodForm value={form} onChange={setForm} />
-
-            <div className="flex flex-wrap gap-3 border-t border-gray-200 pt-4">
-              <Button onClick={handleSave} disabled={saving}>
-                {saving ? "Saving…" : "Save changes"}
-              </Button>
-              <Button variant="destructive" onClick={handleDelete}>
-                Delete
-              </Button>
-            </div>
+          <div className="admin-panel">
+            <ChildGrowthPeriodForm
+              value={form}
+              onChange={setForm}
+              onSave={handleSave}
+              saving={saving}
+              saveLabel="Save changes"
+            />
           </div>
         )}
       </div>

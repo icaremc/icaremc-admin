@@ -6,6 +6,8 @@ import { LOCALES } from "@/lib/constants";
 import { CHILD_AGE_GROUP_LABELS, type ChildAgeGroup } from "@/lib/childGrowth/periods";
 import type {
   ChildGrowthGrowthData,
+  ChildGrowthMetrics,
+  ChildGrowthMetricSex,
   ChildGrowthPeriod,
   ChildGrowthPeriodTranslation,
   Locale,
@@ -218,6 +220,70 @@ function TranslationPanel({
   );
 }
 
+function metricLine(sex: ChildGrowthMetricSex | undefined, label: string) {
+  if (!sex) return null;
+  const fmt = (
+    min?: number,
+    median?: number,
+    max?: number,
+    unit?: string,
+  ) => {
+    if (min == null && median == null && max == null) return null;
+    const range =
+      min != null && max != null ? `${min}–${max}` : median != null ? `${median}` : "";
+    const med = median != null ? ` (median ${median})` : "";
+    return `${range}${med} ${unit ?? ""}`.trim();
+  };
+  const weight = fmt(sex.weight_min, sex.weight_kg, sex.weight_max, "kg");
+  const height = fmt(sex.height_min, sex.height_cm, sex.height_max, "cm");
+  const hc = fmt(sex.hc_min, sex.hc_cm, sex.hc_max, "cm");
+  if (!weight && !height && !hc) return null;
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-4">
+      <p className="text-sm font-semibold text-gray-800">{label}</p>
+      <dl className="mt-2 grid gap-2 text-sm sm:grid-cols-3">
+        {weight ? (
+          <div>
+            <dt className="text-gray-500">Weight</dt>
+            <dd className="text-gray-900">{weight}</dd>
+          </div>
+        ) : null}
+        {height ? (
+          <div>
+            <dt className="text-gray-500">Height</dt>
+            <dd className="text-gray-900">{height}</dd>
+          </div>
+        ) : null}
+        {hc ? (
+          <div>
+            <dt className="text-gray-500">Head circ.</dt>
+            <dd className="text-gray-900">{hc}</dd>
+          </div>
+        ) : null}
+      </dl>
+    </div>
+  );
+}
+
+function MetricsPanel({ metrics }: { metrics: ChildGrowthMetrics }) {
+  const boys = metricLine(metrics.boys, "Boys");
+  const girls = metricLine(metrics.girls, "Girls");
+  if (!boys && !girls) return null;
+
+  return (
+    <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-4">
+      <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
+        Growth reference metrics (numeric)
+      </p>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        {boys}
+        {girls}
+      </div>
+    </div>
+  );
+}
+
 type ChildGrowthPeriodDetailViewProps = {
   period: ChildGrowthPeriod;
 };
@@ -301,6 +367,8 @@ export default function ChildGrowthPeriodDetailView({
           </p>
         </div>
       ) : null}
+
+      <MetricsPanel metrics={period.growth_metrics ?? {}} />
 
       <div className="admin-panel">
         <div className="mb-4 flex flex-wrap gap-2">

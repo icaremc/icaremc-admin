@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { TrendingUp } from "lucide-react";
 import ChildGrowthPeriodForm from "@/components/content/ChildGrowthPeriodForm";
 import PageHero from "@/components/PageHero";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import {
@@ -64,7 +63,8 @@ export default function NewChildGrowthPeriodPage() {
 
     const result = await dispatch(saveChildGrowthPeriod(form));
     if (saveChildGrowthPeriod.fulfilled.match(result)) {
-      router.replace(`/admin/child-growth/${result.payload.age_months}`);
+      // Continue in the edit page so the admin can finish remaining tabs.
+      router.replace(`/admin/child-growth/${result.payload.age_months}/edit`);
     }
     if (saveChildGrowthPeriod.rejected.match(result)) {
       setFormError(result.payload as string);
@@ -147,24 +147,14 @@ export default function NewChildGrowthPeriodPage() {
             ) : null}
           </div>
 
-          <label className="flex items-center gap-2 text-sm text-gray-700">
-            <input
-              type="checkbox"
-              checked={form.is_published}
-              onChange={(e) =>
-                setForm({ ...form, is_published: e.target.checked })
-              }
-            />
-            Published (visible in mobile app)
-          </label>
-
-          <ChildGrowthPeriodForm value={form} onChange={setForm} isNew />
-
-          <div className="flex flex-wrap gap-3 border-t border-gray-200 pt-4">
-            <Button onClick={handleSave} disabled={saving}>
-              {saving ? "Saving…" : "Create period"}
-            </Button>
-          </div>
+          <ChildGrowthPeriodForm
+            value={form}
+            onChange={setForm}
+            isNew
+            onSave={handleSave}
+            saving={saving}
+            saveLabel="Create period"
+          />
         </div>
       </div>
     </>
