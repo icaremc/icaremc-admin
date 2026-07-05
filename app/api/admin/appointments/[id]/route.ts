@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
+import { appointmentStatusEventLabel } from "@/lib/activity/buildLog";
 import { logAdminActivity } from "@/lib/activityLog";
 import { requireAdminSession } from "@/lib/adminAuth";
 import {
@@ -142,7 +143,11 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     const { data, error } = await client
       .from("appointments")
-      .update({ status, updated_at: new Date().toISOString() })
+      .update({
+        status,
+        updated_at: new Date().toISOString(),
+        ...(status === "cancelled" ? { cancelled_by: "admin" } : {}),
+      })
       .eq("id", id)
       .select(APPOINTMENT_SELECT)
       .single();
@@ -168,6 +173,10 @@ export async function PATCH(request: Request, context: RouteContext) {
       doctorName,
       appointmentDate: appointment.appointment_date,
       timeSlot: appointment.time_slot,
+      cancelledBy:
+        status === "cancelled" ? appointment.cancelled_by ?? "admin" : null,
+      amountPaid: appointment.amount_paid,
+      paymentStatus: appointment.payment_status,
     });
 
     if (patientMessage) {
@@ -205,6 +214,7 @@ export async function PATCH(request: Request, context: RouteContext) {
           patientName,
           appointmentDate: appointment.appointment_date,
           timeSlot: appointment.time_slot,
+          cancelledBy: "admin",
         }),
       });
       pushResults.doctor = doctorPush;
@@ -218,14 +228,24 @@ export async function PATCH(request: Request, context: RouteContext) {
           (auth.user.user_metadata?.full_name as string | undefined) ?? null,
         actorRole: auth.adminRole,
         eventType: ADMIN_ACTIVITY_EVENTS.APPOINTMENT_STATUS,
-        eventLabel: `Appointment ${previous.status} → ${status}`,
+        eventLabel: appointmentStatusEventLabel({
+          previousStatus: previous.status,
+          newStatus: status,
+          patientName,
+          appointmentDate: appointment.appointment_date,
+          timeSlot: appointment.time_slot,
+        }),
         resourceType: "appointment",
         resourceId: id,
         metadata: {
           previous_status: previous.status,
           new_status: status,
           patient_id: appointment.patient_id,
+          patient_name: patientName,
           doctor_id: appointment.doctor_id,
+          appointment_date: appointment.appointment_date,
+          time_slot: appointment.time_slot,
+          service_name: appointment.service_name ?? null,
         },
       },
       request,

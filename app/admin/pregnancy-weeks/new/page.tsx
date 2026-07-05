@@ -16,6 +16,7 @@ import {
   type PregnancyWeekFormState,
 } from "@/features/pregnancyWeeks/pregnancyWeeksSlice";
 import { EMPTY_PREGNANCY_SECTION } from "@/lib/content/formTypes";
+import { uploadPregnancyWeekImage } from "@/lib/pregnancyWeeks/imageApi";
 
 function createEmptyForm(weekNumber: number): PregnancyWeekFormState {
   const emptyTranslation = {
@@ -32,6 +33,7 @@ function createEmptyForm(weekNumber: number): PregnancyWeekFormState {
     week_number: weekNumber,
     trimester: trimesterForWeek(weekNumber),
     image_note: "",
+    image_url: "",
     is_published: true,
     translations: {
       en: { ...emptyTranslation },
@@ -52,10 +54,28 @@ export default function NewPregnancyWeekPage() {
     createEmptyForm(1),
   );
   const [formError, setFormError] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(pregnancyWeeksActions.clearPregnancyWeekMessages());
   }, [dispatch]);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview?.startsWith("blob:")) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
+
+  const handleImageChange = (file: File | null) => {
+    setImageFile(file);
+    if (imagePreview?.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreview);
+    }
+    setImagePreview(file ? URL.createObjectURL(file) : null);
+  };
 
   const handleSave = async () => {
     setFormError(null);
@@ -66,6 +86,18 @@ export default function NewPregnancyWeekPage() {
 
     const result = await dispatch(savePregnancyWeek(form));
     if (savePregnancyWeek.fulfilled.match(result)) {
+      try {
+        if (imageFile) {
+          await uploadPregnancyWeekImage(result.payload.id, imageFile);
+        }
+      } catch (imageError) {
+        setFormError(
+          imageError instanceof Error
+            ? imageError.message
+            : "Week created but image upload failed.",
+        );
+        return;
+      }
       router.replace(`/admin/pregnancy-weeks/${result.payload.week_number}`);
     }
     if (savePregnancyWeek.rejected.match(result)) {
@@ -134,7 +166,13 @@ export default function NewPregnancyWeekPage() {
             Published (visible in mobile app)
           </label>
 
-          <PregnancyWeekForm value={form} onChange={setForm} isNew />
+          <PregnancyWeekForm
+            value={form}
+            onChange={setForm}
+            isNew
+            imagePreview={imagePreview}
+            onImageChange={handleImageChange}
+          />
 
           <div className="flex flex-wrap gap-3 border-t border-gray-200 pt-4">
             <Button onClick={handleSave} disabled={saving}>

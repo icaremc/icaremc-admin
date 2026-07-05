@@ -3,6 +3,8 @@ import type { CombinedActivityLog } from "@/lib/types/activity";
 
 type ActivityLogsState = {
   logs: CombinedActivityLog[];
+  selectedLog: CombinedActivityLog | null;
+  detailLoading: boolean;
   loading: boolean;
   error: string | null;
   source: "all" | "admin" | "platform";
@@ -12,6 +14,8 @@ type ActivityLogsState = {
 
 const initialState: ActivityLogsState = {
   logs: [],
+  selectedLog: null,
+  detailLoading: false,
   loading: false,
   error: null,
   source: "all",
@@ -54,6 +58,23 @@ export const fetchActivityLogs = createAsyncThunk(
   },
 );
 
+export const fetchActivityLogDetail = createAsyncThunk(
+  "activityLogs/fetchDetail",
+  async (
+    payload: { source: "admin" | "platform"; id: string },
+    { rejectWithValue },
+  ) => {
+    const response = await fetch(
+      `/api/admin/activity-logs/${payload.source}/${payload.id}`,
+    );
+    if (!response.ok) {
+      return rejectWithValue(await readApiError(response));
+    }
+    const body = (await response.json()) as { log: CombinedActivityLog };
+    return body.log;
+  },
+);
+
 const activityLogsSlice = createSlice({
   name: "activityLogs",
   initialState,
@@ -78,6 +99,18 @@ const activityLogsSlice = createSlice({
       .addCase(fetchActivityLogs.rejected, (state, action) => {
         state.loading = false;
         state.error = (action.payload as string) ?? "Failed to load activity";
+      })
+      .addCase(fetchActivityLogDetail.pending, (state) => {
+        state.detailLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchActivityLogDetail.fulfilled, (state, action) => {
+        state.detailLoading = false;
+        state.selectedLog = action.payload;
+      })
+      .addCase(fetchActivityLogDetail.rejected, (state, action) => {
+        state.detailLoading = false;
+        state.error = (action.payload as string) ?? "Failed to load activity details";
       });
   },
 });

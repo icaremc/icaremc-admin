@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
+import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
+import { chapaTransferEventLabel, payoutActionEventLabel } from "@/lib/activity/buildLog";
+import { logAdminActivityFromAuth } from "@/lib/activity/logFromAuth";
 import { requireAdminSession } from "@/lib/adminAuth";
 import {
   appendAdminNote,
   buildPayoutTxRef,
+  getDoctorDefaultPayoutMethod,
   getDoctorPayoutMethod,
   isDigitsOnly,
   loadChapaSettings,
@@ -11,6 +15,7 @@ import {
   resolveWebhookUrl,
   toErrorMessage,
 } from "@/lib/finance/chapaPayout";
+import { notifyDoctorPayoutStatus } from "@/lib/finance/payoutNotify";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
 
 export async function POST(request: Request) {
@@ -54,7 +59,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const method = await getDoctorPayoutMethod(payoutRequest.payout_method_id);
+    const method =
+      (await getDoctorPayoutMethod(payoutRequest.payout_method_id)) ??
+      (await getDoctorDefaultPayoutMethod(payoutRequest.doctor_id));
     if (!method) {
       return NextResponse.json(
         { error: "Doctor payout method not found. Ask the doctor to save bank details." },
@@ -173,6 +180,49 @@ export async function POST(request: Request) {
     if (updateError) {
       return NextResponse.json({ error: "Failed to update payout request" }, { status: 500 });
     }
+
+    const { data: doctorProfile } = await client
+      .from("doctor_profiles")
+      .select("first_name, last_name")
+      .eq("id", payoutRequest.doctor_id)
+      .maybeSingle();
+    const resolvedDoctorName = doctorProfile
+      ? `Dr. ${doctorProfile.first_name} ${doctorProfile.last_name}`.trim()
+      : holderName;
+
+    await logAdminActivityFromAuth(
+      auth,
+      {
+        eventType: ADMIN_ACTIVITY_EVENTS.PAYOUT_ACTION,
+        eventLabel: chapaTransferEventLabel({
+          amount: Number(payoutRequest.amount),
+          doctorName: resolvedDoctorName,
+          currency: method.currency || "ETB",
+          txRef: transferReference,
+        }),
+        resourceType: "payout_request",
+        resourceId: payoutRequest.id,
+        metadata: {
+          action: "chapa_transfer",
+          amount: Number(payoutRequest.amount),
+          currency: method.currency || "ETB",
+          doctor_id: payoutRequest.doctor_id,
+          doctor_name: resolvedDoctorName,
+          bank_name: bankName,
+          account_number_masked: accountNumber.slice(-4).padStart(accountNumber.length, "*"),
+          tx_ref: transferReference,
+          transfer_id: transferId,
+        },
+      },
+      request,
+    );
+
+    await notifyDoctorPayoutStatus(client, {
+      doctorId: payoutRequest.doctor_id,
+      event: "transfer_initiated",
+      amount: Number(payoutRequest.amount),
+      currency: method.currency || "ETB",
+    });
 
     return NextResponse.json({
       status: "success",

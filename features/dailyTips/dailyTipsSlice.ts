@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { supabase } from "@/lib/supabaseClient";
+import { logContentDeleted, logContentSaved } from "@/lib/client/adminActivityEvents";
 import type { DailyTip, DailyTipTranslation, Locale } from "@/lib/types/database";
 
 export type DailyTipFormTranslation = {
@@ -218,6 +219,15 @@ export const saveDailyTip = createAsyncThunk(
       .single();
 
     if (error) return rejectWithValue(error.message);
+    logContentSaved(
+      "daily_tip",
+      tipId!,
+      `Saved daily tip: week ${payload.form.week_number}, day ${payload.form.day_number}`,
+      {
+        week_number: payload.form.week_number,
+        day_number: payload.form.day_number,
+      },
+    );
     return normalizeDailyTip(data as DailyTip & { daily_tip_translations_1?: DailyTipTranslation[] });
   },
 );
@@ -227,6 +237,7 @@ export const deleteDailyTip = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     const { error } = await supabase.from("daily_tips").delete().eq("id", id);
     if (error) return rejectWithValue(error.message);
+    logContentDeleted("daily_tip", id, "Deleted daily tip", { resource_id: id });
     return id;
   },
 );

@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
+import { settingsUpdatedEventLabel } from "@/lib/activity/buildLog";
+import { logAdminActivityFromAuth } from "@/lib/activity/logFromAuth";
 import { requireSuperAdminSession } from "@/lib/adminAuth";
 import {
   mergePaymentSettings,
@@ -89,6 +92,17 @@ export async function PATCH(request: Request) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    await logAdminActivityFromAuth(
+      auth,
+      {
+        eventType: ADMIN_ACTIVITY_EVENTS.SETTINGS_UPDATED,
+        eventLabel: settingsUpdatedEventLabel("payment settings", "Chapa and payment gateways"),
+        resourceType: "app_settings",
+        resourceId: PAYMENT_ROW_ID,
+      },
+      request,
+    );
 
     return NextResponse.json({
       paymentSettings: parsePaymentSettingsData(data.data),

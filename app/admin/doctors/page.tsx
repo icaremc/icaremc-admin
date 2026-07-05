@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Stethoscope } from "lucide-react";
 import PageHero from "@/components/PageHero";
+import { ConfirmActionModal } from "@/components/ConfirmActionModal";
 import {
   Table,
   TableBody,
@@ -24,6 +25,7 @@ import {
   summarizeAvailabilitySlots,
 } from "@/lib/availability";
 import { doctorCategoryLabel, doctorDisplayName } from "@/lib/doctors/display";
+import { doctorVerificationConfirmCopy } from "@/lib/admin/confirmMessages";
 import DoctorProfileAvatar from "@/components/doctors/DoctorProfileAvatar";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -43,6 +45,11 @@ export default function DoctorsPage() {
     (state) => state.doctors,
   );
   const [filter, setFilter] = useState<Filter>("all");
+  const [pendingVerification, setPendingVerification] = useState<{
+    id: string;
+    name: string;
+    approve: boolean;
+  } | null>(null);
 
   useEffect(() => {
     dispatch(fetchDoctors());
@@ -56,6 +63,24 @@ export default function DoctorsPage() {
     if (filter === "verified") return doctors.filter((d) => d.is_verified);
     return doctors;
   }, [doctors, filter]);
+
+  const verificationConfirm = pendingVerification
+    ? doctorVerificationConfirmCopy({
+        approve: pendingVerification.approve,
+        doctorName: pendingVerification.name,
+      })
+    : null;
+
+  async function confirmVerificationChange() {
+    if (!pendingVerification) return;
+    await dispatch(
+      updateDoctorVerification({
+        id: pendingVerification.id,
+        is_verified: pendingVerification.approve,
+      }),
+    );
+    setPendingVerification(null);
+  }
 
   return (
     <>
@@ -149,7 +174,7 @@ export default function DoctorsPage() {
                           <div className="font-medium">
                             {doctorDisplayName(doctor.first_name, doctor.last_name)}
                           </div>
-                          <div className="text-xs text-gray-500">{doctor.phone ?? "—"}</div>
+                          <div className="text-xs text-gray-500">{doctor.phone ?? "N/A"}</div>
                         </div>
                       </div>
                     </TableCell>
@@ -180,12 +205,11 @@ export default function DoctorsPage() {
                         disabled={saving}
                         onClick={(event) => {
                           event.stopPropagation();
-                          dispatch(
-                            updateDoctorVerification({
-                              id: doctor.id,
-                              is_verified: !doctor.is_verified,
-                            }),
-                          );
+                          setPendingVerification({
+                            id: doctor.id,
+                            name: doctorDisplayName(doctor.first_name, doctor.last_name),
+                            approve: !doctor.is_verified,
+                          });
                         }}
                         className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                           doctor.is_verified
@@ -213,6 +237,17 @@ export default function DoctorsPage() {
           </Table>
         </div>
       </div>
+
+      <ConfirmActionModal
+        open={pendingVerification !== null && verificationConfirm !== null}
+        onClose={() => setPendingVerification(null)}
+        onConfirm={confirmVerificationChange}
+        title={verificationConfirm?.title ?? ""}
+        description={verificationConfirm?.description ?? ""}
+        confirmLabel={verificationConfirm?.confirmLabel}
+        variant={verificationConfirm?.variant}
+        loading={saving}
+      />
     </>
   );
 }

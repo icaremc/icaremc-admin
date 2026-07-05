@@ -70,7 +70,7 @@ export async function rejectPayoutRequest(requestId: string, adminNote?: string)
     is_credit: true,
     type: "payout_release",
     payout_request_id: requestId,
-    note: "Payout request rejected — funds returned",
+    note: "Payout request rejected. Funds returned.",
   });
 
   const { data: updated, error: updateError } = await client

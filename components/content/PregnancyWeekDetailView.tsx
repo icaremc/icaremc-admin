@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Baby, Heart } from "lucide-react";
 import { LOCALES } from "@/lib/constants";
 import type {
   Locale,
   PregnancyWeek,
   PregnancyWeekTranslation,
 } from "@/lib/types/database";
+import { pregnancyWeekHasImage } from "@/lib/pregnancyWeeks/storage";
 import { cn } from "@/lib/utils";
 
 const LOCALE_LABELS: Record<Locale, string> = {
@@ -167,6 +168,29 @@ export default function PregnancyWeekDetailView({
           <p className="mt-1 text-sm text-gray-800">{week.image_note}</p>
         </div>
       ) : null}
+
+      <div className="rounded-xl border border-gray-200 bg-white p-4">
+        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          Week hero image
+        </p>
+        <div className="mt-3 flex items-center gap-4">
+          {pregnancyWeekHasImage(week.image_url) ? (
+            <img
+              src={week.image_url!.trim()}
+              alt={`Week ${week.week_number} hero`}
+              className="h-28 w-28 rounded-full border object-cover"
+            />
+          ) : (
+            <div className="flex h-28 w-28 items-center justify-center rounded-full border border-dashed border-emerald-200 bg-emerald-50 text-emerald-600">
+              {week.week_number < 8 ? (
+                <Heart className="h-10 w-10" />
+              ) : (
+                <Baby className="h-10 w-10" />
+              )}
+            </div>
+          )}
+        </div>
+      </div>
 
       {englishTitle ? (
         <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">

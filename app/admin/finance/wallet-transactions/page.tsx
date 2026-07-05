@@ -127,7 +127,7 @@ export default function WalletTransactionsPage() {
                             Dr. {doctor.first_name} {doctor.last_name}
                           </Link>
                         ) : (
-                          "—"
+                          "N/A"
                         )}
                       </TableCell>
                       <TableCell className="capitalize">{tx.type.replace(/_/g, " ")}</TableCell>
@@ -141,7 +141,7 @@ export default function WalletTransactionsPage() {
                         {formatMoney(Number(tx.amount), "ETB")}
                       </TableCell>
                       <TableCell className="max-w-[240px] truncate text-sm text-gray-600">
-                        {tx.note ?? "—"}
+                        {tx.note ?? "N/A"}
                       </TableCell>
                       <TableCell className="text-sm text-gray-500">
                         {formatDateTime(tx.created_at)}

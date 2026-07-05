@@ -82,7 +82,7 @@ export default function PaymentSettingsPage() {
     <>
       <PageHero
         title="Payment settings"
-        description="Configure Chapa checkout keys for appointment prepayments in the patient app."
+        description="Configure Chapa checkout keys for appointment payments in the patient app."
         icon={CreditCard}
         stat={{ label: "Gateway", value: "Chapa" }}
       />

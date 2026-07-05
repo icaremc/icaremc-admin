@@ -163,6 +163,58 @@ export default function FinanceSettingsPage() {
             credited with the paid amount minus commission. Example: ETB {preview.sample}{" "}
             collected → ETB {preview.net.toFixed(0)} credited to doctor.
           </p>
+        </section>
+
+        <section className="admin-panel space-y-4">
+          <div>
+            <h2 className="text-base font-semibold text-gray-900">
+              Doctor cancellation penalty
+            </h2>
+            <p className="mt-1 text-sm text-gray-600">
+              When a doctor cancels a paid booking, the patient is refunded to their wallet.
+              Optionally deduct a fixed penalty from the doctor&apos;s wallet (up to their
+              available balance).
+            </p>
+          </div>
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              checked={settings.doctorCancelPenaltyEnabled}
+              onChange={(event) =>
+                setSettings((current) => ({
+                  ...current,
+                  doctorCancelPenaltyEnabled: event.target.checked,
+                }))
+              }
+              disabled={loading}
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            Enable doctor cancellation penalty
+          </label>
+          <label className="block text-sm">
+            <span className="mb-1 block font-medium text-gray-700">
+              Penalty amount (ETB)
+            </span>
+            <Input
+              type="number"
+              min={0}
+              step={50}
+              value={String(settings.doctorCancelPenaltyAmount)}
+              onChange={(event) =>
+                setSettings((current) => ({
+                  ...current,
+                  doctorCancelPenaltyAmount:
+                    Number.parseFloat(event.target.value) ||
+                    current.doctorCancelPenaltyAmount,
+                }))
+              }
+              disabled={loading || !settings.doctorCancelPenaltyEnabled}
+            />
+          </label>
+          <p className="text-xs text-gray-500">
+            Applies only when <strong>cancelled_by = doctor</strong> and the booking was paid.
+            Patient refunds are unchanged.
+          </p>
           <p className="text-xs text-gray-500">
             Restricted to <span className="font-medium">super admins</span>.
           </p>

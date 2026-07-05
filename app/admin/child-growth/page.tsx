@@ -32,7 +32,7 @@ export default function ChildGrowthPage() {
     <>
       <PageHero
         title="Child milestones"
-        description="Growth, vaccines, milestones, red flags, nutrition, and visit reminders (0–18 years) in English, Amharic, and Oromo"
+        description="Growth, vaccines, milestones, red flags, nutrition, and visits (0–18 years)"
         icon={TrendingUp}
         stat={{ label: "Periods", value: periods.length }}
       />

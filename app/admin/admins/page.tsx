@@ -219,7 +219,7 @@ export default function AdminsPage() {
                 admins.map((admin) => (
                   <TableRow key={admin.id}>
                     <TableCell className="font-medium text-gray-900">
-                      {admin.full_name || "—"}
+                      {admin.full_name || "N/A"}
                     </TableCell>
                     <TableCell>{admin.email}</TableCell>
                     <TableCell>

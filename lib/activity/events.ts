@@ -6,6 +6,13 @@ export const ADMIN_ACTIVITY_EVENTS = {
   ADMIN_UPDATED: "admin_updated",
   PAYOUT_ACTION: "payout_action",
   PUSH_SENT: "push_sent",
+  CONTENT_SAVED: "content_saved",
+  CONTENT_DELETED: "content_deleted",
+  SETTINGS_UPDATED: "settings_updated",
+  DOCTOR_BOOKING_UPDATED: "doctor_booking_updated",
+  DOCTOR_UPDATED: "doctor_updated",
+  HOSPITAL_UPDATED: "hospital_updated",
+  CATEGORY_UPDATED: "category_updated",
 } as const;
 
 export const PLATFORM_ACTIVITY_EVENTS = {
@@ -26,6 +33,13 @@ export const ACTIVITY_EVENT_LABELS: Record<string, string> = {
   [ADMIN_ACTIVITY_EVENTS.ADMIN_UPDATED]: "Admin account updated",
   [ADMIN_ACTIVITY_EVENTS.PAYOUT_ACTION]: "Payout action",
   [ADMIN_ACTIVITY_EVENTS.PUSH_SENT]: "Push notification sent",
+  [ADMIN_ACTIVITY_EVENTS.CONTENT_SAVED]: "Content saved",
+  [ADMIN_ACTIVITY_EVENTS.CONTENT_DELETED]: "Content deleted",
+  [ADMIN_ACTIVITY_EVENTS.SETTINGS_UPDATED]: "Settings updated",
+  [ADMIN_ACTIVITY_EVENTS.DOCTOR_BOOKING_UPDATED]: "Doctor booking pricing updated",
+  [ADMIN_ACTIVITY_EVENTS.DOCTOR_UPDATED]: "Doctor profile updated",
+  [ADMIN_ACTIVITY_EVENTS.HOSPITAL_UPDATED]: "Hospital updated",
+  [ADMIN_ACTIVITY_EVENTS.CATEGORY_UPDATED]: "Doctor category updated",
   [PLATFORM_ACTIVITY_EVENTS.LOGIN]: "Logged in",
   [PLATFORM_ACTIVITY_EVENTS.LOGOUT]: "Logged out",
   [PLATFORM_ACTIVITY_EVENTS.APPOINTMENT_BOOKED]: "Appointment booked",

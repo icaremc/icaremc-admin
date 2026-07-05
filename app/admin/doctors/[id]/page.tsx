@@ -17,6 +17,7 @@ import {
   XCircle,
 } from "lucide-react";
 import PageHero from "@/components/PageHero";
+import { ConfirmActionModal } from "@/components/ConfirmActionModal";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -46,6 +47,7 @@ import {
   doctorCategoryLabel,
   doctorDisplayName,
 } from "@/lib/doctors/display";
+import { doctorVerificationConfirmCopy } from "@/lib/admin/confirmMessages";
 import { formatDate, formatDateTime } from "@/lib/format";
 import type { DoctorAvailabilitySlot, DoctorProfile } from "@/lib/types/doctors";
 
@@ -155,10 +157,10 @@ function DoctorPersonalDetails({ doctor }: { doctor: DoctorProfile }) {
             />
             <DetailField
               label="Hospital"
-              value={doctor.hospital || "—"}
+              value={doctor.hospital || "N/A"}
               icon={Building2}
             />
-            <DetailField label="Phone" value={doctor.phone || "—"} icon={Phone} />
+            <DetailField label="Phone" value={doctor.phone || "N/A"} icon={Phone} />
             <DetailField
               label="Experience"
               value={`${doctor.experience_years} years`}
@@ -186,12 +188,12 @@ function DoctorPersonalDetails({ doctor }: { doctor: DoctorProfile }) {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <DetailField
             label="License number"
-            value={doctor.license_number ?? "—"}
+            value={doctor.license_number ?? "N/A"}
             icon={FileText}
           />
           <DetailField
             label="Speciality"
-            value={doctor.doctor_categories?.name ?? doctor.specialty ?? "—"}
+            value={doctor.doctor_categories?.name ?? doctor.specialty ?? "N/A"}
           />
           <DetailField label="Joined" value={formatDate(doctor.created_at)} icon={Calendar} />
           <DetailField label="Last updated" value={formatDateTime(doctor.updated_at)} />
@@ -221,6 +223,9 @@ export default function DoctorDetailPage() {
   const dispatch = useAppDispatch();
   const { doctor, loading, saving, error } = useAppSelector((state) => state.doctorDetail);
   const [approvalNotice, setApprovalNotice] = useState<string | null>(null);
+  const [verificationAction, setVerificationAction] = useState<
+    "approve" | "revoke" | null
+  >(null);
 
   const tabParam = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState<DoctorDetailTab>(
@@ -244,39 +249,45 @@ export default function DoctorDetailPage() {
     window.history.replaceState(null, "", url);
   };
 
-  const handleApprove = async () => {
-    if (!doctorId || !window.confirm("Approve this doctor? They will appear as verified in the MC app.")) {
-      return;
-    }
-    setApprovalNotice(null);
-    const result = await dispatch(approveDoctor(doctorId));
-    if (approveDoctor.fulfilled.match(result)) {
-      dispatch(updateDoctorVerification({ id: doctorId, is_verified: true }));
-      const push = result.payload.push;
-      if (push?.sent) {
-        setApprovalNotice("Doctor approved and notified by push notification.");
-      } else if (push && !push.sent && "skipped" in push) {
-        setApprovalNotice(`Doctor approved. Push not sent: ${push.skipped}`);
-      } else if (push && !push.sent && "error" in push) {
-        setApprovalNotice(`Doctor approved, but push failed: ${push.error}`);
-      } else {
-        setApprovalNotice("Doctor approved.");
+  const doctorName = doctor
+    ? doctorDisplayName(doctor.first_name, doctor.last_name)
+    : "Doctor";
+
+  const verificationConfirm = verificationAction
+    ? doctorVerificationConfirmCopy({
+        approve: verificationAction === "approve",
+        doctorName,
+      })
+    : null;
+
+  async function confirmVerificationAction() {
+    if (!doctorId || !verificationAction) return;
+
+    if (verificationAction === "approve") {
+      setApprovalNotice(null);
+      const result = await dispatch(approveDoctor(doctorId));
+      if (approveDoctor.fulfilled.match(result)) {
+        dispatch(updateDoctorVerification({ id: doctorId, is_verified: true }));
+        const push = result.payload.push;
+        if (push?.sent) {
+          setApprovalNotice("Doctor approved and notified by push notification.");
+        } else if (push && !push.sent && "skipped" in push) {
+          setApprovalNotice(`Doctor approved. Push not sent: ${push.skipped}`);
+        } else if (push && !push.sent && "error" in push) {
+          setApprovalNotice(`Doctor approved, but push failed: ${push.error}`);
+        } else {
+          setApprovalNotice("Doctor approved.");
+        }
+      }
+    } else {
+      const result = await dispatch(revokeDoctorApproval(doctorId));
+      if (revokeDoctorApproval.fulfilled.match(result)) {
+        dispatch(updateDoctorVerification({ id: doctorId, is_verified: false }));
       }
     }
-  };
 
-  const handleRevoke = async () => {
-    if (
-      !doctorId ||
-      !window.confirm("Revoke verification? This doctor will no longer appear as approved.")
-    ) {
-      return;
-    }
-    const result = await dispatch(revokeDoctorApproval(doctorId));
-    if (revokeDoctorApproval.fulfilled.match(result)) {
-      dispatch(updateDoctorVerification({ id: doctorId, is_verified: false }));
-    }
-  };
+    setVerificationAction(null);
+  }
 
   return (
     <>
@@ -288,7 +299,7 @@ export default function DoctorDetailPage() {
         }
         description="Review credentials, services, and verification status"
         icon={Stethoscope}
-        stat={doctor ? undefined : { label: "Status", value: "—" }}
+        stat={doctor ? undefined : { label: "Status", value: "N/A" }}
         actions={
           doctor ? (
             <div className="flex flex-wrap items-center gap-3">
@@ -306,7 +317,7 @@ export default function DoctorDetailPage() {
                   type="button"
                   variant="outline"
                   disabled={saving}
-                  onClick={handleRevoke}
+                  onClick={() => setVerificationAction("revoke")}
                   className="gap-2"
                 >
                   <XCircle className="h-4 w-4" />
@@ -316,7 +327,7 @@ export default function DoctorDetailPage() {
                 <Button
                   type="button"
                   disabled={saving}
-                  onClick={handleApprove}
+                  onClick={() => setVerificationAction("approve")}
                   className="gap-2"
                 >
                   <CheckCircle2 className="h-4 w-4" />
@@ -374,6 +385,17 @@ export default function DoctorDetailPage() {
           </>
         ) : null}
       </div>
+
+      <ConfirmActionModal
+        open={verificationAction !== null && verificationConfirm !== null}
+        onClose={() => setVerificationAction(null)}
+        onConfirm={confirmVerificationAction}
+        title={verificationConfirm?.title ?? ""}
+        description={verificationConfirm?.description ?? ""}
+        confirmLabel={verificationConfirm?.confirmLabel}
+        variant={verificationConfirm?.variant}
+        loading={saving}
+      />
     </>
   );
 }

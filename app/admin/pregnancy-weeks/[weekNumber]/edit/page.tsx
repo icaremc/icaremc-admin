@@ -16,6 +16,10 @@ import {
   weekToForm,
   type PregnancyWeekFormState,
 } from "@/features/pregnancyWeeks/pregnancyWeeksSlice";
+import {
+  removePregnancyWeekImage,
+  uploadPregnancyWeekImage,
+} from "@/lib/pregnancyWeeks/imageApi";
 
 export default function PregnancyWeekEditPage() {
   const params = useParams<{ weekNumber: string }>();
@@ -28,6 +32,9 @@ export default function PregnancyWeekEditPage() {
   const weekNumber = Number(params.weekNumber);
   const [form, setForm] = useState<PregnancyWeekFormState | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
 
   useEffect(() => {
     dispatch(pregnancyWeeksActions.clearPregnancyWeekMessages());
@@ -39,8 +46,55 @@ export default function PregnancyWeekEditPage() {
   useEffect(() => {
     if (selected) {
       setForm(weekToForm(selected));
+      setImageFile(null);
+      setRemoveImage(false);
+      setImagePreview(selected.image_url?.trim() || null);
     }
   }, [selected]);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview?.startsWith("blob:")) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
+
+  const handleImageChange = (file: File | null) => {
+    setImageFile(file);
+    setRemoveImage(false);
+    if (imagePreview?.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreview);
+    }
+    if (file) {
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      setImagePreview(selected?.image_url?.trim() || null);
+    }
+  };
+
+  const handleRemoveImageChange = (remove: boolean) => {
+    setRemoveImage(remove);
+    if (remove) {
+      setImageFile(null);
+      if (imagePreview?.startsWith("blob:")) {
+        URL.revokeObjectURL(imagePreview);
+      }
+      setImagePreview(null);
+    } else {
+      setImagePreview(selected?.image_url?.trim() || null);
+    }
+  };
+
+  const syncWeekImage = async (weekId: string) => {
+    if (removeImage) {
+      await removePregnancyWeekImage(weekId);
+      return;
+    }
+    if (imageFile) {
+      await uploadPregnancyWeekImage(weekId, imageFile);
+    }
+  };
 
   const handleSave = async () => {
     if (!form) return;
@@ -52,6 +106,18 @@ export default function PregnancyWeekEditPage() {
 
     const result = await dispatch(savePregnancyWeek(form));
     if (savePregnancyWeek.fulfilled.match(result)) {
+      try {
+        if (removeImage || imageFile) {
+          await syncWeekImage(result.payload.id);
+        }
+      } catch (imageError) {
+        setFormError(
+          imageError instanceof Error
+            ? imageError.message
+            : "Week saved but image upload failed.",
+        );
+        return;
+      }
       router.replace(`/admin/pregnancy-weeks/${result.payload.week_number}`);
     }
     if (savePregnancyWeek.rejected.match(result)) {
@@ -62,6 +128,11 @@ export default function PregnancyWeekEditPage() {
   const handleDelete = async () => {
     if (!selected?.id) return;
     if (!window.confirm("Delete this pregnancy week?")) return;
+    try {
+      await removePregnancyWeekImage(selected.id);
+    } catch {
+      // Continue deleting the week even if storage cleanup fails.
+    }
     const result = await dispatch(deletePregnancyWeek(selected.id));
     if (deletePregnancyWeek.fulfilled.match(result)) {
       router.replace("/admin/pregnancy-weeks");
@@ -123,7 +194,14 @@ export default function PregnancyWeekEditPage() {
               Published (visible in mobile app)
             </label>
 
-            <PregnancyWeekForm value={form} onChange={setForm} />
+            <PregnancyWeekForm
+              value={form}
+              onChange={setForm}
+              imagePreview={imagePreview}
+              onImageChange={handleImageChange}
+              removeImage={removeImage}
+              onRemoveImageChange={handleRemoveImageChange}
+            />
 
             <div className="flex flex-wrap gap-3 border-t border-gray-200 pt-4">
               <Button onClick={handleSave} disabled={saving}>

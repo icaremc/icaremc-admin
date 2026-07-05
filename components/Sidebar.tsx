@@ -298,7 +298,7 @@ export default function Sidebar() {
           onClick={async () => {
             await logAdminPortalEvent({
               event_type: ADMIN_ACTIVITY_EVENTS.LOGOUT,
-              event_label: "Admin logged out",
+              event_label: "Signed out of admin portal",
             });
             await supabase.auth.signOut();
             location.href = "/";

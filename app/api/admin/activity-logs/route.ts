@@ -27,6 +27,8 @@ function toCombinedAdmin(row: AdminActivityLog): CombinedActivityLog {
     resource_type: row.resource_type,
     resource_id: row.resource_id,
     metadata: row.metadata ?? {},
+    ip_address: row.ip_address,
+    user_agent: row.user_agent,
     created_at: row.created_at,
   };
 }
@@ -45,6 +47,8 @@ function toCombinedPlatform(row: PlatformActivityLog): CombinedActivityLog {
     resource_type: row.resource_type,
     resource_id: row.resource_id,
     metadata: row.metadata ?? {},
+    ip_address: row.ip_address,
+    user_agent: row.user_agent,
     created_at: row.created_at,
   };
 }

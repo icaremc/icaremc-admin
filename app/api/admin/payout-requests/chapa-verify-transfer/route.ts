@@ -10,6 +10,7 @@ import {
   completePayoutRequest,
   rejectPayoutRequest,
 } from "@/lib/finance/payoutActions";
+import { notifyDoctorPayoutStatus } from "@/lib/finance/payoutNotify";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
 
 export async function POST(request: Request) {
@@ -89,6 +90,11 @@ export async function POST(request: Request) {
 
     if (isSuccess) {
       await completePayoutRequest(payoutRequest.id, updatedAdminNote);
+      await notifyDoctorPayoutStatus(client, {
+        doctorId: payoutRequest.doctor_id,
+        event: "completed",
+        amount: Number(payoutRequest.amount),
+      });
     } else if (
       ["failed", "failure", "cancelled", "canceled", "error", "reversed"].includes(
         transferStatus,
@@ -98,6 +104,11 @@ export async function POST(request: Request) {
         payoutRequest.id,
         appendAdminNote(updatedAdminNote, "Chapa transfer failed during verification."),
       );
+      await notifyDoctorPayoutStatus(client, {
+        doctorId: payoutRequest.doctor_id,
+        event: "rejected",
+        amount: Number(payoutRequest.amount),
+      });
     } else {
       await client
         .from("doctor_payout_requests")

@@ -15,6 +15,7 @@ import {
   User,
 } from "lucide-react";
 import PageHero from "@/components/PageHero";
+import { ConfirmActionModal } from "@/components/ConfirmActionModal";
 import { Button } from "@/components/ui/button";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import {
@@ -37,6 +38,7 @@ import {
   statusActionLabel,
 } from "@/lib/appointments/display";
 import { cn } from "@/lib/utils";
+import { appointmentStatusConfirmCopy } from "@/lib/admin/confirmMessages";
 import type { Appointment, AppointmentStatus } from "@/lib/types/doctors";
 
 type StatusFilter = "all" | AppointmentStatus;
@@ -162,11 +164,11 @@ function groupByDate(appointments: Appointment[]): [string, Appointment[]][] {
 function AppointmentCard({
   appt,
   isSaving,
-  onStatusChange,
+  onStatusChangeRequest,
 }: {
   appt: Appointment;
   isSaving: boolean;
-  onStatusChange: (id: string, status: AppointmentStatus) => void;
+  onStatusChangeRequest: (appointment: Appointment, status: AppointmentStatus) => void;
 }) {
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
@@ -221,7 +223,7 @@ function AppointmentCard({
               </Link>
               <p className="mt-0.5 text-sm text-gray-500">
                 {[doctor?.specialty, doctor?.hospital].filter(Boolean).join(" · ") ||
-                  "—"}
+                  "N/A"}
               </p>
             </div>
           </div>
@@ -250,7 +252,7 @@ function AppointmentCard({
               className={cn(
                 status === "cancelled" && "text-red-700 hover:text-red-800",
               )}
-              onClick={() => onStatusChange(appt.id, status)}
+              onClick={() => onStatusChangeRequest(appt, status)}
             >
               {isSaving ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -297,7 +299,7 @@ function AppointmentCard({
           ) : null}
 
           {appt.total_amount > 0 ? (
-            <dl className="grid gap-3 text-sm sm:grid-cols-3">
+            <dl className="grid gap-3 text-sm sm:grid-cols-2">
               <div>
                 <dt className="text-xs font-medium uppercase text-gray-500">Total</dt>
                 <dd className="mt-0.5 font-medium text-gray-900">
@@ -308,18 +310,6 @@ function AppointmentCard({
                 <dt className="text-xs font-medium uppercase text-gray-500">Paid</dt>
                 <dd className="mt-0.5 font-medium text-gray-900">
                   {formatMoney(appt.amount_paid, appt.currency)}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs font-medium uppercase text-gray-500">
-                  Prepayment
-                </dt>
-                <dd className="mt-0.5 font-medium capitalize text-gray-900">
-                  {appt.prepayment_mode === "none"
-                    ? "None"
-                    : appt.prepayment_mode === "full"
-                      ? "Full"
-                      : `${appt.prepayment_percent ?? 0}%`}
                 </dd>
               </div>
             </dl>
@@ -335,7 +325,7 @@ function AppointmentCard({
               onChange={(event) => {
                 const nextStatus = event.target.value as AppointmentStatus;
                 if (nextStatus !== appt.status) {
-                  onStatusChange(appt.id, nextStatus);
+                  onStatusChangeRequest(appt, nextStatus);
                 }
               }}
               className="rounded-md border border-gray-200 bg-white px-2 py-1.5 text-sm text-gray-700 disabled:opacity-50"
@@ -360,6 +350,10 @@ export default function AppointmentsPage() {
   );
   const [filter, setFilter] = useState<StatusFilter>("pending");
   const [search, setSearch] = useState("");
+  const [pendingStatusChange, setPendingStatusChange] = useState<{
+    appointment: Appointment;
+    nextStatus: AppointmentStatus;
+  } | null>(null);
 
   useEffect(() => {
     dispatch(fetchAppointments());
@@ -415,19 +409,39 @@ export default function AppointmentsPage() {
     ).length;
   }, [appointments]);
 
-  function handleStatusChange(id: string, status: AppointmentStatus) {
-    dispatch(updateAppointmentStatus({ id, status })).then((result) => {
-      if (updateAppointmentStatus.fulfilled.match(result)) {
-        dispatch(fetchBookingStats());
-      }
-    });
+  function requestStatusChange(appointment: Appointment, status: AppointmentStatus) {
+    if (status === appointment.status) return;
+    setPendingStatusChange({ appointment, nextStatus: status });
   }
+
+  async function confirmStatusChange() {
+    if (!pendingStatusChange) return;
+    const { appointment, nextStatus } = pendingStatusChange;
+    const result = await dispatch(
+      updateAppointmentStatus({ id: appointment.id, status: nextStatus }),
+    );
+    if (updateAppointmentStatus.fulfilled.match(result)) {
+      dispatch(fetchBookingStats());
+    }
+    setPendingStatusChange(null);
+  }
+
+  const statusConfirm = pendingStatusChange
+    ? appointmentStatusConfirmCopy({
+        nextStatus: pendingStatusChange.nextStatus,
+        currentStatus: pendingStatusChange.appointment.status,
+        patientName: patientLabel(pendingStatusChange.appointment),
+        doctorName: doctorLabel(pendingStatusChange.appointment),
+        appointmentDate: pendingStatusChange.appointment.appointment_date,
+        timeSlot: pendingStatusChange.appointment.time_slot,
+      })
+    : null;
 
   return (
     <>
       <PageHero
         title="Appointments"
-        description="Bookings from ICare-MC — review upcoming visits and update status"
+        description="Bookings from ICare-MC. Review upcoming visits and update status."
         icon={CalendarCheck}
         stat={{ label: "Upcoming", value: upcomingCount }}
       />
@@ -487,7 +501,7 @@ export default function AppointmentsPage() {
         ) : filteredAppointments.length === 0 ? (
           <div className="admin-panel py-12 text-center text-sm text-gray-500">
             {filter === "pending"
-              ? "No pending appointments — all caught up."
+              ? "No pending appointments."
               : "No appointments match your filters."}
           </div>
         ) : (
@@ -505,7 +519,7 @@ export default function AppointmentsPage() {
                         key={appt.id}
                         appt={appt}
                         isSaving={savingId === appt.id}
-                        onStatusChange={handleStatusChange}
+                        onStatusChangeRequest={requestStatusChange}
                       />
                     ))}
                 </div>
@@ -514,6 +528,19 @@ export default function AppointmentsPage() {
           </div>
         )}
       </div>
+
+      <ConfirmActionModal
+        open={pendingStatusChange !== null && statusConfirm !== null}
+        onClose={() => setPendingStatusChange(null)}
+        onConfirm={confirmStatusChange}
+        title={statusConfirm?.title ?? ""}
+        description={statusConfirm?.description ?? ""}
+        confirmLabel={statusConfirm?.confirmLabel}
+        variant={statusConfirm?.variant}
+        loading={Boolean(
+          pendingStatusChange && savingId === pendingStatusChange.appointment.id,
+        )}
+      />
     </>
   );
 }

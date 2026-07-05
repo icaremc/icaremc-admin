@@ -8,6 +8,7 @@ import {
   completePayoutRequest,
   rejectPayoutRequest,
 } from "@/lib/finance/payoutActions";
+import { notifyDoctorPayoutStatus } from "@/lib/finance/payoutNotify";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
 
 export const runtime = "nodejs";
@@ -86,11 +87,21 @@ export async function POST(request: Request) {
 
     if (nextStatus === "completed") {
       await completePayoutRequest(payoutRequest.id, updatedAdminNote);
+      await notifyDoctorPayoutStatus(client, {
+        doctorId: payoutRequest.doctor_id,
+        event: "completed",
+        amount: Number(payoutRequest.amount),
+      });
     } else if (nextStatus === "rejected") {
       await rejectPayoutRequest(
         payoutRequest.id,
         appendAdminNote(updatedAdminNote, "Chapa transfer rejected by webhook."),
       );
+      await notifyDoctorPayoutStatus(client, {
+        doctorId: payoutRequest.doctor_id,
+        event: "rejected",
+        amount: Number(payoutRequest.amount),
+      });
     } else {
       await client
         .from("doctor_payout_requests")

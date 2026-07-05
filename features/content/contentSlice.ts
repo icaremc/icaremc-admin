@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { dailyTipDayNumber, dailyTipWeekNumber } from "@/lib/content/contentLabels";
 import { supabase } from "@/lib/supabaseClient";
+import { logContentDeleted, logContentSaved } from "@/lib/client/adminActivityEvents";
 import type {
   ContentNamespace,
   ContentTranslation,
@@ -104,7 +105,18 @@ export const saveContentItem = createAsyncThunk(
           .single();
 
     if (error) return rejectWithValue(error.message);
-    return data as ContentTranslation;
+    const item = data as ContentTranslation;
+    logContentSaved(
+      "content_translation",
+      item.id,
+      `Saved ${payload.namespace} content`,
+      {
+        namespace: payload.namespace,
+        entity_id: payload.entityId,
+        is_published: payload.isPublished,
+      },
+    );
+    return item;
   },
 );
 
@@ -117,6 +129,9 @@ export const deleteContentItem = createAsyncThunk(
       .eq("id", id);
 
     if (error) return rejectWithValue(error.message);
+    logContentDeleted("content_translation", id, "Deleted content item", {
+      resource_id: id,
+    });
     return id;
   },
 );

@@ -104,7 +104,7 @@ export default function UsersPage() {
     <>
       <PageHero
         title="Parents"
-        description="Mother profiles from the app — tap a row for pregnancy, vitals, and children"
+        description="Mother profiles from the app. Open a row for pregnancy, vitals, and children."
         icon={Users}
         stat={{ label: "Total parents", value: profiles.length }}
       />

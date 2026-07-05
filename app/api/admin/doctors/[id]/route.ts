@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
+import { doctorVerificationEventLabel } from "@/lib/activity/buildLog";
+import { logAdminActivityFromAuth } from "@/lib/activity/logFromAuth";
 import { requireAdminSession } from "@/lib/adminAuth";
 import {
   doctorApprovalPushMessage,
@@ -137,6 +140,26 @@ export async function PATCH(request: Request, context: RouteContext) {
         push = { sent: false, error: pushResult.error };
       }
     }
+
+    await logAdminActivityFromAuth(
+      auth,
+      {
+        eventType: ADMIN_ACTIVITY_EVENTS.DOCTOR_UPDATED,
+        eventLabel: doctorVerificationEventLabel({
+          isVerified,
+          firstName: doctor.first_name,
+          lastName: doctor.last_name,
+        }),
+        resourceType: "doctor_profile",
+        resourceId: id,
+        metadata: {
+          is_verified: isVerified,
+          doctor_name: `Dr. ${doctor.first_name} ${doctor.last_name}`.trim(),
+          specialty: doctor.specialty ?? null,
+        },
+      },
+      request,
+    );
 
     return NextResponse.json({ doctor, push });
   } catch (error) {

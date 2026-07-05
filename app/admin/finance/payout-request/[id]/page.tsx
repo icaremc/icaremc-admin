@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import StatCard from "@/components/StatCard";
+import { ConfirmActionModal } from "@/components/ConfirmActionModal";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +34,7 @@ import { formatMoney } from "@/lib/appointments/display";
 import { formatAppointmentDate } from "@/lib/appointments/status";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { payoutConfirmCopy, type PayoutAction } from "@/lib/admin/confirmMessages";
 import type { PayoutRequestStatus } from "@/lib/types/finance";
 
 const statusStyles: Record<PayoutRequestStatus, string> = {
@@ -48,7 +50,7 @@ function hasChapaReference(note: string | null | undefined): boolean {
 
 function maskAccountNumber(accountNumber?: string | null): string {
   const normalized = (accountNumber ?? "").trim();
-  if (!normalized) return "—";
+  if (!normalized) return "N/A";
   if (normalized.length <= 4) return normalized;
   return `${"*".repeat(Math.max(normalized.length - 4, 2))}${normalized.slice(-4)}`;
 }
@@ -64,6 +66,7 @@ export default function PayoutRequestDetailPage() {
   const savingId = useAppSelector((state) => state.payout.savingId);
 
   const [showChapaConfirm, setShowChapaConfirm] = useState(false);
+  const [pendingAction, setPendingAction] = useState<PayoutAction | null>(null);
   const [transferResult, setTransferResult] = useState<ChapaTransferResult | null>(
     null,
   );
@@ -92,6 +95,26 @@ export default function PayoutRequestDetailPage() {
       await reload();
     }
   }
+
+  async function confirmPendingAction() {
+    if (!pendingAction) return;
+    if (pendingAction === "verify") {
+      await handleVerify();
+    } else {
+      await handleAction(pendingAction);
+    }
+    setPendingAction(null);
+  }
+
+  const payoutConfirm =
+    pendingAction && request
+      ? payoutConfirmCopy({
+          action: pendingAction,
+          amount: Number(request.amount),
+          currency,
+          doctorName,
+        })
+      : null;
 
   async function handleChapaTransfer() {
     setShowChapaConfirm(false);
@@ -161,7 +184,7 @@ export default function PayoutRequestDetailPage() {
           <div className="flex flex-wrap gap-2">
             {request.status === "pending" ? (
               <>
-                <Button size="sm" disabled={isSaving} onClick={() => handleAction("approve")}>
+                <Button size="sm" disabled={isSaving} onClick={() => setPendingAction("approve")}>
                   Allow
                 </Button>
                 <Button
@@ -169,7 +192,7 @@ export default function PayoutRequestDetailPage() {
                   variant="outline"
                   disabled={isSaving}
                   className="text-red-700"
-                  onClick={() => handleAction("reject")}
+                  onClick={() => setPendingAction("reject")}
                 >
                   Reject
                 </Button>
@@ -188,14 +211,19 @@ export default function PayoutRequestDetailPage() {
                   size="sm"
                   variant="outline"
                   disabled={isSaving || !method}
-                  onClick={() => handleAction("complete")}
+                  onClick={() => setPendingAction("complete")}
                 >
                   Mark paid
                 </Button>
               </>
             ) : null}
             {waitingChapa ? (
-              <Button size="sm" variant="outline" disabled={isSaving} onClick={handleVerify}>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={isSaving}
+                onClick={() => setPendingAction("verify")}
+              >
                 Verify status
               </Button>
             ) : null}
@@ -397,7 +425,7 @@ export default function PayoutRequestDetailPage() {
                               : null}
                           </Link>
                         ) : (
-                          <span className="text-gray-500">—</span>
+                          <span className="text-gray-500">N/A</span>
                         )}
                       </TableCell>
                       <TableCell className="text-sm">
@@ -410,7 +438,7 @@ export default function PayoutRequestDetailPage() {
                           </Link>
                         ) : (
                           <span className="text-gray-500">
-                            {row.patient_name ?? "—"}
+                            {row.patient_name ?? "N/A"}
                           </span>
                         )}
                       </TableCell>
@@ -422,6 +450,17 @@ export default function PayoutRequestDetailPage() {
           </div>
         </section>
       </div>
+
+      <ConfirmActionModal
+        open={pendingAction !== null && payoutConfirm !== null}
+        onClose={() => setPendingAction(null)}
+        onConfirm={confirmPendingAction}
+        title={payoutConfirm?.title ?? ""}
+        description={payoutConfirm?.description ?? ""}
+        confirmLabel={payoutConfirm?.confirmLabel}
+        variant={payoutConfirm?.variant}
+        loading={isSaving}
+      />
 
       <Modal
         open={showChapaConfirm}

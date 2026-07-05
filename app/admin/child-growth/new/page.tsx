@@ -75,7 +75,7 @@ export default function NewChildGrowthPeriodPage() {
     <>
       <PageHero
         title="New growth period"
-        description="WHO-aligned checkpoint: growth, vaccines, milestones, red flags, nutrition, visits"
+        description="Growth, vaccines, milestones, red flags, nutrition, and visits"
         icon={TrendingUp}
       />
 

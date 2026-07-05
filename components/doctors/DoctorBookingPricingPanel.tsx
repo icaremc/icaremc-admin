@@ -325,7 +325,7 @@ export default function DoctorBookingPricingPanel({
                               </p>
                             ) : (
                               <p className="mt-1 text-sm text-amber-600">
-                                Incomplete — tap edit to finish
+                                Incomplete. Tap edit to finish.
                               </p>
                             )}
                             {service.description.trim() ? (

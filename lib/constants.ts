@@ -10,7 +10,7 @@ export const CONTENT_NAMESPACES: {
   {
     value: "milestone",
     label: "Child milestones",
-    description: "Developmental milestones by age in months",
+    description: "Milestones by age in months",
   },
   {
     value: "daily_tip",

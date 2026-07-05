@@ -4,16 +4,19 @@ import {
   EMPTY_GROWTH_METRIC,
   EMPTY_MILESTONE_CATEGORY,
   EMPTY_PREGNANCY_SECTION,
+  EMPTY_VACCINE,
   type GrowthFields,
   type GrowthMetricSexFields,
   type MilestoneCategoryFields,
   type PregnancySectionFields,
+  type VaccineFields,
 } from "@/lib/content/formTypes";
 import {
   ageGroupForMonths,
   type ChildAgeGroup,
 } from "@/lib/childGrowth/periods";
 import { supabase } from "@/lib/supabaseClient";
+import { logContentDeleted, logContentSaved } from "@/lib/client/adminActivityEvents";
 import type {
   ChildGrowthGrowthData,
   ChildGrowthMetrics,
@@ -21,6 +24,7 @@ import type {
   ChildGrowthMilestoneCategory,
   ChildGrowthPeriod,
   ChildGrowthPeriodTranslation,
+  ChildGrowthVaccine,
   Locale,
   PregnancyWeekSection,
 } from "@/lib/types/database";
@@ -35,7 +39,7 @@ export type ChildGrowthPeriodFormTranslation = {
   title: string;
   subtitle: string;
   growth: ChildGrowthFormGrowth;
-  vaccines: PregnancySectionFields[];
+  vaccines: VaccineFields[];
   milestones: MilestoneCategoryFields[];
   red_flags: PregnancySectionFields[];
   nutrition: PregnancySectionFields[];
@@ -76,12 +80,59 @@ const emptyTranslation = (): ChildGrowthPeriodFormTranslation => ({
   title: "",
   subtitle: "",
   growth: emptyGrowth(),
-  vaccines: [{ ...EMPTY_PREGNANCY_SECTION }],
+  vaccines: [{ ...EMPTY_VACCINE }],
   milestones: [{ ...EMPTY_MILESTONE_CATEGORY }],
   red_flags: [{ ...EMPTY_PREGNANCY_SECTION }],
   nutrition: [{ ...EMPTY_PREGNANCY_SECTION }],
   visit_reminders: [{ ...EMPTY_PREGNANCY_SECTION }],
 });
+
+function parseVaccines(raw: unknown): VaccineFields[] {
+  if (!Array.isArray(raw) || raw.length === 0) {
+    return [{ ...EMPTY_VACCINE }];
+  }
+  return raw
+    .filter((item) => item && typeof item === "object")
+    .map((item) => {
+      const map = item as Record<string, unknown>;
+      const benefits = map.benefits ?? map.bullets;
+      const benefitsText = Array.isArray(benefits)
+        ? benefits.map((b) => String(b)).join("\n")
+        : "";
+
+      // New shape: { name, route, benefits[] }
+      if (typeof map.name === "string" || typeof map.route === "string") {
+        return {
+          name: typeof map.name === "string" ? map.name : "",
+          route: typeof map.route === "string" ? map.route : "",
+          benefitsText,
+        };
+      }
+
+      // Legacy shape: { title, body, bullets[] }
+      return {
+        name: typeof map.title === "string" ? map.title : "",
+        route: typeof map.body === "string" ? map.body : "",
+        benefitsText,
+      };
+    });
+}
+
+function serializeVaccines(vaccines: VaccineFields[]): ChildGrowthVaccine[] {
+  return vaccines
+    .filter(
+      (vaccine) =>
+        vaccine.name.trim() || vaccine.route.trim() || vaccine.benefitsText.trim(),
+    )
+    .map((vaccine) => ({
+      name: vaccine.name.trim(),
+      route: vaccine.route.trim(),
+      benefits: vaccine.benefitsText
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean),
+    }));
+}
 
 function parseSections(raw: unknown): PregnancySectionFields[] {
   if (!Array.isArray(raw) || raw.length === 0) {
@@ -283,8 +334,15 @@ function translationHasContent(
   ) {
     return true;
   }
+  if (
+    slice.vaccines.some(
+      (vaccine) =>
+        vaccine.name.trim() || vaccine.route.trim() || vaccine.benefitsText.trim(),
+    )
+  ) {
+    return true;
+  }
   const sectionGroups = [
-    slice.vaccines,
     slice.red_flags,
     slice.nutrition,
     slice.visit_reminders,
@@ -316,7 +374,7 @@ export function periodToForm(period: ChildGrowthPeriod): ChildGrowthPeriodFormSt
         title: row?.title ?? "",
         subtitle: row?.subtitle ?? "",
         growth: parseGrowth(row?.growth),
-        vaccines: parseSections(row?.vaccines),
+        vaccines: parseVaccines(row?.vaccines),
         milestones: parseMilestones(row?.milestones),
         red_flags: parseSections(row?.red_flags),
         nutrition: parseSections(row?.nutrition),
@@ -345,7 +403,7 @@ export function createEmptyForm(
   const makeTranslation = (): ChildGrowthPeriodFormTranslation => ({
     ...emptyTranslation(),
     growth: emptyGrowth(),
-    vaccines: [{ ...EMPTY_PREGNANCY_SECTION }],
+    vaccines: [{ ...EMPTY_VACCINE }],
     milestones: [{ ...EMPTY_MILESTONE_CATEGORY }],
     red_flags: [{ ...EMPTY_PREGNANCY_SECTION }],
     nutrition: [{ ...EMPTY_PREGNANCY_SECTION }],
@@ -385,7 +443,7 @@ function formToTranslationRows(
         title: slice.title.trim() || form.age_label.trim() || `Age ${form.age_months} months`,
         subtitle: slice.subtitle.trim() || null,
         growth: serializeGrowth(slice.growth),
-        vaccines: serializeSections(slice.vaccines),
+        vaccines: serializeVaccines(slice.vaccines),
         milestones: serializeMilestones(slice.milestones),
         red_flags: serializeSections(slice.red_flags),
         nutrition: serializeSections(slice.nutrition),
@@ -504,6 +562,12 @@ export const saveChildGrowthPeriod = createAsyncThunk(
       .single();
 
     if (error) return rejectWithValue(error.message);
+    logContentSaved(
+      "child_growth_period",
+      periodId!,
+      `Saved child milestone: ${form.age_months} months`,
+      { age_months: form.age_months },
+    );
     return data as ChildGrowthPeriod;
   },
 );
@@ -516,6 +580,9 @@ export const deleteChildGrowthPeriod = createAsyncThunk(
       .delete()
       .eq("id", id);
     if (error) return rejectWithValue(error.message);
+    logContentDeleted("child_growth_period", id, "Deleted child milestone period", {
+      resource_id: id,
+    });
     return id;
   },
 );

@@ -2,7 +2,7 @@ export type PushDeliveryInput = {
   title: string;
   body: string;
   route?: string;
-  type?: "chat" | "booking" | "account";
+  type?: "chat" | "booking" | "account" | "payout";
   tab?: string;
   conversation_id?: string;
 };

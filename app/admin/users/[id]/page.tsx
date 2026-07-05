@@ -110,17 +110,17 @@ function VitalsTable({ logs }: { logs: PregnancyLog[] }) {
           {sorted.map((log) => (
             <TableRow key={log.id}>
               <TableCell className="font-medium">Week {log.week_number}</TableCell>
-              <TableCell>{log.weight != null ? `${log.weight} kg` : "—"}</TableCell>
+              <TableCell>{log.weight != null ? `${log.weight} kg` : "N/A"}</TableCell>
               <TableCell>
                 {log.blood_pressure_systolic != null
-                  ? `${log.blood_pressure_systolic}/${log.blood_pressure_diastolic ?? "—"}`
-                  : "—"}
+                  ? `${log.blood_pressure_systolic}/${log.blood_pressure_diastolic ?? "N/A"}`
+                  : "N/A"}
               </TableCell>
               <TableCell className="max-w-[180px]">
-                {log.symptoms.length ? log.symptoms.join(", ") : "—"}
+                {log.symptoms.length ? log.symptoms.join(", ") : "N/A"}
               </TableCell>
               <TableCell className="max-w-[200px] text-gray-600">
-                {log.notes ? truncate(log.notes, 64) : "—"}
+                {log.notes ? truncate(log.notes, 64) : "N/A"}
               </TableCell>
             </TableRow>
           ))}
@@ -147,7 +147,7 @@ function LatestVitalSummary({ log }: { log: PregnancyLog }) {
         <span>
           <span className="text-gray-500">BP</span>{" "}
           <span className="font-medium text-gray-900">
-            {log.blood_pressure_systolic}/{log.blood_pressure_diastolic ?? "—"}
+            {log.blood_pressure_systolic}/{log.blood_pressure_diastolic ?? "N/A"}
           </span>
         </span>
       ) : null}
@@ -414,7 +414,7 @@ export default function UserDetailPage() {
                   activePregnancy.lmp_date,
                   activePregnancy.edd,
                 );
-                return age ? `Week ${age.week}` : "—";
+                return age ? `Week ${age.week}` : "N/A";
               })()
             : (detail?.pregnancies.length ?? 0),
         }}

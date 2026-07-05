@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
+import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
+import { payoutActionEventLabel } from "@/lib/activity/buildLog";
+import { logAdminActivityFromAuth } from "@/lib/activity/logFromAuth";
 import { requireAdminSession } from "@/lib/adminAuth";
 import {
   approvePayoutRequest,
   completePayoutRequest,
   rejectPayoutRequest,
 } from "@/lib/finance/payoutActions";
+import { notifyDoctorPayoutStatus } from "@/lib/finance/payoutNotify";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
 import type { DoctorPayoutRequest } from "@/lib/types/finance";
 
@@ -75,6 +79,24 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   try {
+    const client = createServiceSupabaseClient();
+    const { data: before } = await client
+      .from("doctor_payout_requests")
+      .select("doctor_id, amount, doctor_profiles(first_name, last_name)")
+      .eq("id", id)
+      .maybeSingle();
+
+    const doctorProfile = before?.doctor_profiles as
+      | { first_name: string; last_name: string }
+      | { first_name: string; last_name: string }[]
+      | null
+      | undefined;
+    const profile = Array.isArray(doctorProfile) ? doctorProfile[0] : doctorProfile;
+    const doctorName = profile
+      ? `Dr. ${profile.first_name} ${profile.last_name}`.trim()
+      : null;
+    const amount = Number(before?.amount ?? 0);
+
     if (body.action === "approve") {
       await approvePayoutRequest(id, body.adminNote);
     } else if (body.action === "reject") {
@@ -83,7 +105,6 @@ export async function PATCH(request: Request, context: RouteContext) {
       await completePayoutRequest(id, body.adminNote);
     }
 
-    const client = createServiceSupabaseClient();
     const { data, error } = await client
       .from("doctor_payout_requests")
       .select(PAYOUT_SELECT)
@@ -92,6 +113,43 @@ export async function PATCH(request: Request, context: RouteContext) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    await logAdminActivityFromAuth(
+      auth,
+      {
+        eventType: ADMIN_ACTIVITY_EVENTS.PAYOUT_ACTION,
+        eventLabel: payoutActionEventLabel({
+          action: body.action,
+          amount,
+          doctorName,
+        }),
+        resourceType: "payout_request",
+        resourceId: id,
+        metadata: {
+          action: body.action,
+          amount,
+          currency: "ETB",
+          doctor_id: before?.doctor_id ?? null,
+          doctor_name: doctorName,
+          admin_note: body.adminNote ?? null,
+        },
+      },
+      request,
+    );
+
+    if (before?.doctor_id) {
+      const notifyEvent =
+        body.action === "approve"
+          ? "approved"
+          : body.action === "reject"
+            ? "rejected"
+            : "completed";
+      await notifyDoctorPayoutStatus(client, {
+        doctorId: before.doctor_id,
+        event: notifyEvent,
+        amount,
+      });
     }
 
     return NextResponse.json({ request: data as DoctorPayoutRequest });

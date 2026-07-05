@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
+import { logAdminActivityFromAuth } from "@/lib/activity/logFromAuth";
 import { requireAdminSession } from "@/lib/adminAuth";
 import {
   removeHospitalImage,
@@ -150,6 +152,17 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    await logAdminActivityFromAuth(
+      auth,
+      {
+        eventType: ADMIN_ACTIVITY_EVENTS.HOSPITAL_UPDATED,
+        eventLabel: `Updated hospital ${(hospital as Hospital).name}`,
+        resourceType: "hospital",
+        resourceId: id,
+      },
+      request,
+    );
+
     return NextResponse.json({ hospital: hospital as Hospital });
   } catch (error) {
     return NextResponse.json(
@@ -202,6 +215,17 @@ export async function DELETE(_request: Request, context: RouteContext) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    await logAdminActivityFromAuth(
+      auth,
+      {
+        eventType: ADMIN_ACTIVITY_EVENTS.CONTENT_DELETED,
+        eventLabel: `Deleted hospital ${id}`,
+        resourceType: "hospital",
+        resourceId: id,
+      },
+      _request,
+    );
 
     return NextResponse.json({ ok: true });
   } catch (error) {

@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { supabase } from "@/lib/supabaseClient";
+import { logContentDeleted, logContentSaved } from "@/lib/client/adminActivityEvents";
 import {
   EMPTY_PREGNANCY_SECTION,
   type PregnancySectionFields,
@@ -25,6 +26,7 @@ export type PregnancyWeekFormState = {
   week_number: number;
   trimester: number;
   image_note: string;
+  image_url: string;
   is_published: boolean;
   translations: Record<Locale, PregnancyWeekFormTranslation>;
 };
@@ -132,6 +134,7 @@ export function weekToForm(week: PregnancyWeek): PregnancyWeekFormState {
     week_number: week.week_number,
     trimester: week.trimester,
     image_note: week.image_note ?? "",
+    image_url: week.image_url ?? "",
     is_published: week.is_published,
     translations,
   };
@@ -265,6 +268,12 @@ export const savePregnancyWeek = createAsyncThunk(
       .single();
 
     if (error) return rejectWithValue(error.message);
+    logContentSaved(
+      "pregnancy_week",
+      weekId!,
+      `Saved pregnancy week ${form.week_number}`,
+      { week_number: form.week_number },
+    );
     return data as PregnancyWeek;
   },
 );
@@ -274,6 +283,9 @@ export const deletePregnancyWeek = createAsyncThunk(
   async (id: string, { rejectWithValue }) => {
     const { error } = await supabase.from("pregnancy_weeks").delete().eq("id", id);
     if (error) return rejectWithValue(error.message);
+    logContentDeleted("pregnancy_week", id, `Deleted pregnancy week`, {
+      resource_id: id,
+    });
     return id;
   },
 );

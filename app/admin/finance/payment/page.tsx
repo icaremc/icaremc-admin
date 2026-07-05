@@ -43,7 +43,7 @@ export default function FinancePaymentsPage() {
     <>
       <PageHero
         title="Payments"
-        description="Appointment prepayments and payment status from the patient app"
+        description="Appointment payments and payment status from the patient app"
         icon={CreditCard}
         stat={{ label: "Collected", value: formatMoney(paidTotal, "ETB") }}
       />
@@ -106,7 +106,7 @@ export default function FinancePaymentsPage() {
                       <TableCell>
                         {doctor
                           ? `Dr. ${doctor.first_name} ${doctor.last_name}`
-                          : "—"}
+                          : "N/A"}
                       </TableCell>
                       <TableCell>
                         {formatMoney(Number(appt.total_amount), appt.currency)}

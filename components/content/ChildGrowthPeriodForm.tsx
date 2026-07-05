@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import SectionFieldsEditor from "@/components/content/SectionFieldsEditor";
+import VaccineFieldsEditor from "@/components/content/VaccineFieldsEditor";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -312,7 +313,7 @@ export default function ChildGrowthPeriodForm({
         </div>
       </div>
 
-      {/* Language selector — applies to all sections' translated text. */}
+      {/* Language selector for all sections' translated text. */}
       <div className="flex flex-wrap items-center gap-3">
         {localeTabs}
       </div>
@@ -477,9 +478,8 @@ export default function ChildGrowthPeriodForm({
       {/* ---- Vaccines ---- */}
       {activeSection === "vaccines" ? (
         <div className="space-y-4 rounded-xl border border-gray-200 bg-gray-50/80 p-4">
-          <SectionFieldsEditor
-            label="Vaccines"
-            sections={translation.vaccines}
+          <VaccineFieldsEditor
+            vaccines={translation.vaccines}
             onChange={(vaccines) => updateTranslation({ vaccines })}
           />
         </div>
@@ -489,7 +489,7 @@ export default function ChildGrowthPeriodForm({
       {activeSection === "milestones" ? (
         <div className="space-y-4 rounded-xl border border-gray-200 bg-gray-50/80 p-4">
           <div className="flex items-center justify-between">
-            <Label>Developmental milestones</Label>
+            <Label>Milestones</Label>
             <Button
               type="button"
               variant="outline"

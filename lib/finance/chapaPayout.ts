@@ -218,6 +218,36 @@ export async function getDoctorPayoutMethod(
   return data as DoctorPayoutMethod;
 }
 
+export async function getDoctorDefaultPayoutMethod(
+  doctorId: string,
+): Promise<DoctorPayoutMethod | null> {
+  const client = createServiceSupabaseClient();
+  const normalizedDoctorId = doctorId.trim();
+  if (!normalizedDoctorId) return null;
+
+  const { data: defaultActive } = await client
+    .from("doctor_payout_methods")
+    .select("*")
+    .eq("doctor_id", normalizedDoctorId)
+    .eq("is_active", true)
+    .eq("is_default", true)
+    .order("updated_at", { ascending: false })
+    .maybeSingle();
+
+  if (defaultActive) return defaultActive as DoctorPayoutMethod;
+
+  const { data: anyActive } = await client
+    .from("doctor_payout_methods")
+    .select("*")
+    .eq("doctor_id", normalizedDoctorId)
+    .eq("is_active", true)
+    .order("is_default", { ascending: false })
+    .order("updated_at", { ascending: false })
+    .maybeSingle();
+
+  return (anyActive as DoctorPayoutMethod | null) ?? null;
+}
+
 export function resolveWebhookUrl(request: Request): string {
   const configured = (
     process.env.CHAPA_TRANSFER_WEBHOOK_URL ||
@@ -240,7 +270,7 @@ export function resolveWebhookUrl(request: Request): string {
 
 export function maskAccountNumber(accountNumber?: string | null): string {
   const normalized = (accountNumber ?? "").trim();
-  if (!normalized) return "—";
+  if (!normalized) return "N/A";
   if (normalized.length <= 4) return normalized;
   return `${"*".repeat(Math.max(normalized.length - 4, 2))}${normalized.slice(-4)}`;
 }

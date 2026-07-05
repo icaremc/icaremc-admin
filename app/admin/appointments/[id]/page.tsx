@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
@@ -13,6 +13,7 @@ import {
   User,
 } from "lucide-react";
 import PageHero from "@/components/PageHero";
+import { ConfirmActionModal } from "@/components/ConfirmActionModal";
 import { Button } from "@/components/ui/button";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import {
@@ -37,6 +38,7 @@ import {
 } from "@/lib/appointments/display";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { appointmentStatusConfirmCopy } from "@/lib/admin/confirmMessages";
 import type { ChatMessage } from "@/lib/types/chat";
 import type { Appointment, AppointmentStatus } from "@/lib/types/doctors";
 
@@ -153,6 +155,7 @@ export default function AppointmentDetailPage() {
   const dispatch = useAppDispatch();
   const { detail, loading, error } = useAppSelector((state) => state.appointmentDetail);
   const savingId = useAppSelector((state) => state.appointments.savingId);
+  const [pendingStatus, setPendingStatus] = useState<AppointmentStatus | null>(null);
 
   useEffect(() => {
     if (appointmentId) {
@@ -164,15 +167,34 @@ export default function AppointmentDetailPage() {
   const isSaving = Boolean(appt && savingId === appt.id);
   const quickActions = appt ? nextStatusActions(appt.status) : [];
 
-  function handleStatusChange(status: AppointmentStatus) {
+  function requestStatusChange(status: AppointmentStatus) {
     if (!appt || status === appt.status) return;
-    dispatch(updateAppointmentStatus({ id: appt.id, status })).then((result) => {
-      if (updateAppointmentStatus.fulfilled.match(result)) {
-        dispatch(fetchBookingStats());
-        dispatch(fetchAppointmentDetail(appt.id));
-      }
-    });
+    setPendingStatus(status);
   }
+
+  async function confirmStatusChange() {
+    if (!appt || !pendingStatus) return;
+    const result = await dispatch(
+      updateAppointmentStatus({ id: appt.id, status: pendingStatus }),
+    );
+    if (updateAppointmentStatus.fulfilled.match(result)) {
+      dispatch(fetchBookingStats());
+      dispatch(fetchAppointmentDetail(appt.id));
+    }
+    setPendingStatus(null);
+  }
+
+  const statusConfirm =
+    appt && pendingStatus
+      ? appointmentStatusConfirmCopy({
+          nextStatus: pendingStatus,
+          currentStatus: appt.status,
+          patientName: patientLabel(appt),
+          doctorName: doctorLabel(appt),
+          appointmentDate: appt.appointment_date,
+          timeSlot: appt.time_slot,
+        })
+      : null;
 
   const heroTitle = appt
     ? `${formatAppointmentDate(appt.appointment_date)} · ${appt.time_slot}`
@@ -231,7 +253,7 @@ export default function AppointmentDetailPage() {
                       className={cn(
                         status === "cancelled" && "text-red-700 hover:text-red-800",
                       )}
-                      onClick={() => handleStatusChange(status)}
+                      onClick={() => requestStatusChange(status)}
                     >
                       {isSaving ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -295,12 +317,33 @@ export default function AppointmentDetailPage() {
                       appt.doctor_profiles?.hospital,
                     ]
                       .filter(Boolean)
-                      .join(" · ") || "—"}
+                      .join(" · ") || "N/A"}
                   </p>
                 </div>
               </div>
 
-              {appt.service_name || appt.note?.trim() || appt.total_amount > 0 ? (
+                  {appt.status === "cancelled" && appt.cancelled_by ? (
+                    <div className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                      Cancelled by{" "}
+                      <span className="font-medium capitalize">{appt.cancelled_by}</span>
+                      {appt.amount_paid > 0 &&
+                      (appt.payment_status === "paid" ||
+                        appt.payment_status === "partial") ? (
+                        <>
+                          {" "}
+                          · Patient refund{" "}
+                          <span className="font-medium">
+                            {formatMoney(appt.amount_paid, appt.currency)}
+                          </span>
+                          {appt.cancelled_by === "doctor"
+                            ? " · Doctor penalty may apply"
+                            : null}
+                        </>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  {appt.service_name || appt.note?.trim() || appt.total_amount > 0 ? (
                 <div className="space-y-3 border-t border-gray-100 pt-4">
                   {appt.service_name ? (
                     <div>
@@ -325,7 +368,7 @@ export default function AppointmentDetailPage() {
                     </div>
                   ) : null}
                   {appt.total_amount > 0 ? (
-                    <dl className="grid gap-3 text-sm sm:grid-cols-3">
+                    <dl className="grid gap-3 text-sm sm:grid-cols-2">
                       <div>
                         <dt className="text-xs font-medium uppercase text-gray-500">Total</dt>
                         <dd className="mt-0.5 font-medium text-gray-900">
@@ -336,18 +379,6 @@ export default function AppointmentDetailPage() {
                         <dt className="text-xs font-medium uppercase text-gray-500">Paid</dt>
                         <dd className="mt-0.5 font-medium text-gray-900">
                           {formatMoney(appt.amount_paid, appt.currency)}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-xs font-medium uppercase text-gray-500">
-                          Prepayment
-                        </dt>
-                        <dd className="mt-0.5 font-medium capitalize text-gray-900">
-                          {appt.prepayment_mode === "none"
-                            ? "None"
-                            : appt.prepayment_mode === "full"
-                              ? "Full"
-                              : `${appt.prepayment_percent ?? 0}%`}
                         </dd>
                       </div>
                     </dl>
@@ -363,7 +394,7 @@ export default function AppointmentDetailPage() {
                   value={appt.status}
                   disabled={isSaving}
                   onChange={(event) =>
-                    handleStatusChange(event.target.value as AppointmentStatus)
+                    requestStatusChange(event.target.value as AppointmentStatus)
                   }
                   className="rounded-md border border-gray-200 bg-white px-2 py-1.5 text-sm text-gray-700 disabled:opacity-50"
                 >
@@ -398,6 +429,17 @@ export default function AppointmentDetailPage() {
           </>
         ) : null}
       </div>
+
+      <ConfirmActionModal
+        open={pendingStatus !== null && statusConfirm !== null}
+        onClose={() => setPendingStatus(null)}
+        onConfirm={confirmStatusChange}
+        title={statusConfirm?.title ?? ""}
+        description={statusConfirm?.description ?? ""}
+        confirmLabel={statusConfirm?.confirmLabel}
+        variant={statusConfirm?.variant}
+        loading={isSaving}
+      />
     </>
   );
 }

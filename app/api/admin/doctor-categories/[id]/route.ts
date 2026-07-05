@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
+import { logAdminActivityFromAuth } from "@/lib/activity/logFromAuth";
 import { requireAdminSession } from "@/lib/adminAuth";
 import { slugifyCategoryName } from "@/lib/doctors/display";
 import {
@@ -143,6 +145,17 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    await logAdminActivityFromAuth(
+      auth,
+      {
+        eventType: ADMIN_ACTIVITY_EVENTS.CATEGORY_UPDATED,
+        eventLabel: `Updated speciality ${(category as DoctorCategory).name}`,
+        resourceType: "doctor_category",
+        resourceId: id,
+      },
+      request,
+    );
+
     return NextResponse.json({ category: category as DoctorCategory });
   } catch (error) {
     return NextResponse.json(
@@ -195,6 +208,17 @@ export async function DELETE(_request: Request, context: RouteContext) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    await logAdminActivityFromAuth(
+      auth,
+      {
+        eventType: ADMIN_ACTIVITY_EVENTS.CONTENT_DELETED,
+        eventLabel: `Deleted speciality ${id}`,
+        resourceType: "doctor_category",
+        resourceId: id,
+      },
+      _request,
+    );
 
     return NextResponse.json({ ok: true });
   } catch (error) {

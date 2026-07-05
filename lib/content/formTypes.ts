@@ -2,6 +2,18 @@ import type { ContentNamespace, Locale } from "@/lib/types/database";
 
 export type LocaleFormMap = Record<Locale, Record<string, unknown>>;
 
+export type VaccineFields = {
+  name: string;
+  route: string;
+  benefitsText: string;
+};
+
+export const EMPTY_VACCINE: VaccineFields = {
+  name: "",
+  route: "",
+  benefitsText: "",
+};
+
 export type PregnancySectionFields = {
   title: string;
   body: string;

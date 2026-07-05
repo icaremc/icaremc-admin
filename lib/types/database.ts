@@ -62,6 +62,7 @@ export type PregnancyWeek = {
   week_number: number;
   trimester: number;
   image_note: string | null;
+  image_url: string | null;
   is_published: boolean;
   created_at: string;
   updated_at: string;
@@ -110,6 +111,12 @@ export type ChildGrowthGrowthData = {
   };
 };
 
+export type ChildGrowthVaccine = {
+  name: string;
+  route: string;
+  benefits: string[];
+};
+
 export type ChildGrowthMilestoneCategory = {
   title: string;
   items?: string[];
@@ -152,7 +159,7 @@ export type ChildGrowthPeriodTranslation = {
   title: string;
   subtitle: string | null;
   growth: ChildGrowthGrowthData;
-  vaccines: PregnancyWeekSection[];
+  vaccines: ChildGrowthVaccine[];
   milestones: ChildGrowthMilestoneCategory[];
   red_flags: PregnancyWeekSection[];
   nutrition: PregnancyWeekSection[];

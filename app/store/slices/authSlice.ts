@@ -85,7 +85,7 @@ export const login = createAsyncThunk<
 
   void logAdminPortalEvent({
     event_type: ADMIN_ACTIVITY_EVENTS.LOGIN,
-    event_label: "Admin logged in",
+    event_label: "Signed in to admin portal",
   });
 
   return {

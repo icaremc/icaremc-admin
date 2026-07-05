@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
+import { logAdminActivityFromAuth } from "@/lib/activity/logFromAuth";
 import { requireAdminSession } from "@/lib/adminAuth";
 import {
   nextHospitalSortOrder,
@@ -114,8 +116,30 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: updateError.message }, { status: 500 });
       }
 
+      await logAdminActivityFromAuth(
+        auth,
+        {
+          eventType: ADMIN_ACTIVITY_EVENTS.HOSPITAL_UPDATED,
+          eventLabel: `Created hospital ${(updated as Hospital).name}`,
+          resourceType: "hospital",
+          resourceId: hospital.id,
+        },
+        request,
+      );
+
       return NextResponse.json({ hospital: updated as Hospital }, { status: 201 });
     }
+
+    await logAdminActivityFromAuth(
+      auth,
+      {
+        eventType: ADMIN_ACTIVITY_EVENTS.HOSPITAL_UPDATED,
+        eventLabel: `Created hospital ${(hospital as Hospital).name}`,
+        resourceType: "hospital",
+        resourceId: hospital.id,
+      },
+      request,
+    );
 
     return NextResponse.json({ hospital: hospital as Hospital }, { status: 201 });
   } catch (error) {

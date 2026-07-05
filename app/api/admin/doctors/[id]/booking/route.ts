@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
+import { logAdminActivityFromAuth } from "@/lib/activity/logFromAuth";
 import { requireAdminSession } from "@/lib/adminAuth";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
 
@@ -112,6 +114,27 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    const doctor = data as { first_name?: string; last_name?: string } | null;
+    const doctorName = doctor
+      ? `Dr. ${doctor.first_name ?? ""} ${doctor.last_name ?? ""}`.trim()
+      : "doctor";
+
+    await logAdminActivityFromAuth(
+      auth,
+      {
+        eventType: ADMIN_ACTIVITY_EVENTS.DOCTOR_BOOKING_UPDATED,
+        eventLabel: `Updated booking services and pricing for ${doctorName}`,
+        resourceType: "doctor_profile",
+        resourceId: id,
+        metadata: {
+          doctor_name: doctorName,
+          service_count: body.services?.length ?? null,
+          currency: body.currency ?? null,
+        },
+      },
+      request,
+    );
 
     return NextResponse.json({ doctor: data });
   } catch (error) {

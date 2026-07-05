@@ -28,7 +28,7 @@ export function doctorHasServiceImage(url: string | null | undefined): boolean {
 }
 
 export function doctorCategoryLabel(doctor: DoctorProfile): string {
-  return doctor.doctor_categories?.name ?? doctor.specialty ?? "—";
+  return doctor.doctor_categories?.name ?? doctor.specialty ?? "N/A";
 }
 
 export function nextDoctorCategorySortOrder(

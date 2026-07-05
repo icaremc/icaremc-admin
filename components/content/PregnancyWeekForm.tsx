@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Baby, Heart, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import {
   type PregnancyWeekFormState,
   trimesterForWeek,
 } from "@/features/pregnancyWeeks/pregnancyWeeksSlice";
+import { pregnancyWeekHasImage } from "@/lib/pregnancyWeeks/storage";
 import { cn } from "@/lib/utils";
 
 const LOCALE_LABELS: Record<Locale, string> = {
@@ -25,12 +26,20 @@ type PregnancyWeekFormProps = {
   value: PregnancyWeekFormState;
   onChange: (value: PregnancyWeekFormState) => void;
   isNew?: boolean;
+  imagePreview?: string | null;
+  onImageChange?: (file: File | null) => void;
+  removeImage?: boolean;
+  onRemoveImageChange?: (remove: boolean) => void;
 };
 
 export default function PregnancyWeekForm({
   value,
   onChange,
   isNew,
+  imagePreview,
+  onImageChange,
+  removeImage = false,
+  onRemoveImageChange,
 }: PregnancyWeekFormProps) {
   const [activeLocale, setActiveLocale] = useState<Locale>("en");
   const translation = value.translations[activeLocale];
@@ -111,6 +120,45 @@ export default function PregnancyWeekForm({
             }
             className="mt-1.5"
           />
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-gray-200 bg-white p-4">
+        <Label htmlFor="week_image">Week hero image</Label>
+        <Input
+          id="week_image"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="mt-3"
+          onChange={(event) => onImageChange?.(event.target.files?.[0] ?? null)}
+        />
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-start">
+          {imagePreview && !removeImage ? (
+            <img
+              src={imagePreview}
+              alt={`Week ${value.week_number} preview`}
+              className="h-28 w-28 rounded-full border object-cover"
+            />
+          ) : (
+            <div className="flex h-28 w-28 items-center justify-center rounded-full border border-dashed border-emerald-200 bg-emerald-50 text-emerald-600">
+              {value.week_number < 8 ? (
+                <Heart className="h-10 w-10" />
+              ) : (
+                <Baby className="h-10 w-10" />
+              )}
+            </div>
+          )}
+          {pregnancyWeekHasImage(value.image_url) && onRemoveImageChange ? (
+            <label className="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={removeImage}
+                onChange={(event) => onRemoveImageChange(event.target.checked)}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              Remove current image
+            </label>
+          ) : null}
         </div>
       </div>
 

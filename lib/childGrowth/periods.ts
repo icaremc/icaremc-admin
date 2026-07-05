@@ -34,7 +34,7 @@ export function formatAgeMonthsLabel(ageMonths: number): string {
   return `${years}y ${months}m`;
 }
 
-/** WHO-aligned checkpoints — admins can add more custom periods. */
+/** Standard age checkpoints — admins can add custom periods. */
 export const SUGGESTED_CHILD_GROWTH_PERIODS = [
   { age_months: 0, age_label: "Newborn (0–28 days)" },
   { age_months: 1, age_label: "6 weeks / 1.5 months" },

@@ -10,6 +10,7 @@ import type {
   ChildGrowthMetricSex,
   ChildGrowthPeriod,
   ChildGrowthPeriodTranslation,
+  ChildGrowthVaccine,
   Locale,
   PregnancyWeekSection,
 } from "@/lib/types/database";
@@ -36,6 +37,52 @@ function DetailField({
         {label}
       </p>
       <p className="mt-1 whitespace-pre-wrap text-sm text-gray-800">{value}</p>
+    </div>
+  );
+}
+
+function VaccineList({ vaccines }: { vaccines: ChildGrowthVaccine[] }) {
+  if (!vaccines?.length) return null;
+
+  return (
+    <div className="space-y-3 border-t border-gray-200 pt-4">
+      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+        Vaccines
+      </p>
+      <div className="overflow-hidden rounded-xl border border-gray-200">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
+            <tr>
+              <th className="px-4 py-3">Vaccine</th>
+              <th className="px-4 py-3">Route</th>
+              <th className="px-4 py-3">Benefit</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 bg-white">
+            {vaccines.map((vaccine, index) => (
+              <tr key={index}>
+                <td className="px-4 py-3 font-medium text-gray-900">
+                  {vaccine.name || `Vaccine ${index + 1}`}
+                </td>
+                <td className="px-4 py-3 text-gray-700">
+                  {vaccine.route || "N/A"}
+                </td>
+                <td className="px-4 py-3 text-gray-700">
+                  {vaccine.benefits?.length ? (
+                    <ul className="list-disc space-y-1 pl-4">
+                      {vaccine.benefits.map((benefit, benefitIndex) => (
+                        <li key={benefitIndex}>{benefit}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    "N/A"
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -180,12 +227,12 @@ function TranslationPanel({
       <DetailField label="Title" value={translation.title} />
       <DetailField label="Subtitle" value={translation.subtitle} />
       <GrowthPanel growth={translation.growth ?? {}} />
-      <SectionList label="Vaccines" sections={translation.vaccines ?? []} />
+      <VaccineList vaccines={translation.vaccines ?? []} />
 
       {translation.milestones && translation.milestones.length > 0 ? (
         <div className="space-y-3 border-t border-gray-200 pt-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-            Developmental milestones
+            Milestones
           </p>
           {translation.milestones.map((category, index) => (
             <div

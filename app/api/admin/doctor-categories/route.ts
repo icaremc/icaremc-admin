@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
+import { logAdminActivityFromAuth } from "@/lib/activity/logFromAuth";
 import { requireAdminSession } from "@/lib/adminAuth";
 import { slugifyCategoryName } from "@/lib/doctors/display";
 import { uploadSpecialityImage } from "@/lib/specialities/storage";
@@ -116,8 +118,30 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: updateError.message }, { status: 500 });
       }
 
+      await logAdminActivityFromAuth(
+        auth,
+        {
+          eventType: ADMIN_ACTIVITY_EVENTS.CATEGORY_UPDATED,
+          eventLabel: `Created speciality ${(updated as DoctorCategory).name}`,
+          resourceType: "doctor_category",
+          resourceId: category.id,
+        },
+        request,
+      );
+
       return NextResponse.json({ category: updated as DoctorCategory }, { status: 201 });
     }
+
+    await logAdminActivityFromAuth(
+      auth,
+      {
+        eventType: ADMIN_ACTIVITY_EVENTS.CATEGORY_UPDATED,
+        eventLabel: `Created speciality ${(category as DoctorCategory).name}`,
+        resourceType: "doctor_category",
+        resourceId: category.id,
+      },
+      request,
+    );
 
     return NextResponse.json({ category: category as DoctorCategory }, { status: 201 });
   } catch (error) {

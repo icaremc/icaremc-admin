@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import StatCard from "@/components/StatCard";
+import { ConfirmActionModal } from "@/components/ConfirmActionModal";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +35,7 @@ import {
 import { formatMoney } from "@/lib/appointments/display";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { payoutConfirmCopy, type PayoutAction } from "@/lib/admin/confirmMessages";
 import type { DoctorPayoutRequest, PayoutRequestStatus } from "@/lib/types/finance";
 
 const statusStyles: Record<PayoutRequestStatus, string> = {
@@ -49,7 +51,7 @@ function hasChapaReference(note: string | null | undefined): boolean {
 
 function maskAccountNumber(accountNumber?: string | null): string {
   const normalized = (accountNumber ?? "").trim();
-  if (!normalized) return "—";
+  if (!normalized) return "N/A";
   if (normalized.length <= 4) return normalized;
   return `${"*".repeat(Math.max(normalized.length - 4, 2))}${normalized.slice(-4)}`;
 }
@@ -73,6 +75,10 @@ function PayoutRequestContent() {
 
   const [confirmingRequest, setConfirmingRequest] =
     useState<DoctorPayoutRequest | null>(null);
+  const [pendingAction, setPendingAction] = useState<{
+    request: DoctorPayoutRequest;
+    action: PayoutAction;
+  } | null>(null);
   const [modalValidationError, setModalValidationError] = useState<string | null>(null);
   const [transferResult, setTransferResult] = useState<ChapaTransferResult | null>(null);
 
@@ -182,6 +188,31 @@ function PayoutRequestContent() {
       dispatch(fetchPayoutRequests());
     }
   }
+
+  async function confirmPendingAction() {
+    if (!pendingAction) return;
+    const { request, action } = pendingAction;
+    if (action === "verify") {
+      await handleVerify(request.id);
+    } else {
+      await handleAction(request.id, action);
+    }
+    setPendingAction(null);
+  }
+
+  function payoutDoctorName(request: DoctorPayoutRequest): string {
+    const doctor = request.doctor_profiles;
+    return doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "Doctor";
+  }
+
+  const payoutConfirm = pendingAction
+    ? payoutConfirmCopy({
+        action: pendingAction.action,
+        amount: Number(pendingAction.request.amount),
+        currency: pendingAction.request.doctor_payout_methods?.currency ?? "ETB",
+        doctorName: payoutDoctorName(pendingAction.request),
+      })
+    : null;
 
   function openChapaConfirm(request: DoctorPayoutRequest) {
     setModalValidationError(null);
@@ -361,7 +392,7 @@ function PayoutRequestContent() {
                         ) : null}
                       </TableCell>
                       <TableCell className="max-w-[180px] text-sm text-gray-600">
-                        {request.note?.trim() || "—"}
+                        {request.note?.trim() || "N/A"}
                       </TableCell>
                       <TableCell>
                         <span
@@ -410,7 +441,9 @@ function PayoutRequestContent() {
                               <Button
                                 size="sm"
                                 disabled={isSaving}
-                                onClick={() => handleAction(request.id, "approve")}
+                                onClick={() =>
+                                  setPendingAction({ request, action: "approve" })
+                                }
                               >
                                 Allow
                               </Button>
@@ -419,7 +452,9 @@ function PayoutRequestContent() {
                                 variant="outline"
                                 disabled={isSaving}
                                 className="text-red-700"
-                                onClick={() => handleAction(request.id, "reject")}
+                                onClick={() =>
+                                  setPendingAction({ request, action: "reject" })
+                                }
                               >
                                 Reject
                               </Button>
@@ -439,7 +474,9 @@ function PayoutRequestContent() {
                                 size="sm"
                                 variant="outline"
                                 disabled={isSaving || !method}
-                                onClick={() => handleAction(request.id, "complete")}
+                                onClick={() =>
+                                  setPendingAction({ request, action: "complete" })
+                                }
                               >
                                 Mark paid
                               </Button>
@@ -452,7 +489,9 @@ function PayoutRequestContent() {
                                 size="sm"
                                 variant="outline"
                                 disabled={isSaving}
-                                onClick={() => handleVerify(request.id)}
+                                onClick={() =>
+                                  setPendingAction({ request, action: "verify" })
+                                }
                               >
                                 Verify status
                               </Button>
@@ -475,6 +514,17 @@ function PayoutRequestContent() {
           </Table>
         </div>
       </div>
+
+      <ConfirmActionModal
+        open={pendingAction !== null && payoutConfirm !== null}
+        onClose={() => setPendingAction(null)}
+        onConfirm={confirmPendingAction}
+        title={payoutConfirm?.title ?? ""}
+        description={payoutConfirm?.description ?? ""}
+        confirmLabel={payoutConfirm?.confirmLabel}
+        variant={payoutConfirm?.variant}
+        loading={savingId !== null}
+      />
 
       <Modal
         open={confirmingRequest !== null}
@@ -511,7 +561,7 @@ function PayoutRequestContent() {
                   Bank code:{" "}
                   {confirmingRequest.doctor_payout_methods.bank_code ||
                     confirmingRequest.doctor_payout_methods.swift_code ||
-                    "—"}
+                    "N/A"}
                 </p>
               </div>
             ) : null}

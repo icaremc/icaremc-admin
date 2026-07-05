@@ -276,8 +276,8 @@ export default function HospitalsPage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{hospital.city ?? "—"}</TableCell>
-                    <TableCell>{hospital.phone ?? "—"}</TableCell>
+                    <TableCell>{hospital.city ?? "N/A"}</TableCell>
+                    <TableCell>{hospital.phone ?? "N/A"}</TableCell>
                     <TableCell>
                       <button
                         type="button"

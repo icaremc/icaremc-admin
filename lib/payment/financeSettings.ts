@@ -1,6 +1,8 @@
 export type FinanceSettings = {
   minimumAmountWithdraw: number;
   platformCommissionPercent: number;
+  doctorCancelPenaltyEnabled: boolean;
+  doctorCancelPenaltyAmount: number;
 };
 
 function parseObject(value: unknown): Record<string, unknown> {
@@ -25,23 +27,41 @@ function readNumber(value: unknown, fallback: number): number {
   return fallback;
 }
 
+function readBoolean(value: unknown, fallback: boolean): boolean {
+  if (typeof value === "boolean") return value;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return fallback;
+}
+
 export function defaultFinanceSettings(): FinanceSettings {
   return {
     minimumAmountWithdraw: 500,
     platformCommissionPercent: 10,
+    doctorCancelPenaltyEnabled: false,
+    doctorCancelPenaltyAmount: 0,
   };
 }
 
 export function parseFinanceSettings(raw: unknown): FinanceSettings {
   const root = parseObject(raw);
+  const defaults = defaultFinanceSettings();
   return {
     minimumAmountWithdraw: readNumber(
       root.minimumAmountWithdraw,
-      defaultFinanceSettings().minimumAmountWithdraw,
+      defaults.minimumAmountWithdraw,
     ),
     platformCommissionPercent: readNumber(
       root.platformCommissionPercent,
-      defaultFinanceSettings().platformCommissionPercent,
+      defaults.platformCommissionPercent,
+    ),
+    doctorCancelPenaltyEnabled: readBoolean(
+      root.doctorCancelPenaltyEnabled,
+      defaults.doctorCancelPenaltyEnabled,
+    ),
+    doctorCancelPenaltyAmount: readNumber(
+      root.doctorCancelPenaltyAmount,
+      defaults.doctorCancelPenaltyAmount,
     ),
   };
 }
@@ -58,6 +78,12 @@ export function mergeFinanceSettings(
     platformCommissionPercent: readNumber(
       patch.platformCommissionPercent,
       existing.platformCommissionPercent,
+    ),
+    doctorCancelPenaltyEnabled:
+      patch.doctorCancelPenaltyEnabled ?? existing.doctorCancelPenaltyEnabled,
+    doctorCancelPenaltyAmount: readNumber(
+      patch.doctorCancelPenaltyAmount,
+      existing.doctorCancelPenaltyAmount,
     ),
   };
 }
