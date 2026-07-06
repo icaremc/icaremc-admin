@@ -31,6 +31,19 @@ export function chapaTransferEventLabel(params: {
   return `Sent Chapa bank transfer of ${amountText}${doctorText}`;
 }
 
+export function chapaVerifyEventLabel(params: {
+  amount: number;
+  doctorName?: string | null;
+  currency?: string;
+  reference?: string;
+  result: string;
+}): string {
+  const amountText = formatMoney(params.amount, params.currency ?? "ETB");
+  const doctorText = params.doctorName?.trim() ? ` for ${params.doctorName.trim()}` : "";
+  const referenceText = params.reference?.trim() ? ` (${params.reference.trim()})` : "";
+  return `Verified Chapa transfer of ${amountText}${doctorText}${referenceText}: ${params.result}`;
+}
+
 export function appointmentStatusEventLabel(params: {
   previousStatus: string;
   newStatus: string;

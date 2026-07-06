@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
 import { payoutActionEventLabel } from "@/lib/activity/buildLog";
 import { logAdminActivityFromAuth } from "@/lib/activity/logFromAuth";
-import { requireAdminSession } from "@/lib/adminAuth";
+import { requireAdminPermission } from "@/lib/adminAuth";
 import {
   approvePayoutRequest,
   completePayoutRequest,
@@ -22,7 +22,7 @@ function isAction(value: unknown): value is "approve" | "reject" | "complete" {
 }
 
 export async function GET(_request: Request, context: RouteContext) {
-  const auth = await requireAdminSession();
+  const auth = await requireAdminPermission("manage_finance");
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
@@ -58,7 +58,7 @@ export async function GET(_request: Request, context: RouteContext) {
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
-  const auth = await requireAdminSession();
+  const auth = await requireAdminPermission("manage_finance");
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }

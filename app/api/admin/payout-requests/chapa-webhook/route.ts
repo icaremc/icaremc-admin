@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import {
   appendAdminNote,
+  loadChapaSettings,
   mapChapaTransferStatus,
   toErrorMessage,
+  verifyChapaWebhookSignature,
 } from "@/lib/finance/chapaPayout";
 import {
   completePayoutRequest,
@@ -48,7 +50,13 @@ function resolveTransferStatus(payload: ChapaWebhookPayload): string {
 
 export async function POST(request: Request) {
   try {
-    const payload = (await request.json()) as ChapaWebhookPayload;
+    const rawBody = await request.text();
+    const { secretKey } = await loadChapaSettings();
+    if (!verifyChapaWebhookSignature(request, rawBody, secretKey)) {
+      return NextResponse.json({ error: "Invalid webhook signature" }, { status: 401 });
+    }
+
+    const payload = JSON.parse(rawBody) as ChapaWebhookPayload;
     const reference = resolveReference(payload);
     if (!reference) {
       return NextResponse.json(

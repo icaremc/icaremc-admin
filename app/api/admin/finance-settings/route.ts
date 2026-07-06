@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
 import { settingsUpdatedEventLabel } from "@/lib/activity/buildLog";
 import { logAdminActivityFromAuth } from "@/lib/activity/logFromAuth";
-import { requireSuperAdminSession } from "@/lib/adminAuth";
+import { requireAdminPermission } from "@/lib/adminAuth";
 import {
   defaultFinanceSettings,
   mergeFinanceSettings,
@@ -13,7 +13,7 @@ import { createServiceSupabaseClient } from "@/lib/supabase/service";
 const FINANCE_ROW_ID = "finance";
 
 export async function GET() {
-  const auth = await requireSuperAdminSession();
+  const auth = await requireAdminPermission("manage_finance");
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
@@ -43,7 +43,7 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
-  const auth = await requireSuperAdminSession();
+  const auth = await requireAdminPermission("manage_finance");
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }

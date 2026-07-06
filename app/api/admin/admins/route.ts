@@ -142,7 +142,22 @@ export async function PATCH(request: Request) {
     );
   }
 
+  if (id === auth.user.id && typeof body.admin_role === "string") {
+    return NextResponse.json(
+      { error: "You cannot change your own admin role" },
+      { status: 400 },
+    );
+  }
+
   const updates: Record<string, unknown> = {};
+  let nextEmail: string | null = null;
+  if (typeof body.email === "string") {
+    nextEmail = body.email.trim().toLowerCase();
+    if (!nextEmail || !nextEmail.includes("@")) {
+      return NextResponse.json({ error: "A valid email is required" }, { status: 400 });
+    }
+    updates.email = nextEmail;
+  }
   if (typeof body.full_name === "string") {
     updates.full_name = body.full_name.trim() || null;
   }
@@ -161,6 +176,16 @@ export async function PATCH(request: Request) {
   }
 
   const serviceClient = createServiceSupabaseClient();
+
+  if (nextEmail) {
+    const { error: authError } = await serviceClient.auth.admin.updateUserById(id, {
+      email: nextEmail,
+    });
+    if (authError) {
+      return NextResponse.json({ error: authError.message }, { status: 400 });
+    }
+  }
+
   const { data, error } = await serviceClient
     .from("admin_users")
     .update(updates)

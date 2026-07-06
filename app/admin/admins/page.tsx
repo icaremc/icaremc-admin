@@ -28,6 +28,7 @@ import {
 } from "@/lib/adminRoles";
 import { formatDateTime } from "@/lib/format";
 import type { AdminRole } from "@/lib/types/database";
+import type { UpdateAdminInput } from "@/lib/adminRoles";
 
 const emptyForm = {
   email: "",
@@ -35,6 +36,168 @@ const emptyForm = {
   full_name: "",
   admin_role: "content_admin" as AdminRole,
 };
+
+type EditingField = {
+  adminId: string;
+  field: "full_name" | "email" | "role";
+};
+
+function EditableHint({ show }: { show: boolean }) {
+  if (!show) return null;
+
+  return (
+    <span className="pointer-events-none absolute bottom-[calc(100%+4px)] left-0 z-20 whitespace-nowrap rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-normal text-gray-500 shadow-sm">
+      Double click to edit
+    </span>
+  );
+}
+
+function EditableAdminTextCell({
+  value,
+  displayValue,
+  placeholder,
+  type = "text",
+  disabled,
+  isEditing,
+  onStartEdit,
+  onCancelEdit,
+  onSave,
+}: {
+  value: string;
+  displayValue: string;
+  placeholder: string;
+  type?: "text" | "email";
+  disabled?: boolean;
+  isEditing: boolean;
+  onStartEdit: () => void;
+  onCancelEdit: () => void;
+  onSave: (nextValue: string) => void;
+}) {
+  const [draft, setDraft] = useState(value);
+  const [isHovered, setIsHovered] = useState(false);
+
+  useEffect(() => {
+    if (isEditing) setDraft(value);
+  }, [isEditing, value]);
+
+  const label = displayValue || placeholder;
+  const sizingText = (isEditing ? draft : label) || placeholder;
+
+  return (
+    <div
+      className="group relative inline-block max-w-full align-middle"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <EditableHint show={!disabled && !isEditing && isHovered} />
+
+      <span className="inline-grid max-w-full align-middle [&>*]:col-start-1 [&>*]:row-start-1">
+        <span
+          aria-hidden
+          className="invisible whitespace-pre px-0 text-sm font-medium"
+        >
+          {sizingText}
+        </span>
+
+        {isEditing ? (
+          <input
+            autoFocus
+            type={type}
+            value={draft}
+            disabled={disabled}
+            onChange={(event) => setDraft(event.target.value)}
+            onBlur={() => {
+              onSave(draft);
+              onCancelEdit();
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                setDraft(value);
+                onCancelEdit();
+              }
+              if (event.key === "Enter") {
+                event.currentTarget.blur();
+              }
+            }}
+            className="min-w-0 border-0 border-b border-emerald-500 bg-transparent p-0 text-sm font-medium text-gray-900 shadow-none outline-none focus:border-emerald-600 focus:ring-0"
+          />
+        ) : (
+          <button
+            type="button"
+            disabled={disabled}
+            onDoubleClick={onStartEdit}
+            className={`min-w-0 truncate rounded-sm px-0 py-0 text-left text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+              displayValue ? "cursor-pointer text-gray-900" : "cursor-pointer text-gray-400"
+            } hover:text-emerald-700`}
+          >
+            {label}
+          </button>
+        )}
+      </span>
+    </div>
+  );
+}
+
+function EditableAdminRoleCell({
+  value,
+  disabled,
+  isEditing,
+  onStartEdit,
+  onCancelEdit,
+  onSave,
+}: {
+  value: AdminRole;
+  disabled?: boolean;
+  isEditing: boolean;
+  onStartEdit: () => void;
+  onCancelEdit: () => void;
+  onSave: (nextRole: AdminRole) => void;
+}) {
+  const [isHovered, setIsHovered] = useState(false);
+  const label = adminRoleLabel(value);
+
+  return (
+    <div
+      className="group relative inline-block max-w-full align-middle"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <EditableHint show={!disabled && !isEditing && isHovered} />
+
+      {isEditing ? (
+        <select
+          autoFocus
+          value={value}
+          disabled={disabled}
+          onChange={(event) => {
+            onSave(event.target.value as AdminRole);
+            onCancelEdit();
+          }}
+          onBlur={onCancelEdit}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") onCancelEdit();
+          }}
+          className="h-auto rounded-sm border-0 border-b border-emerald-500 bg-transparent py-0 pl-0 pr-6 text-sm font-medium text-gray-900 outline-none focus:border-emerald-600 focus:ring-0"
+        >
+          {ADMIN_ROLES.map((role) => (
+            <option key={role.value} value={role.value}>
+              {role.label}
+            </option>
+          ))}
+        </select>
+      ) : (
+        <button
+          type="button"
+          disabled={disabled}
+          onDoubleClick={onStartEdit}
+          className="cursor-pointer rounded-sm px-0 py-0 text-left text-sm font-medium text-gray-900 transition-colors hover:text-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {label}
+        </button>
+      )}
+    </div>
+  );
+}
 
 export default function AdminsPage() {
   const dispatch = useAppDispatch();
@@ -44,6 +207,7 @@ export default function AdminsPage() {
   );
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [editingField, setEditingField] = useState<EditingField | null>(null);
 
   const canManageAdmins = currentUser?.adminRole === "super_admin";
 
@@ -74,6 +238,10 @@ export default function AdminsPage() {
       setShowCreateForm(false);
     }
   };
+
+  function saveAdminField(adminId: string, updates: Omit<UpdateAdminInput, "id">) {
+    dispatch(updateAdmin({ id: adminId, ...updates }));
+  }
 
   return (
     <>
@@ -216,42 +384,96 @@ export default function AdminsPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                admins.map((admin) => (
+                admins.map((admin) => {
+                  const isSelf = admin.id === currentUser?.id;
+                  const isEditingName =
+                    editingField?.adminId === admin.id &&
+                    editingField.field === "full_name";
+                  const isEditingEmail =
+                    editingField?.adminId === admin.id &&
+                    editingField.field === "email";
+                  const isEditingRole =
+                    editingField?.adminId === admin.id &&
+                    editingField.field === "role";
+
+                  return (
                   <TableRow key={admin.id}>
                     <TableCell className="font-medium text-gray-900">
-                      {admin.full_name || "N/A"}
+                      {canManageAdmins ? (
+                        <EditableAdminTextCell
+                          value={admin.full_name ?? ""}
+                          displayValue={admin.full_name ?? ""}
+                          placeholder="Add full name"
+                          disabled={saving}
+                          isEditing={isEditingName}
+                          onStartEdit={() =>
+                            setEditingField({ adminId: admin.id, field: "full_name" })
+                          }
+                          onCancelEdit={() => setEditingField(null)}
+                          onSave={(fullName) => {
+                            const trimmed = fullName.trim();
+                            if (trimmed === (admin.full_name ?? "").trim()) return;
+                            saveAdminField(admin.id, {
+                              full_name: trimmed || null,
+                            });
+                          }}
+                        />
+                      ) : (
+                        admin.full_name || "N/A"
+                      )}
                     </TableCell>
-                    <TableCell>{admin.email}</TableCell>
                     <TableCell>
                       {canManageAdmins ? (
-                        <select
-                          value={admin.admin_role}
-                          disabled={saving || admin.id === currentUser?.id}
-                          onChange={(event) =>
-                            dispatch(
-                              updateAdmin({
-                                id: admin.id,
-                                admin_role: event.target.value as AdminRole,
-                              }),
-                            )
+                        <EditableAdminTextCell
+                          type="email"
+                          value={admin.email}
+                          displayValue={admin.email}
+                          placeholder="Add email"
+                          disabled={saving}
+                          isEditing={isEditingEmail}
+                          onStartEdit={() =>
+                            setEditingField({ adminId: admin.id, field: "email" })
                           }
-                          className="rounded-[var(--radius)] border border-gray-200 bg-white px-2 py-1 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200/50"
-                        >
-                          {ADMIN_ROLES.map((role) => (
-                            <option key={role.value} value={role.value}>
-                              {role.label}
-                            </option>
-                          ))}
-                        </select>
+                          onCancelEdit={() => setEditingField(null)}
+                          onSave={(email) => {
+                            const normalized = email.trim().toLowerCase();
+                            if (
+                              !normalized ||
+                              normalized === admin.email.trim().toLowerCase()
+                            ) {
+                              return;
+                            }
+                            saveAdminField(admin.id, { email: normalized });
+                          }}
+                        />
+                      ) : (
+                        admin.email
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {canManageAdmins && !isSelf ? (
+                        <EditableAdminRoleCell
+                          value={admin.admin_role}
+                          disabled={saving}
+                          isEditing={isEditingRole}
+                          onStartEdit={() =>
+                            setEditingField({ adminId: admin.id, field: "role" })
+                          }
+                          onCancelEdit={() => setEditingField(null)}
+                          onSave={(adminRole) => {
+                            if (adminRole === admin.admin_role) return;
+                            saveAdminField(admin.id, { admin_role: adminRole });
+                          }}
+                        />
                       ) : (
                         adminRoleLabel(admin.admin_role)
                       )}
                     </TableCell>
                     <TableCell>
-                      {canManageAdmins ? (
+                      {canManageAdmins && !isSelf ? (
                         <button
                           type="button"
-                          disabled={saving || admin.id === currentUser?.id}
+                          disabled={saving}
                           onClick={() =>
                             dispatch(
                               updateAdmin({
@@ -260,7 +482,7 @@ export default function AdminsPage() {
                               }),
                             )
                           }
-                          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          className={`inline-flex cursor-pointer rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60 ${
                             admin.is_active
                               ? "bg-emerald-50 text-emerald-700"
                               : "bg-gray-100 text-gray-600"
@@ -284,7 +506,8 @@ export default function AdminsPage() {
                       {formatDateTime(admin.created_at)}
                     </TableCell>
                   </TableRow>
-                ))
+                  );
+                })
               )}
             </TableBody>
           </Table>

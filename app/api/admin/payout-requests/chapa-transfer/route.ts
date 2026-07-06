@@ -1,15 +1,17 @@
 import { NextResponse } from "next/server";
 import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
-import { chapaTransferEventLabel, payoutActionEventLabel } from "@/lib/activity/buildLog";
+import { chapaTransferEventLabel } from "@/lib/activity/buildLog";
 import { logAdminActivityFromAuth } from "@/lib/activity/logFromAuth";
-import { requireAdminSession } from "@/lib/adminAuth";
+import { requireAdminPermission } from "@/lib/adminAuth";
 import {
   appendAdminNote,
   buildPayoutTxRef,
   getDoctorDefaultPayoutMethod,
   getDoctorPayoutMethod,
+  hasChapaReference,
   isDigitsOnly,
   loadChapaSettings,
+  maskAccountNumber,
   normalizeAccountNumber,
   resolveNumericBankCode,
   resolveWebhookUrl,
@@ -19,7 +21,7 @@ import { notifyDoctorPayoutStatus } from "@/lib/finance/payoutNotify";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
 
 export async function POST(request: Request) {
-  const auth = await requireAdminSession();
+  const auth = await requireAdminPermission("manage_finance");
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
@@ -52,9 +54,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Payout request not found" }, { status: 404 });
     }
 
-    if (!["approved", "pending"].includes(payoutRequest.status)) {
+    if (payoutRequest.status !== "approved") {
       return NextResponse.json(
-        { error: `Payout status "${payoutRequest.status}" cannot be sent` },
+        { error: `Payout status "${payoutRequest.status}" cannot be sent. Approve the request first.` },
+        { status: 400 },
+      );
+    }
+
+    if (hasChapaReference(payoutRequest.admin_note)) {
+      return NextResponse.json(
+        { error: "A Chapa transfer was already initiated for this payout request" },
         { status: 400 },
       );
     }
@@ -167,11 +176,9 @@ export async function POST(request: Request) {
       transferId ? ` transfer_id=${transferId}` : ""
     }`;
 
-    const nextStatus = payoutRequest.status === "pending" ? "approved" : payoutRequest.status;
     const { error: updateError } = await client
       .from("doctor_payout_requests")
       .update({
-        status: nextStatus,
         admin_note: appendAdminNote(payoutRequest.admin_note, notePart),
         updated_at: new Date().toISOString(),
       })
@@ -232,7 +239,7 @@ export async function POST(request: Request) {
       destination: {
         holder_name: holderName,
         bank_name: bankName,
-        account_number: accountNumber,
+        account_number: maskAccountNumber(accountNumber),
       },
       amount: payoutRequest.amount,
     });

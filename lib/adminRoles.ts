@@ -122,6 +122,7 @@ export type CreateAdminInput = {
 
 export type UpdateAdminInput = {
   id: string;
+  email?: string;
   admin_role?: AdminRole;
   full_name?: string | null;
   is_active?: boolean;

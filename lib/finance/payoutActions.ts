@@ -100,8 +100,8 @@ export async function completePayoutRequest(requestId: string, adminNote?: strin
   if (error) throw new Error(error.message);
   if (!request) throw new Error("Payout request not found");
   if (request.status === "completed") return request;
-  if (request.status !== "approved" && request.status !== "pending") {
-    throw new Error("Request cannot be marked paid in current status");
+  if (request.status !== "approved") {
+    throw new Error("Only approved requests can be marked paid");
   }
 
   const amount = Number(request.amount);

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { requireAdminSession } from "@/lib/adminAuth";
-import { extractChapaReference } from "@/lib/finance/chapaPayout";
+import { requireAdminPermission } from "@/lib/adminAuth";
+import { extractChapaReference, maskAccountNumber } from "@/lib/finance/chapaPayout";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
 import type { DoctorPayoutRequest } from "@/lib/types/finance";
 
@@ -52,7 +52,7 @@ function filterBySegment(
 }
 
 export async function GET(request: Request) {
-  const auth = await requireAdminSession();
+  const auth = await requireAdminPermission("manage_finance");
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
@@ -97,7 +97,7 @@ export async function GET(request: Request) {
         request.status,
         method?.holder_name ?? "",
         method?.bank_name ?? "",
-        method?.account_number ?? "",
+        method?.account_number ? maskAccountNumber(method.account_number) : "",
         extractChapaReference(request.admin_note),
         request.note ?? "",
         request.admin_note ?? "",

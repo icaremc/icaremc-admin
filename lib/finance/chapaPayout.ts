@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from "crypto";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
 import {
   defaultChapaSettings,
@@ -273,4 +274,45 @@ export function maskAccountNumber(accountNumber?: string | null): string {
   if (!normalized) return "N/A";
   if (normalized.length <= 4) return normalized;
   return `${"*".repeat(Math.max(normalized.length - 4, 2))}${normalized.slice(-4)}`;
+}
+
+function readHeaderSignature(request: Request, name: string): string {
+  return (request.headers.get(name) ?? "").trim();
+}
+
+function signaturesMatch(expected: string, received: string): boolean {
+  if (!received || expected.length !== received.length) return false;
+  try {
+    return timingSafeEqual(Buffer.from(expected), Buffer.from(received));
+  } catch {
+    return false;
+  }
+}
+
+export function verifyChapaWebhookSignature(
+  request: Request,
+  rawBody: string,
+  secretKey: string,
+): boolean {
+  const normalizedSecret = secretKey.trim();
+  if (!normalizedSecret) return false;
+
+  const xChapaSignature = readHeaderSignature(request, "x-chapa-signature");
+  const chapaSignature = readHeaderSignature(request, "chapa-signature");
+  if (!xChapaSignature && !chapaSignature) return false;
+
+  const payloadSignature = createHmac("sha256", normalizedSecret)
+    .update(rawBody)
+    .digest("hex");
+  const secretSignature = createHmac("sha256", normalizedSecret)
+    .update(normalizedSecret)
+    .digest("hex");
+
+  if (xChapaSignature && signaturesMatch(payloadSignature, xChapaSignature)) {
+    return true;
+  }
+  if (chapaSignature && signaturesMatch(secretSignature, chapaSignature)) {
+    return true;
+  }
+  return false;
 }

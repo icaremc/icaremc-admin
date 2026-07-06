@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdminSession } from "@/lib/adminAuth";
+import { adminHasPermission } from "@/lib/adminRoles";
 import {
   computeDashboardAnalytics,
   parseDashboardRange,
@@ -23,6 +24,7 @@ export async function GET(request: Request) {
 
   try {
     const client = createServiceSupabaseClient();
+    const canViewFinance = adminHasPermission(auth.adminRole, "manage_finance");
 
     const [appointmentsResult, walletResult, financeResult] = await Promise.all([
       client
@@ -31,15 +33,19 @@ export async function GET(request: Request) {
           "id, status, amount_paid, payment_status, total_amount, created_at, updated_at",
         )
         .order("created_at", { ascending: false }),
-      client
-        .from("wallet_transactions")
-        .select("id, amount, is_credit, type, created_at")
-        .order("created_at", { ascending: false }),
-      client
-        .from("app_settings")
-        .select("data")
-        .eq("id", "finance")
-        .maybeSingle(),
+      canViewFinance
+        ? client
+            .from("wallet_transactions")
+            .select("id, amount, is_credit, type, created_at")
+            .order("created_at", { ascending: false })
+        : Promise.resolve({ data: [], error: null }),
+      canViewFinance
+        ? client
+            .from("app_settings")
+            .select("data")
+            .eq("id", "finance")
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
     ]);
 
     if (appointmentsResult.error) {
