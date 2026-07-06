@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdminSession } from "@/lib/adminAuth";
+import { requireAdminViewPermission } from "@/lib/adminAuth";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
 import type { AppointmentStatus } from "@/lib/types/doctors";
 
@@ -11,7 +11,7 @@ const STATUSES: AppointmentStatus[] = [
 ];
 
 export async function GET() {
-  const auth = await requireAdminSession();
+  const auth = await requireAdminViewPermission("manage_appointments");
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }

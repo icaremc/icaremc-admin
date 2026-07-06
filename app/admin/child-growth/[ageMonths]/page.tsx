@@ -12,6 +12,7 @@ import {
   childGrowthActions,
   fetchChildGrowthPeriod,
 } from "@/features/childGrowth/childGrowthSlice";
+import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import { formatDateTime } from "@/lib/format";
 
 export default function ChildGrowthPeriodDetailPage() {
@@ -23,6 +24,8 @@ export default function ChildGrowthPeriodDetailPage() {
   const englishTitle = selected?.child_growth_period_translations?.find(
     (item) => item.language_code === "en",
   )?.title;
+
+  const canManageContent = useAdminCanManage("manage_content");
 
   useEffect(() => {
     dispatch(childGrowthActions.clearChildGrowthMessages());
@@ -65,7 +68,7 @@ export default function ChildGrowthPeriodDetailPage() {
           >
             ← Back to timeline
           </Link>
-          {!loading && selected ? (
+          {!loading && selected && canManageContent ? (
             <Link href={`/admin/child-growth/${ageMonths}/edit`}>
               <Button>
                 <Pencil className="mr-2 h-4 w-4" />

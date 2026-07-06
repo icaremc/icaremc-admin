@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/table";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { fetchUserDetail } from "@/features/users/userDetailSlice";
+import { useAdminHasPermission } from "@/lib/useAdminPermissions";
 import { formatDate, formatDateTime, truncate } from "@/lib/format";
 import {
   formatGestationalAge,
@@ -393,6 +394,7 @@ export default function UserDetailPage() {
     if (userId) dispatch(fetchUserDetail(userId));
   }, [dispatch, userId]);
 
+  const canSendPush = useAdminHasPermission("send_push");
   const profile = detail?.profile;
   const sortedPregnancies = detail ? sortPregnancies(detail.pregnancies) : [];
   const activePregnancy = sortedPregnancies.find((p) => p.status === "active");
@@ -429,7 +431,9 @@ export default function UserDetailPage() {
             <ArrowLeft className="h-4 w-4" />
             Back to parents
           </Link>
-          {profile ? <SendPushForm userId={profile.id} role="mother" /> : null}
+          {profile && canSendPush ? (
+            <SendPushForm userId={profile.id} role="mother" />
+          ) : null}
         </div>
 
         {error ? (

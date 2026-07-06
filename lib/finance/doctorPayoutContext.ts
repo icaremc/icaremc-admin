@@ -2,21 +2,15 @@ import {
   defaultFinanceSettings,
   parseFinanceSettings,
 } from "@/lib/payment/financeSettings";
+import {
+  type DoctorRecentEarning,
+  mapWalletEarningRow,
+  type WalletEarningRow,
+} from "@/lib/finance/doctorWalletEarnings";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
 import type { DoctorPayoutRequest } from "@/lib/types/finance";
 
-export type DoctorRecentEarning = {
-  id: string;
-  amount: number;
-  created_at: string;
-  note: string | null;
-  appointment_id: string | null;
-  appointment_date: string | null;
-  time_slot: string | null;
-  service_name: string | null;
-  patient_id: string | null;
-  patient_name: string | null;
-};
+export type { DoctorRecentEarning };
 
 export type DoctorPayoutSummary = {
   earned: number;
@@ -56,74 +50,6 @@ function isOnOrAfter(value: string | null | undefined, from: Date): boolean {
 
 function sumAmount(rows: Array<{ amount?: number | string | null }>): number {
   return rows.reduce((sum, row) => sum + Number(row.amount ?? 0), 0);
-}
-
-type EarningRow = {
-  id: string;
-  amount: number | string;
-  created_at: string;
-  note: string | null;
-  appointment_id: string | null;
-  appointments?:
-    | {
-        id: string;
-        patient_id: string;
-        patient_name: string | null;
-        appointment_date: string;
-        time_slot: string;
-        service_name: string | null;
-        profiles?: { full_name: string | null } | { full_name: string | null }[] | null;
-      }
-    | {
-        id: string;
-        patient_id: string;
-        patient_name: string | null;
-        appointment_date: string;
-        time_slot: string;
-        service_name: string | null;
-        profiles?: { full_name: string | null } | { full_name: string | null }[] | null;
-      }[]
-    | null;
-};
-
-function resolveAppointment(
-  value: EarningRow["appointments"],
-):
-  | {
-      id: string;
-      patient_id: string;
-      patient_name: string | null;
-      appointment_date: string;
-      time_slot: string;
-      service_name: string | null;
-      profiles?: { full_name: string | null } | { full_name: string | null }[] | null;
-    }
-  | null {
-  if (!value) return null;
-  return Array.isArray(value) ? (value[0] ?? null) : value;
-}
-
-function mapRecentEarning(row: EarningRow): DoctorRecentEarning {
-  const appt = resolveAppointment(row.appointments);
-  const profile = appt?.profiles;
-  const profileName = Array.isArray(profile)
-    ? profile[0]?.full_name
-    : profile?.full_name;
-  const patientName =
-    appt?.patient_name?.trim() || profileName?.trim() || null;
-
-  return {
-    id: row.id,
-    amount: Number(row.amount ?? 0),
-    created_at: row.created_at,
-    note: row.note,
-    appointment_id: appt?.id ?? row.appointment_id,
-    appointment_date: appt?.appointment_date ?? null,
-    time_slot: appt?.time_slot ?? null,
-    service_name: appt?.service_name ?? null,
-    patient_id: appt?.patient_id ?? null,
-    patient_name: patientName,
-  };
 }
 
 export async function buildDoctorPayoutContext(
@@ -176,7 +102,9 @@ export async function buildDoctorPayoutContext(
   const financeSettings = parseFinanceSettings(
     financeResult.data?.data ?? defaultFinanceSettings(),
   );
-  const earnings = ((earningsResult.data ?? []) as EarningRow[]).map(mapRecentEarning);
+  const earnings = ((earningsResult.data ?? []) as WalletEarningRow[]).map(
+    mapWalletEarningRow,
+  );
   const payoutHistory = (payoutResult.data ?? []) as DoctorPayoutRequest[];
 
   const monthEarnings = earnings.filter((row) =>

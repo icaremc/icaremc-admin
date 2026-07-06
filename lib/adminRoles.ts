@@ -10,18 +10,26 @@ export type AdminPermission =
   | "send_push"
   | "view_health_data"
   | "view_dashboard"
-  | "view_activity_log";
+  | "view_activity_log"
+  | "view_users"
+  | "view_doctors"
+  | "view_appointments"
+  | "view_content";
 
 export const ADMIN_PERMISSIONS = [
   { value: "view_dashboard", label: "View dashboard" },
   { value: "view_activity_log", label: "View activity log" },
+  { value: "view_users", label: "View parents & children" },
+  { value: "view_doctors", label: "View doctors & hospitals" },
+  { value: "view_appointments", label: "View appointments" },
+  { value: "view_content", label: "View CMS content" },
+  { value: "view_health_data", label: "View health logs" },
   { value: "manage_users", label: "Manage parents & children" },
   { value: "manage_doctors", label: "Manage doctors & appointments" },
   { value: "manage_appointments", label: "Manage appointments" },
   { value: "manage_content", label: "Manage CMS content" },
   { value: "manage_finance", label: "Manage finance & payouts" },
   { value: "send_push", label: "Send push notifications" },
-  { value: "view_health_data", label: "View health logs" },
   { value: "manage_admins", label: "Manage portal admins" },
 ] as const satisfies ReadonlyArray<{
   value: AdminPermission;
@@ -73,8 +81,16 @@ export const ADMIN_ROLES = [
   {
     value: "viewer",
     label: "Viewer",
-    description: "Read-only dashboard and activity log",
-    permissions: ["view_dashboard", "view_activity_log"] as AdminPermission[],
+    description: "Read-only access across mothers, doctors, content, and health data",
+    permissions: [
+      "view_dashboard",
+      "view_activity_log",
+      "view_users",
+      "view_doctors",
+      "view_appointments",
+      "view_content",
+      "view_health_data",
+    ] as AdminPermission[],
   },
 ] as const satisfies ReadonlyArray<{
   value: AdminRole;
@@ -111,6 +127,34 @@ export function adminHasPermission(
 ): boolean {
   if (!role) return false;
   return ROLE_PERMISSIONS[role].includes(permission);
+}
+
+const VIEW_FOR_MANAGE: Partial<Record<AdminPermission, AdminPermission>> = {
+  manage_users: "view_users",
+  manage_doctors: "view_doctors",
+  manage_appointments: "view_appointments",
+  manage_content: "view_content",
+};
+
+export function adminCanView(
+  role: AdminRole | null | undefined,
+  permission: AdminPermission,
+): boolean {
+  if (!role) return false;
+  if (adminHasPermission(role, permission)) return true;
+  if (permission.startsWith("manage_")) {
+    const viewPermission = VIEW_FOR_MANAGE[permission];
+    return viewPermission ? adminHasPermission(role, viewPermission) : false;
+  }
+  return false;
+}
+
+export function adminCanManage(
+  role: AdminRole | null | undefined,
+  permission: AdminPermission,
+): boolean {
+  if (!role || !permission.startsWith("manage_")) return false;
+  return adminHasPermission(role, permission);
 }
 
 export type CreateAdminInput = {

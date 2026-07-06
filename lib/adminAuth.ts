@@ -1,6 +1,6 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { fetchAdminAccess } from "@/lib/adminAccess";
-import { adminHasPermission, type AdminPermission } from "@/lib/adminRoles";
+import { adminCanManage, adminCanView, adminHasPermission, type AdminPermission } from "@/lib/adminRoles";
 import type { AdminRole } from "@/lib/types/database";
 
 export async function requireAdminSession() {
@@ -36,6 +36,28 @@ export async function requireAdminPermission(permission: AdminPermission) {
   if ("error" in auth) return auth;
 
   if (!adminHasPermission(auth.adminRole, permission)) {
+    return { error: "Forbidden", status: 403 as const };
+  }
+
+  return auth;
+}
+
+export async function requireAdminViewPermission(permission: AdminPermission) {
+  const auth = await requireAdminSession();
+  if ("error" in auth) return auth;
+
+  if (!adminCanView(auth.adminRole, permission)) {
+    return { error: "Forbidden", status: 403 as const };
+  }
+
+  return auth;
+}
+
+export async function requireAdminManagePermission(permission: AdminPermission) {
+  const auth = await requireAdminSession();
+  if ("error" in auth) return auth;
+
+  if (!adminCanManage(auth.adminRole, permission)) {
     return { error: "Forbidden", status: 403 as const };
   }
 

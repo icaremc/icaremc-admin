@@ -12,6 +12,7 @@ import {
   fetchPregnancyWeek,
   pregnancyWeeksActions,
 } from "@/features/pregnancyWeeks/pregnancyWeeksSlice";
+import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import { formatDateTime } from "@/lib/format";
 
 export default function PregnancyWeekDetailPage() {
@@ -25,6 +26,8 @@ export default function PregnancyWeekDetailPage() {
   const englishTitle = selected?.pregnancy_week_translations?.find(
     (item) => item.language_code === "en",
   )?.title;
+
+  const canManageContent = useAdminCanManage("manage_content");
 
   useEffect(() => {
     dispatch(pregnancyWeeksActions.clearPregnancyWeekMessages());
@@ -67,7 +70,7 @@ export default function PregnancyWeekDetailPage() {
           >
             ← Back to pregnancy weeks
           </Link>
-          {!loading && selected ? (
+          {!loading && selected && canManageContent ? (
             <Link href={`/admin/pregnancy-weeks/${weekNumber}/edit`}>
               <Button>
                 <Pencil className="mr-2 h-4 w-4" />

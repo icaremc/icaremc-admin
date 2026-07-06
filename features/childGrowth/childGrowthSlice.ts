@@ -1,4 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import type { RootState } from "@/app/store/store";
+import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
 import {
   EMPTY_GROWTH,
   EMPTY_GROWTH_METRIC,
@@ -498,7 +500,13 @@ export const fetchChildGrowthPeriod = createAsyncThunk(
 
 export const saveChildGrowthPeriod = createAsyncThunk(
   "childGrowth/save",
-  async (form: ChildGrowthPeriodFormState, { rejectWithValue }) => {
+  async (form: ChildGrowthPeriodFormState, { rejectWithValue, getState }) => {
+    const denied = rejectUnlessCanManage(
+      (getState() as RootState).auth.user?.adminRole,
+      "manage_content",
+    );
+    if (denied) return rejectWithValue(denied);
+
     if (!form.translations.en.title.trim()) {
       return rejectWithValue("English title is required.");
     }
@@ -574,7 +582,13 @@ export const saveChildGrowthPeriod = createAsyncThunk(
 
 export const deleteChildGrowthPeriod = createAsyncThunk(
   "childGrowth/delete",
-  async (id: string, { rejectWithValue }) => {
+  async (id: string, { rejectWithValue, getState }) => {
+    const denied = rejectUnlessCanManage(
+      (getState() as RootState).auth.user?.adminRole,
+      "manage_content",
+    );
+    if (denied) return rejectWithValue(denied);
+
     const { error } = await supabase
       .from("child_growth_periods")
       .delete()

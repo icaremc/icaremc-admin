@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
 import { doctorVerificationEventLabel } from "@/lib/activity/buildLog";
 import { logAdminActivityFromAuth } from "@/lib/activity/logFromAuth";
-import { requireAdminSession } from "@/lib/adminAuth";
+import { requireAdminManagePermission, requireAdminViewPermission } from "@/lib/adminAuth";
 import {
   doctorApprovalPushMessage,
   sendDoctorPush,
@@ -16,7 +16,7 @@ const DOCTOR_SELECT =
   "*, doctor_availability_slots(*), doctor_services(*), doctor_categories(id, name, slug)";
 
 export async function GET(_request: Request, context: RouteContext) {
-  const auth = await requireAdminSession();
+  const auth = await requireAdminViewPermission("manage_doctors");
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
@@ -61,7 +61,7 @@ export async function GET(_request: Request, context: RouteContext) {
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
-  const auth = await requireAdminSession();
+  const auth = await requireAdminManagePermission("manage_doctors");
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }

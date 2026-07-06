@@ -23,6 +23,7 @@ import {
   updateDoctorCategory,
 } from "@/features/doctorCategories/doctorCategoriesSlice";
 import { specialityHasImage } from "@/lib/doctors/display";
+import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import { formatDateTime } from "@/lib/format";
 import type { DoctorCategory } from "@/lib/types/doctors";
 
@@ -92,6 +93,7 @@ export default function DoctorCategoriesPage() {
   const { categories, loading, error, saving, creating } = useAppSelector(
     (state) => state.doctorCategories,
   );
+  const canManageDoctors = useAdminCanManage("manage_doctors");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -243,6 +245,7 @@ export default function DoctorCategoriesPage() {
       />
 
       <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+        {canManageDoctors ? (
         <div className="mb-6 flex justify-end">
           <Button
             type="button"
@@ -258,6 +261,7 @@ export default function DoctorCategoriesPage() {
             {showForm ? "Close form" : "Add speciality"}
           </Button>
         </div>
+        ) : null}
 
         {error ? (
           <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
@@ -378,7 +382,7 @@ export default function DoctorCategoriesPage() {
           </form>
         ) : null}
 
-        {showForm ? (
+        {canManageDoctors && showForm ? (
           <form
             onSubmit={handleCreate}
             className="admin-panel mb-6 grid gap-4 md:grid-cols-2"
@@ -439,7 +443,9 @@ export default function DoctorCategoriesPage() {
                 <TableHead>Sort</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Updated</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                {canManageDoctors ? (
+                  <TableHead className="text-right">Actions</TableHead>
+                ) : null}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -467,7 +473,7 @@ export default function DoctorCategoriesPage() {
                       <div className="flex items-center gap-3">
                         <SpecialityThumbnail
                           category={category}
-                          disabled={saving}
+                          disabled={saving || !canManageDoctors}
                           onUpload={(file) => handleImageUpload(category.id, file)}
                         />
                         <span className="font-medium text-gray-900">{category.name}</span>
@@ -478,6 +484,7 @@ export default function DoctorCategoriesPage() {
                     </TableCell>
                     <TableCell>{category.sort_order}</TableCell>
                     <TableCell>
+                      {canManageDoctors ? (
                       <button
                         type="button"
                         disabled={saving}
@@ -492,10 +499,22 @@ export default function DoctorCategoriesPage() {
                       >
                         {category.is_active ? "Active" : "Inactive"}
                       </button>
+                      ) : (
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            category.is_active
+                              ? "bg-emerald-100 text-emerald-800"
+                              : "bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          {category.is_active ? "Active" : "Inactive"}
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell className="text-sm text-gray-500">
                       {formatDateTime(category.updated_at)}
                     </TableCell>
+                    {canManageDoctors ? (
                     <TableCell className="text-right">
                       <div className="inline-flex items-center gap-2">
                         <button
@@ -518,6 +537,7 @@ export default function DoctorCategoriesPage() {
                         </button>
                       </div>
                     </TableCell>
+                    ) : null}
                   </TableRow>
                 ))
               )}

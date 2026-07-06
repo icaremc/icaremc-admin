@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { fetchPregnancyWeeks } from "@/features/pregnancyWeeks/pregnancyWeeksSlice";
+import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import { formatDateTime } from "@/lib/format";
 
 export default function PregnancyWeeksPage() {
@@ -24,6 +25,8 @@ export default function PregnancyWeeksPage() {
   const { weeks, loading, error } = useAppSelector(
     (state) => state.pregnancyWeeks,
   );
+
+  const canManageContent = useAdminCanManage("manage_content");
 
   useEffect(() => {
     dispatch(fetchPregnancyWeeks());
@@ -39,11 +42,13 @@ export default function PregnancyWeeksPage() {
       />
 
       <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+        {canManageContent ? (
         <div className="mb-6 flex justify-end">
           <Link href="/admin/pregnancy-weeks/new">
             <Button>Add week</Button>
           </Link>
         </div>
+        ) : null}
 
         {error ? (
           <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">

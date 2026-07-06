@@ -1,20 +1,27 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import type { DoctorWalletHistory } from "@/lib/finance/doctorWalletHistory";
 import type { DoctorProfile } from "@/lib/types/doctors";
 
 type DoctorDetailState = {
   doctorId: string | null;
   doctor: DoctorProfile | null;
+  wallet: DoctorWalletHistory | null;
   loading: boolean;
+  walletLoading: boolean;
   saving: boolean;
   error: string | null;
+  walletError: string | null;
 };
 
 const initialState: DoctorDetailState = {
   doctorId: null,
   doctor: null,
+  wallet: null,
   loading: false,
+  walletLoading: false,
   saving: false,
   error: null,
+  walletError: null,
 };
 
 async function readApiError(response: Response): Promise<string> {
@@ -64,6 +71,18 @@ export const approveDoctor = createAsyncThunk(
   },
 );
 
+export const fetchDoctorWallet = createAsyncThunk(
+  "doctorDetail/fetchWallet",
+  async (id: string, { rejectWithValue }) => {
+    const response = await fetch(`/api/admin/doctors/${id}/wallet`);
+    if (!response.ok) {
+      return rejectWithValue(await readApiError(response));
+    }
+    const body = (await response.json()) as { history: DoctorWalletHistory };
+    return body.history;
+  },
+);
+
 export const revokeDoctorApproval = createAsyncThunk(
   "doctorDetail/revoke",
   async (id: string, { rejectWithValue }) => {
@@ -87,7 +106,9 @@ const doctorDetailSlice = createSlice({
     clearDoctorDetail(state) {
       state.doctorId = null;
       state.doctor = null;
+      state.wallet = null;
       state.error = null;
+      state.walletError = null;
     },
   },
   extraReducers: (builder) => {
@@ -104,6 +125,18 @@ const doctorDetailSlice = createSlice({
       .addCase(fetchDoctorDetail.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      .addCase(fetchDoctorWallet.pending, (state) => {
+        state.walletLoading = true;
+        state.walletError = null;
+      })
+      .addCase(fetchDoctorWallet.fulfilled, (state, action) => {
+        state.walletLoading = false;
+        state.wallet = action.payload;
+      })
+      .addCase(fetchDoctorWallet.rejected, (state, action) => {
+        state.walletLoading = false;
+        state.walletError = action.payload as string;
       })
       .addCase(approveDoctor.pending, (state) => {
         state.saving = true;

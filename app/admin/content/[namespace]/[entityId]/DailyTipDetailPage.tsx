@@ -19,6 +19,7 @@ import {
   dailyTipsActions,
   fetchDailyTip,
 } from "@/features/dailyTips/dailyTipsSlice";
+import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import { formatDateTime } from "@/lib/format";
 import type { Locale } from "@/lib/types/database";
 
@@ -46,6 +47,7 @@ export default function DailyTipDetailPage() {
     dispatch(fetchDailyTip(tipId));
   }, [dispatch, tipId]);
 
+  const canManageContent = useAdminCanManage("manage_content");
   const heroTitle = selected ? dailyTipHeroTitle(selected) : "Daily tip";
 
   return (
@@ -78,7 +80,7 @@ export default function DailyTipDetailPage() {
           >
             ← Back to week
           </Link>
-          {!loading && selected ? (
+          {!loading && selected && canManageContent ? (
             <Link href={dailyTipEditPath(tipId)}>
               <Button>
                 <Pencil className="mr-2 h-4 w-4" />

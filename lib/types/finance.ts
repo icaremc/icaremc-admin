@@ -58,7 +58,8 @@ export type WalletTransaction = {
     | "payout_hold"
     | "payout_release"
     | "payout_paid"
-    | "adjustment";
+    | "adjustment"
+    | "cancel_penalty";
   appointment_id: string | null;
   payout_request_id: string | null;
   note: string | null;

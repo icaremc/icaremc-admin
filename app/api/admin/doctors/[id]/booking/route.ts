@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
 import { logAdminActivityFromAuth } from "@/lib/activity/logFromAuth";
-import { requireAdminSession } from "@/lib/adminAuth";
+import { requireAdminManagePermission } from "@/lib/adminAuth";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
 
 type RouteContext = { params: Promise<{ id: string }> };
@@ -18,7 +18,7 @@ type BookingBody = {
 };
 
 export async function PATCH(request: Request, context: RouteContext) {
-  const auth = await requireAdminSession();
+  const auth = await requireAdminManagePermission("manage_doctors");
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }

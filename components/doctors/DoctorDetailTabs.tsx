@@ -1,12 +1,13 @@
 "use client";
 
-import { FileText, Stethoscope, User } from "lucide-react";
+import { FileText, Stethoscope, User, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const DOCTOR_DETAIL_TABS = [
   { id: "personal", label: "Personal details", icon: User },
   { id: "documents", label: "Documents", icon: FileText },
   { id: "services", label: "Services", icon: Stethoscope },
+  { id: "wallet", label: "Earnings & wallet", icon: Wallet },
 ] as const;
 
 export type DoctorDetailTab = (typeof DOCTOR_DETAIL_TABS)[number]["id"];

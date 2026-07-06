@@ -21,6 +21,7 @@ import {
   fetchProfiles,
   profilesActions,
 } from "@/features/profiles/profilesSlice";
+import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import { LOCALES } from "@/lib/constants";
 import { formatDateTime } from "@/lib/format";
 import type { Locale, Profile } from "@/lib/types/database";
@@ -63,6 +64,7 @@ export default function UsersPage() {
   const { profiles, loading, error, creating } = useAppSelector(
     (state) => state.profiles,
   );
+  const canManageUsers = useAdminCanManage("manage_users");
   const [query, setQuery] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
@@ -120,6 +122,7 @@ export default function UsersPage() {
               className="w-full rounded-[var(--radius)] border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm text-gray-900 shadow-sm placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200/50"
             />
           </div>
+          {canManageUsers ? (
           <Button
             type="button"
             onClick={() => setShowCreateForm((open) => !open)}
@@ -128,9 +131,10 @@ export default function UsersPage() {
             <Plus className="h-4 w-4" />
             {showCreateForm ? "Close form" : "Create parent"}
           </Button>
+          ) : null}
         </div>
 
-        {showCreateForm ? (
+        {canManageUsers && showCreateForm ? (
           <form onSubmit={handleCreate} className="mb-6 admin-panel">
             <h2 className="mb-4 text-lg font-semibold text-gray-900">
               New parent account

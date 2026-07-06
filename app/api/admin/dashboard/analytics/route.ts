@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { requireAdminSession } from "@/lib/adminAuth";
-import { adminHasPermission } from "@/lib/adminRoles";
+import { requireAdminViewPermission } from "@/lib/adminAuth";
+import { adminCanView } from "@/lib/adminRoles";
 import {
   computeDashboardAnalytics,
   parseDashboardRange,
@@ -14,7 +14,7 @@ import type { Appointment } from "@/lib/types/doctors";
 import type { WalletTransaction } from "@/lib/types/finance";
 
 export async function GET(request: Request) {
-  const auth = await requireAdminSession();
+  const auth = await requireAdminViewPermission("view_dashboard");
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 
   try {
     const client = createServiceSupabaseClient();
-    const canViewFinance = adminHasPermission(auth.adminRole, "manage_finance");
+    const canViewFinance = adminCanView(auth.adminRole, "manage_finance");
 
     const [appointmentsResult, walletResult, financeResult] = await Promise.all([
       client

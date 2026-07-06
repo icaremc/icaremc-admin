@@ -37,6 +37,7 @@ import {
   statusActionLabel,
 } from "@/lib/appointments/display";
 import { formatDateTime } from "@/lib/format";
+import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import { cn } from "@/lib/utils";
 import { appointmentStatusConfirmCopy } from "@/lib/admin/confirmMessages";
 import type { ChatMessage } from "@/lib/types/chat";
@@ -155,6 +156,7 @@ export default function AppointmentDetailPage() {
   const dispatch = useAppDispatch();
   const { detail, loading, error } = useAppSelector((state) => state.appointmentDetail);
   const savingId = useAppSelector((state) => state.appointments.savingId);
+  const canManageAppointments = useAdminCanManage("manage_appointments");
   const [pendingStatus, setPendingStatus] = useState<AppointmentStatus | null>(null);
 
   useEffect(() => {
@@ -242,6 +244,7 @@ export default function AppointmentDetailPage() {
                   <StatusBadge status={appt.status} />
                   {appt.total_amount > 0 ? <PaymentBadge appt={appt} /> : null}
                 </div>
+                {canManageAppointments && quickActions.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {quickActions.map((status) => (
                     <Button
@@ -263,6 +266,7 @@ export default function AppointmentDetailPage() {
                     </Button>
                   ))}
                 </div>
+                ) : null}
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

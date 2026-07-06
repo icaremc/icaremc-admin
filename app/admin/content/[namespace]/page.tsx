@@ -37,6 +37,7 @@ import {
   DAILY_TIP_TRIMESTERS,
   dailyTipMatchesSearch,
 } from "@/lib/content/dailyTipUi";
+import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import { formatDateTime } from "@/lib/format";
 import type { ContentNamespace } from "@/lib/types/database";
 import {
@@ -51,6 +52,7 @@ import {
 function DailyTipWeeksView() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const canManageContent = useAdminCanManage("manage_content");
   const { tips, loading, error } = useAppSelector((state) => state.dailyTips);
   const [query, setQuery] = useState("");
   const [expandedTrimester, setExpandedTrimester] = useState<number | null>(1);
@@ -126,12 +128,14 @@ function DailyTipWeeksView() {
               className="w-full rounded-[var(--radius)] border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200/50"
             />
           </div>
+          {canManageContent ? (
           <Link href="/admin/content/daily_tip/new">
             <Button className="w-full sm:w-auto">
               <Plus className="mr-2 h-4 w-4" />
               Add tip
             </Button>
           </Link>
+          ) : null}
         </div>
 
         {error ? (
@@ -151,9 +155,11 @@ function DailyTipWeeksView() {
             <p className="mt-1 text-sm text-gray-500">
               Create tips for each week and day so mothers get relevant advice.
             </p>
+            {canManageContent ? (
             <Link href="/admin/content/daily_tip/new" className="mt-6 inline-block">
               <Button>Create first tip</Button>
             </Link>
+            ) : null}
           </div>
         ) : (
           <div className="space-y-4">
@@ -299,6 +305,8 @@ export default function ContentNamespacePage() {
   const dispatch = useAppDispatch();
   const { items, loading, error } = useAppSelector((state) => state.content);
 
+  const canManageContent = useAdminCanManage("manage_content");
+
   useEffect(() => {
     if (namespace && namespace !== "daily_tip") {
       dispatch(fetchContentByNamespace(namespace));
@@ -343,6 +351,7 @@ export default function ContentNamespacePage() {
       />
 
       <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+        {canManageContent ? (
         <div className="mb-6 flex justify-end">
           <Link href={`/admin/content/${namespace}/new`}>
             <Button>
@@ -351,6 +360,7 @@ export default function ContentNamespacePage() {
             </Button>
           </Link>
         </div>
+        ) : null}
 
         {error ? (
           <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
@@ -370,9 +380,11 @@ export default function ContentNamespacePage() {
                 ) : null}
                 <TableHead className="font-semibold text-gray-700">Status</TableHead>
                 <TableHead className="font-semibold text-gray-700">Updated</TableHead>
+                {canManageContent ? (
                 <TableHead className="text-right font-semibold text-gray-700">
                   Actions
                 </TableHead>
+                ) : null}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -419,6 +431,7 @@ export default function ContentNamespacePage() {
                     <TableCell className="text-gray-600">
                       {formatDateTime(item.updated_at)}
                     </TableCell>
+                    {canManageContent ? (
                     <TableCell className="text-right">
                       <Link
                         href={contentEditPath(namespace, item.entity_id)}
@@ -428,6 +441,7 @@ export default function ContentNamespacePage() {
                         Edit
                       </Link>
                     </TableCell>
+                    ) : null}
                   </TableRow>
                 ))
               )}

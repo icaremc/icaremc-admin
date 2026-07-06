@@ -1,5 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import type { RootState } from "@/app/store/store";
 import { dailyTipDayNumber, dailyTipWeekNumber } from "@/lib/content/contentLabels";
+import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
 import { supabase } from "@/lib/supabaseClient";
 import { logContentDeleted, logContentSaved } from "@/lib/client/adminActivityEvents";
 import type {
@@ -82,8 +84,14 @@ export const saveContentItem = createAsyncThunk(
       translations: Record<string, Record<string, unknown>>;
       isPublished: boolean;
     },
-    { rejectWithValue },
+    { rejectWithValue, getState },
   ) => {
+    const denied = rejectUnlessCanManage(
+      (getState() as RootState).auth.user?.adminRole,
+      "manage_content",
+    );
+    if (denied) return rejectWithValue(denied);
+
     const row = {
       namespace: payload.namespace,
       entity_id: payload.entityId,
@@ -122,7 +130,13 @@ export const saveContentItem = createAsyncThunk(
 
 export const deleteContentItem = createAsyncThunk(
   "content/deleteItem",
-  async (id: string, { rejectWithValue }) => {
+  async (id: string, { rejectWithValue, getState }) => {
+    const denied = rejectUnlessCanManage(
+      (getState() as RootState).auth.user?.adminRole,
+      "manage_content",
+    );
+    if (denied) return rejectWithValue(denied);
+
     const { error } = await supabase
       .from("content_translations")
       .delete()

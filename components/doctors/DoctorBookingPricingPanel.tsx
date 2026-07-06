@@ -42,9 +42,11 @@ function isComplete(service: DraftService): boolean {
 export default function DoctorBookingPricingPanel({
   doctor,
   onSaved,
+  readOnly = false,
 }: {
   doctor: DoctorProfile;
   onSaved: () => void;
+  readOnly?: boolean;
 }) {
   const currency = doctor.currency ?? "ETB";
 
@@ -182,6 +184,7 @@ export default function DoctorBookingPricingPanel({
               : `${visibleCount} service${visibleCount === 1 ? "" : "s"} available for booking.`}
           </p>
         </div>
+        {readOnly ? null : (
         <div className="flex gap-2">
           <Button type="button" variant="outline" size="sm" onClick={addService}>
             <Plus className="mr-1.5 h-4 w-4" />
@@ -191,16 +194,19 @@ export default function DoctorBookingPricingPanel({
             {saving ? "Saving…" : "Save"}
           </Button>
         </div>
+        )}
       </div>
 
       {services.length === 0 ? (
         <div className="mt-6 rounded-[var(--radius)] border border-dashed border-gray-200 bg-gray-50 px-6 py-12 text-center">
           <p className="text-sm font-medium text-gray-900">No services yet</p>
           <p className="mt-1 text-sm text-gray-500">Each card is one consultation type with a fee.</p>
+          {readOnly ? null : (
           <Button type="button" variant="outline" size="sm" className="mt-4" onClick={addService}>
             <Plus className="mr-1.5 h-4 w-4" />
             Add service
           </Button>
+          )}
         </div>
       ) : (
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -335,6 +341,7 @@ export default function DoctorBookingPricingPanel({
                             ) : null}
                           </div>
 
+                          {readOnly ? null : (
                           <div className="flex shrink-0 gap-1">
                             <button
                               type="button"
@@ -353,6 +360,7 @@ export default function DoctorBookingPricingPanel({
                               <Trash2 className="h-4 w-4" />
                             </button>
                           </div>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
 import { settingsUpdatedEventLabel } from "@/lib/activity/buildLog";
 import { logAdminActivityFromAuth } from "@/lib/activity/logFromAuth";
-import { requireAdminSession } from "@/lib/adminAuth";
+import { requireAdminManagePermission, requireAdminViewPermission } from "@/lib/adminAuth";
 import {
   mergeAppVersionSettings,
   parseAppVersionSettingsData,
@@ -23,7 +23,7 @@ function resolveTarget(request: Request): AppVersionTarget {
 export async function GET(request: Request) {
   const app = resolveTarget(request);
   const rowId = rowIdForAppVersionTarget(app);
-  const auth = await requireAdminSession();
+  const auth = await requireAdminViewPermission("manage_content");
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
@@ -56,7 +56,7 @@ export async function GET(request: Request) {
 export async function PATCH(request: Request) {
   const app = resolveTarget(request);
   const rowId = rowIdForAppVersionTarget(app);
-  const auth = await requireAdminSession();
+  const auth = await requireAdminManagePermission("manage_content");
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }

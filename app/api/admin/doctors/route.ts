@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdminSession } from "@/lib/adminAuth";
+import { requireAdminViewPermission } from "@/lib/adminAuth";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
 import type { DoctorProfile } from "@/lib/types/doctors";
 
@@ -7,7 +7,7 @@ const DOCTOR_SELECT =
   "*, doctor_availability_slots(*), doctor_categories(id, name, slug)";
 
 export async function GET() {
-  const auth = await requireAdminSession();
+  const auth = await requireAdminViewPermission("manage_doctors");
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }

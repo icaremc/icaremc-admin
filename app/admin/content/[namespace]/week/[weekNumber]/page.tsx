@@ -19,6 +19,7 @@ import {
   dailyTipWeekPath,
 } from "@/lib/content/contentLabels";
 import { dailyTipAdjacentWeek } from "@/lib/content/dailyTipUi";
+import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import type { DailyTip } from "@/lib/types/database";
 
 function parseWeekNumber(raw: string): number | null {
@@ -32,11 +33,13 @@ function DaySlot({
   tip,
   weekNumber,
   onOpen,
+  canManageContent,
 }: {
   day: number;
   tip?: DailyTip;
   weekNumber: number;
   onOpen: (path: string) => void;
+  canManageContent: boolean;
 }) {
   const filled = Boolean(tip);
 
@@ -65,6 +68,7 @@ function DaySlot({
       {tip ? (
         <>
           <DailyTipLanguageTitles tip={tip} layout="stacked" maxTitleLength={40} />
+          {canManageContent ? (
           <div className="mt-auto pt-4">
             <Link
               href={dailyTipEditPath(tip.id)}
@@ -74,10 +78,12 @@ function DaySlot({
               Edit
             </Link>
           </div>
+          ) : null}
         </>
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center py-6 text-center">
           <p className="text-xs text-gray-400">No tip for this day</p>
+          {canManageContent ? (
           <Link
             href={dailyTipNewPath(weekNumber, day)}
             className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-emerald-700 hover:underline"
@@ -86,6 +92,9 @@ function DaySlot({
             <Plus className="h-3.5 w-3.5" />
             Add tip
           </Link>
+          ) : (
+          <p className="mt-3 text-xs text-gray-400">No tip</p>
+          )}
         </div>
       )}
     </article>
@@ -97,6 +106,8 @@ export default function DailyTipWeekPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { tips, loading, error } = useAppSelector((state) => state.dailyTips);
+
+  const canManageContent = useAdminCanManage("manage_content");
 
   const weekNumber = parseWeekNumber(params.weekNumber);
   const isValidWeek =
@@ -202,6 +213,7 @@ export default function DailyTipWeekPage() {
                   weekNumber={weekNumber}
                   tip={tipsByDay.get(day)}
                   onOpen={(path) => router.push(path)}
+                  canManageContent={canManageContent}
                 />
               ))}
             </div>

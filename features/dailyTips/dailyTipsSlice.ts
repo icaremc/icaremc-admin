@@ -1,4 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import type { RootState } from "@/app/store/store";
+import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
 import { supabase } from "@/lib/supabaseClient";
 import { logContentDeleted, logContentSaved } from "@/lib/client/adminActivityEvents";
 import type { DailyTip, DailyTipTranslation, Locale } from "@/lib/types/database";
@@ -169,8 +171,14 @@ export const saveDailyTip = createAsyncThunk(
   "dailyTips/save",
   async (
     payload: { id?: string; form: DailyTipFormState },
-    { rejectWithValue },
+    { rejectWithValue, getState },
   ) => {
+    const denied = rejectUnlessCanManage(
+      (getState() as RootState).auth.user?.adminRole,
+      "manage_content",
+    );
+    if (denied) return rejectWithValue(denied);
+
     const validationError = validateDailyTipForm(payload.form);
     if (validationError) return rejectWithValue(validationError);
 
@@ -234,7 +242,13 @@ export const saveDailyTip = createAsyncThunk(
 
 export const deleteDailyTip = createAsyncThunk(
   "dailyTips/delete",
-  async (id: string, { rejectWithValue }) => {
+  async (id: string, { rejectWithValue, getState }) => {
+    const denied = rejectUnlessCanManage(
+      (getState() as RootState).auth.user?.adminRole,
+      "manage_content",
+    );
+    if (denied) return rejectWithValue(denied);
+
     const { error } = await supabase.from("daily_tips").delete().eq("id", id);
     if (error) return rejectWithValue(error.message);
     logContentDeleted("daily_tip", id, "Deleted daily tip", { resource_id: id });

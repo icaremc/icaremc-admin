@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
 import { logAdminActivityFromAuth } from "@/lib/activity/logFromAuth";
-import { requireAdminSession } from "@/lib/adminAuth";
+import { requireAdminManagePermission, requireAdminViewPermission } from "@/lib/adminAuth";
 import { slugifyCategoryName } from "@/lib/doctors/display";
 import { uploadSpecialityImage } from "@/lib/specialities/storage";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
@@ -27,7 +27,7 @@ async function nextSortOrder(
 }
 
 export async function GET() {
-  const auth = await requireAdminSession();
+  const auth = await requireAdminViewPermission("manage_doctors");
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
@@ -54,7 +54,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireAdminSession();
+  const auth = await requireAdminManagePermission("manage_doctors");
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }

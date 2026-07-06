@@ -28,6 +28,7 @@ import { doctorCategoryLabel, doctorDisplayName } from "@/lib/doctors/display";
 import { doctorVerificationConfirmCopy } from "@/lib/admin/confirmMessages";
 import DoctorProfileAvatar from "@/components/doctors/DoctorProfileAvatar";
 import { formatDate } from "@/lib/format";
+import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import { cn } from "@/lib/utils";
 
 type Filter = "all" | "pending" | "verified";
@@ -44,6 +45,7 @@ export default function DoctorsPage() {
   const { doctors, loading, error, saving } = useAppSelector(
     (state) => state.doctors,
   );
+  const canManageDoctors = useAdminCanManage("manage_doctors");
   const [filter, setFilter] = useState<Filter>("all");
   const [pendingVerification, setPendingVerification] = useState<{
     id: string;
@@ -200,6 +202,7 @@ export default function DoctorsPage() {
                       </div>
                     </TableCell>
                     <TableCell>
+                      {canManageDoctors ? (
                       <button
                         type="button"
                         disabled={saving}
@@ -219,6 +222,17 @@ export default function DoctorsPage() {
                       >
                         {doctor.is_verified ? "Verified" : "Pending"}
                       </button>
+                      ) : (
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            doctor.is_verified
+                              ? "bg-emerald-100 text-emerald-800"
+                              : "bg-amber-100 text-amber-800"
+                          }`}
+                        >
+                          {doctor.is_verified ? "Verified" : "Pending"}
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell>{formatDate(doctor.created_at)}</TableCell>
                     <TableCell>

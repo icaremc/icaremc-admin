@@ -17,6 +17,7 @@ import {
   contentEditPath,
   contentHeroTitle,
 } from "@/lib/content/contentLabels";
+import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import { formatDateTime } from "@/lib/format";
 import type { ContentNamespace } from "@/lib/types/database";
 import DailyTipDetailPage from "./DailyTipDetailPage";
@@ -37,6 +38,7 @@ export default function ContentDetailPage() {
     dispatch(fetchContentItem({ namespace, entityId }));
   }, [dispatch, namespace, entityId]);
 
+  const canManageContent = useAdminCanManage("manage_content");
   const heroTitle = selected
     ? contentHeroTitle(namespace, selected)
     : "Content item";
@@ -61,7 +63,7 @@ export default function ContentDetailPage() {
           >
             ← Back to list
           </Link>
-          {!loading && selected ? (
+          {!loading && selected && canManageContent ? (
             <Link href={contentEditPath(namespace, entityId)}>
               <Button>
                 <Pencil className="mr-2 h-4 w-4" />

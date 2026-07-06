@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdminSession } from "@/lib/adminAuth";
+import { requireAdminManagePermission } from "@/lib/adminAuth";
 import {
   removePregnancyWeekImage,
   uploadPregnancyWeekImage,
@@ -9,7 +9,7 @@ import { createServiceSupabaseClient } from "@/lib/supabase/service";
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function PATCH(request: Request, context: RouteContext) {
-  const auth = await requireAdminSession();
+  const auth = await requireAdminManagePermission("manage_content");
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
@@ -78,7 +78,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 }
 
 export async function DELETE(_request: Request, context: RouteContext) {
-  const auth = await requireAdminSession();
+  const auth = await requireAdminManagePermission("manage_content");
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }

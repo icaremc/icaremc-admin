@@ -17,12 +17,15 @@ import {
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { fetchChildGrowthPeriods } from "@/features/childGrowth/childGrowthSlice";
 import { CHILD_AGE_GROUP_LABELS, type ChildAgeGroup } from "@/lib/childGrowth/periods";
+import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import { formatDateTime } from "@/lib/format";
 
 export default function ChildGrowthPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { periods, loading, error } = useAppSelector((state) => state.childGrowth);
+
+  const canManageContent = useAdminCanManage("manage_content");
 
   useEffect(() => {
     dispatch(fetchChildGrowthPeriods());
@@ -38,11 +41,13 @@ export default function ChildGrowthPage() {
       />
 
       <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+        {canManageContent ? (
         <div className="mb-6 flex justify-end">
           <Link href="/admin/child-growth/new">
             <Button>Add period</Button>
           </Link>
         </div>
+        ) : null}
 
         {error ? (
           <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">

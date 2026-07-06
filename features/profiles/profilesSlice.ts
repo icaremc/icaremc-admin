@@ -1,4 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import type { RootState } from "@/app/store/store";
+import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
 import { supabase } from "@/lib/supabaseClient";
 import { accountTypeForRole, type CreateUserInput, type AppUserRole } from "@/lib/roles";
 import type { Profile } from "@/lib/types/database";
@@ -45,7 +47,13 @@ export const fetchProfiles = createAsyncThunk(
 
 export const createUser = createAsyncThunk(
   "profiles/createUser",
-  async (payload: CreateUserInput, { rejectWithValue }) => {
+  async (payload: CreateUserInput, { rejectWithValue, getState }) => {
+    const denied = rejectUnlessCanManage(
+      (getState() as RootState).auth.user?.adminRole,
+      "manage_users",
+    );
+    if (denied) return rejectWithValue(denied);
+
     const response = await fetch("/api/admin/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -65,8 +73,14 @@ export const updateProfileRole = createAsyncThunk(
   "profiles/updateRole",
   async (
     payload: { id: string; role: AppUserRole },
-    { rejectWithValue },
+    { rejectWithValue, getState },
   ) => {
+    const denied = rejectUnlessCanManage(
+      (getState() as RootState).auth.user?.adminRole,
+      "manage_users",
+    );
+    if (denied) return rejectWithValue(denied);
+
     const { data, error } = await supabase
       .from("profiles")
       .update({

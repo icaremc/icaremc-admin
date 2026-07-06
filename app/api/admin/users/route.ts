@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAdminSession } from "@/lib/adminAuth";
+import { requireAdminManagePermission } from "@/lib/adminAuth";
 import {
   accountTypeForRole,
   isAppUserRole,
@@ -38,7 +38,7 @@ function parseCreateBody(body: unknown): CreateUserInput | string {
 }
 
 export async function POST(request: Request) {
-  const auth = await requireAdminSession();
+  const auth = await requireAdminManagePermission("manage_users");
   if ("error" in auth) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }

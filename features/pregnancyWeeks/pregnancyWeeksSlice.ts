@@ -1,4 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import type { RootState } from "@/app/store/store";
+import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
 import { supabase } from "@/lib/supabaseClient";
 import { logContentDeleted, logContentSaved } from "@/lib/client/adminActivityEvents";
 import {
@@ -210,7 +212,13 @@ export const fetchPregnancyWeek = createAsyncThunk(
 
 export const savePregnancyWeek = createAsyncThunk(
   "pregnancyWeeks/save",
-  async (form: PregnancyWeekFormState, { rejectWithValue }) => {
+  async (form: PregnancyWeekFormState, { rejectWithValue, getState }) => {
+    const denied = rejectUnlessCanManage(
+      (getState() as RootState).auth.user?.adminRole,
+      "manage_content",
+    );
+    if (denied) return rejectWithValue(denied);
+
     if (!form.translations.en.title.trim()) {
       return rejectWithValue("English title is required.");
     }
@@ -280,7 +288,13 @@ export const savePregnancyWeek = createAsyncThunk(
 
 export const deletePregnancyWeek = createAsyncThunk(
   "pregnancyWeeks/delete",
-  async (id: string, { rejectWithValue }) => {
+  async (id: string, { rejectWithValue, getState }) => {
+    const denied = rejectUnlessCanManage(
+      (getState() as RootState).auth.user?.adminRole,
+      "manage_content",
+    );
+    if (denied) return rejectWithValue(denied);
+
     const { error } = await supabase.from("pregnancy_weeks").delete().eq("id", id);
     if (error) return rejectWithValue(error.message);
     logContentDeleted("pregnancy_week", id, `Deleted pregnancy week`, {

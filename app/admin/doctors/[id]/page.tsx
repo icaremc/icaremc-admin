@@ -35,10 +35,12 @@ import DoctorDetailTabs, {
   type DoctorDetailTab,
 } from "@/components/doctors/DoctorDetailTabs";
 import DoctorProfileAvatar from "@/components/doctors/DoctorProfileAvatar";
+import DoctorWalletPanel from "@/components/doctors/DoctorWalletPanel";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import {
   approveDoctor,
   fetchDoctorDetail,
+  fetchDoctorWallet,
   revokeDoctorApproval,
 } from "@/features/doctors/doctorDetailSlice";
 import { updateDoctorVerification } from "@/features/doctors/doctorsSlice";
@@ -49,6 +51,7 @@ import {
 } from "@/lib/doctors/display";
 import { doctorVerificationConfirmCopy } from "@/lib/admin/confirmMessages";
 import { formatDate, formatDateTime } from "@/lib/format";
+import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import type { DoctorAvailabilitySlot, DoctorProfile } from "@/lib/types/doctors";
 
 const DAY_NAMES = [
@@ -221,7 +224,9 @@ export default function DoctorDetailPage() {
   const searchParams = useSearchParams();
   const doctorId = typeof params.id === "string" ? params.id : "";
   const dispatch = useAppDispatch();
-  const { doctor, loading, saving, error } = useAppSelector((state) => state.doctorDetail);
+  const { doctor, loading, saving, error, wallet, walletLoading, walletError } =
+    useAppSelector((state) => state.doctorDetail);
+  const canManageDoctors = useAdminCanManage("manage_doctors");
   const [approvalNotice, setApprovalNotice] = useState<string | null>(null);
   const [verificationAction, setVerificationAction] = useState<
     "approve" | "revoke" | null
@@ -241,6 +246,12 @@ export default function DoctorDetailPage() {
       setActiveTab(tabParam);
     }
   }, [tabParam]);
+
+  useEffect(() => {
+    if (activeTab === "wallet" && doctorId) {
+      dispatch(fetchDoctorWallet(doctorId));
+    }
+  }, [activeTab, doctorId, dispatch]);
 
   const handleTabChange = (tab: DoctorDetailTab) => {
     setActiveTab(tab);
@@ -312,28 +323,30 @@ export default function DoctorDetailPage() {
               >
                 {doctor.is_verified ? "Verified" : "Pending approval"}
               </span>
-              {doctor.is_verified ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={saving}
-                  onClick={() => setVerificationAction("revoke")}
-                  className="gap-2"
-                >
-                  <XCircle className="h-4 w-4" />
-                  Revoke approval
-                </Button>
-              ) : (
-                <Button
-                  type="button"
-                  disabled={saving}
-                  onClick={() => setVerificationAction("approve")}
-                  className="gap-2"
-                >
-                  <CheckCircle2 className="h-4 w-4" />
-                  Approve doctor
-                </Button>
-              )}
+              {canManageDoctors ? (
+                doctor.is_verified ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={saving}
+                    onClick={() => setVerificationAction("revoke")}
+                    className="gap-2"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    Revoke approval
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    disabled={saving}
+                    onClick={() => setVerificationAction("approve")}
+                    className="gap-2"
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                    Approve doctor
+                  </Button>
+                )
+              ) : null}
             </div>
           ) : null
         }
@@ -348,7 +361,7 @@ export default function DoctorDetailPage() {
             <ArrowLeft className="h-4 w-4" />
             Back to doctors
           </Link>
-          {doctor ? <SendDoctorPushForm doctorId={doctor.id} /> : null}
+          {doctor && canManageDoctors ? <SendDoctorPushForm doctorId={doctor.id} /> : null}
         </div>
 
         {error ? (
@@ -379,7 +392,16 @@ export default function DoctorDetailPage() {
             {activeTab === "services" ? (
               <DoctorBookingPricingPanel
                 doctor={doctor}
+                readOnly={!canManageDoctors}
                 onSaved={() => dispatch(fetchDoctorDetail(doctorId))}
+              />
+            ) : null}
+
+            {activeTab === "wallet" ? (
+              <DoctorWalletPanel
+                history={wallet}
+                loading={walletLoading}
+                error={walletError}
               />
             ) : null}
           </>

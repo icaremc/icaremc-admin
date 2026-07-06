@@ -23,6 +23,7 @@ import {
   hospitalsActions,
   updateHospital,
 } from "@/features/hospitals/hospitalsSlice";
+import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import { formatDateTime } from "@/lib/format";
 import type { Hospital } from "@/lib/types/hospitals";
 
@@ -39,6 +40,7 @@ export default function HospitalsPage() {
   const { hospitals, loading, error, saving, creating } = useAppSelector(
     (state) => state.hospitals,
   );
+  const canManageDoctors = useAdminCanManage("manage_doctors");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -124,6 +126,7 @@ export default function HospitalsPage() {
       />
 
       <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+        {canManageDoctors ? (
         <div className="mb-6 flex justify-end">
           <Button
             type="button"
@@ -137,6 +140,7 @@ export default function HospitalsPage() {
             {showForm ? "Close form" : "Add hospital"}
           </Button>
         </div>
+        ) : null}
 
         {error ? (
           <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
@@ -144,7 +148,7 @@ export default function HospitalsPage() {
           </div>
         ) : null}
 
-        {showForm ? (
+        {canManageDoctors && showForm ? (
           <form
             onSubmit={handleCreate}
             className="admin-panel mb-6 grid gap-4 md:grid-cols-2"
@@ -238,7 +242,9 @@ export default function HospitalsPage() {
                 <TableHead>Phone</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Updated</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                {canManageDoctors ? (
+                  <TableHead className="text-right">Actions</TableHead>
+                ) : null}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -279,6 +285,7 @@ export default function HospitalsPage() {
                     <TableCell>{hospital.city ?? "N/A"}</TableCell>
                     <TableCell>{hospital.phone ?? "N/A"}</TableCell>
                     <TableCell>
+                      {canManageDoctors ? (
                       <button
                         type="button"
                         disabled={saving}
@@ -291,10 +298,22 @@ export default function HospitalsPage() {
                       >
                         {hospital.is_active ? "Active" : "Inactive"}
                       </button>
+                      ) : (
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            hospital.is_active
+                              ? "bg-emerald-100 text-emerald-800"
+                              : "bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          {hospital.is_active ? "Active" : "Inactive"}
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell className="text-sm text-gray-500">
                       {formatDateTime(hospital.updated_at)}
                     </TableCell>
+                    {canManageDoctors ? (
                     <TableCell className="text-right">
                       <button
                         type="button"
@@ -306,6 +325,7 @@ export default function HospitalsPage() {
                         Delete
                       </button>
                     </TableCell>
+                    ) : null}
                   </TableRow>
                 ))
               )}
