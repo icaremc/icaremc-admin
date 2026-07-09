@@ -2,15 +2,17 @@
 
 import { useState } from "react";
 import { AlertTriangle } from "lucide-react";
+import { ImageGallery } from "@/components/content/ImageGallery";
+import { VideoEmbed } from "@/components/content/VideoEmbed";
 import { LOCALES } from "@/lib/constants";
 import { CHILD_AGE_GROUP_LABELS, type ChildAgeGroup } from "@/lib/childGrowth/periods";
+import { collectLearningPathImageUrls } from "@/lib/content/learningPathMedia";
 import type {
   ChildGrowthGrowthData,
   ChildGrowthMetrics,
   ChildGrowthMetricSex,
   ChildGrowthPeriod,
   ChildGrowthPeriodTranslation,
-  ChildGrowthVaccine,
   Locale,
   PregnancyWeekSection,
 } from "@/lib/types/database";
@@ -37,52 +39,6 @@ function DetailField({
         {label}
       </p>
       <p className="mt-1 whitespace-pre-wrap text-sm text-gray-800">{value}</p>
-    </div>
-  );
-}
-
-function VaccineList({ vaccines }: { vaccines: ChildGrowthVaccine[] }) {
-  if (!vaccines?.length) return null;
-
-  return (
-    <div className="space-y-3 border-t border-gray-200 pt-4">
-      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-        Vaccines
-      </p>
-      <div className="overflow-hidden rounded-xl border border-gray-200">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
-            <tr>
-              <th className="px-4 py-3">Vaccine</th>
-              <th className="px-4 py-3">Route</th>
-              <th className="px-4 py-3">Benefit</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {vaccines.map((vaccine, index) => (
-              <tr key={index}>
-                <td className="px-4 py-3 font-medium text-gray-900">
-                  {vaccine.name || `Vaccine ${index + 1}`}
-                </td>
-                <td className="px-4 py-3 text-gray-700">
-                  {vaccine.route || "N/A"}
-                </td>
-                <td className="px-4 py-3 text-gray-700">
-                  {vaccine.benefits?.length ? (
-                    <ul className="list-disc space-y-1 pl-4">
-                      {vaccine.benefits.map((benefit, benefitIndex) => (
-                        <li key={benefitIndex}>{benefit}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    "N/A"
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </div>
   );
 }
@@ -136,75 +92,14 @@ function SectionList({
 }
 
 function GrowthPanel({ growth }: { growth: ChildGrowthGrowthData }) {
-  const hasBoys =
-    growth.boys &&
-    Object.values(growth.boys).some((v) => typeof v === "string" && v.trim());
-  const hasGirls =
-    growth.girls &&
-    Object.values(growth.girls).some((v) => typeof v === "string" && v.trim());
-
-  if (!growth.notes?.trim() && !hasBoys && !hasGirls) return null;
+  if (!growth.notes?.trim()) return null;
 
   return (
     <div className="space-y-3 border-t border-gray-200 pt-4">
       <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-        Growth tracking
+        Growth notes
       </p>
       <DetailField label="Notes" value={growth.notes} />
-      {hasBoys ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <p className="text-sm font-semibold text-gray-800">Boys</p>
-          <dl className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
-            {growth.boys?.weight_range ? (
-              <div>
-                <dt className="text-gray-500">Weight</dt>
-                <dd className="text-gray-900">{growth.boys.weight_range}</dd>
-              </div>
-            ) : null}
-            {growth.boys?.length_range ? (
-              <div>
-                <dt className="text-gray-500">Length</dt>
-                <dd className="text-gray-900">{growth.boys.length_range}</dd>
-              </div>
-            ) : null}
-            {growth.boys?.head_circumference_range ? (
-              <div>
-                <dt className="text-gray-500">Head circumference</dt>
-                <dd className="text-gray-900">
-                  {growth.boys.head_circumference_range}
-                </dd>
-              </div>
-            ) : null}
-          </dl>
-        </div>
-      ) : null}
-      {hasGirls ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <p className="text-sm font-semibold text-gray-800">Girls</p>
-          <dl className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
-            {growth.girls?.weight_range ? (
-              <div>
-                <dt className="text-gray-500">Weight</dt>
-                <dd className="text-gray-900">{growth.girls.weight_range}</dd>
-              </div>
-            ) : null}
-            {growth.girls?.length_range ? (
-              <div>
-                <dt className="text-gray-500">Length</dt>
-                <dd className="text-gray-900">{growth.girls.length_range}</dd>
-              </div>
-            ) : null}
-            {growth.girls?.head_circumference_range ? (
-              <div>
-                <dt className="text-gray-500">Head circumference</dt>
-                <dd className="text-gray-900">
-                  {growth.girls.head_circumference_range}
-                </dd>
-              </div>
-            ) : null}
-          </dl>
-        </div>
-      ) : null}
     </div>
   );
 }
@@ -227,12 +122,11 @@ function TranslationPanel({
       <DetailField label="Title" value={translation.title} />
       <DetailField label="Subtitle" value={translation.subtitle} />
       <GrowthPanel growth={translation.growth ?? {}} />
-      <VaccineList vaccines={translation.vaccines ?? []} />
 
       {translation.milestones && translation.milestones.length > 0 ? (
         <div className="space-y-3 border-t border-gray-200 pt-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-            Milestones
+            Checklist
           </p>
           {translation.milestones.map((category, index) => (
             <div
@@ -243,10 +137,35 @@ function TranslationPanel({
                 {category.title || `Category ${index + 1}`}
               </p>
               {category.items && category.items.length > 0 ? (
-                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-gray-700">
-                  {category.items.map((item, itemIndex) => (
-                    <li key={itemIndex}>{item}</li>
-                  ))}
+                <ul className="mt-2 space-y-3">
+                  {category.items.map((item, itemIndex) => {
+                    const label =
+                      typeof item === "string"
+                        ? item
+                        : item.label || `Item ${itemIndex + 1}`;
+                    const imageUrls =
+                      typeof item === "object"
+                        ? collectLearningPathImageUrls(item)
+                        : [];
+                    const videoUrl =
+                      typeof item === "object" ? item.video_url : undefined;
+                    return (
+                      <li
+                        key={itemIndex}
+                        className="rounded-lg border border-gray-100 bg-gray-50/80 p-3 text-sm text-gray-700"
+                      >
+                        <p className="font-medium text-gray-900">{label}</p>
+                        {typeof item === "object" &&
+                        item.explanation?.trim() ? (
+                          <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600">
+                            {item.explanation.trim()}
+                          </p>
+                        ) : null}
+                        <ImageGallery urls={imageUrls} />
+                        {videoUrl ? <VideoEmbed url={videoUrl} /> : null}
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : null}
             </div>
@@ -258,10 +177,6 @@ function TranslationPanel({
       <SectionList
         label="Nutrition guidance"
         sections={translation.nutrition ?? []}
-      />
-      <SectionList
-        label="Visit reminders"
-        sections={translation.visit_reminders ?? []}
       />
     </div>
   );

@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { supabase } from "@/lib/supabaseClient";
-import type { Child, ChildMilestone } from "@/lib/types/database";
+import type { Child, ChildMilestone, ChildUpdatePayload } from "@/lib/types/database";
 
 const CHILD_SELECT = "*, profiles(full_name, phone)";
 
@@ -14,6 +14,7 @@ type ChildrenState = {
   selected: ChildDetailPayload | null;
   loading: boolean;
   detailLoading: boolean;
+  saving: boolean;
   error: string | null;
 };
 
@@ -22,6 +23,7 @@ const initialState: ChildrenState = {
   selected: null,
   loading: false,
   detailLoading: false,
+  saving: false,
   error: null,
 };
 
@@ -60,6 +62,24 @@ export const fetchChildDetail = createAsyncThunk(
   },
 );
 
+export const updateChild = createAsyncThunk(
+  "children/update",
+  async (
+    { childId, patch }: { childId: string; patch: ChildUpdatePayload },
+    { rejectWithValue },
+  ) => {
+    const { data, error } = await supabase
+      .from("children")
+      .update({ ...patch, updated_at: new Date().toISOString() })
+      .eq("id", childId)
+      .select(CHILD_SELECT)
+      .single();
+
+    if (error) return rejectWithValue(error.message);
+    return data as Child;
+  },
+);
+
 const childrenSlice = createSlice({
   name: "children",
   initialState,
@@ -93,6 +113,24 @@ const childrenSlice = createSlice({
       })
       .addCase(fetchChildDetail.rejected, (state, action) => {
         state.detailLoading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(updateChild.pending, (state) => {
+        state.saving = true;
+        state.error = null;
+      })
+      .addCase(updateChild.fulfilled, (state, action) => {
+        state.saving = false;
+        const updated = action.payload;
+        state.children = state.children.map((c) =>
+          c.id === updated.id ? updated : c,
+        );
+        if (state.selected?.child.id === updated.id) {
+          state.selected = { ...state.selected, child: updated };
+        }
+      })
+      .addCase(updateChild.rejected, (state, action) => {
+        state.saving = false;
         state.error = action.payload as string;
       });
   },

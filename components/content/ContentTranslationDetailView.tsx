@@ -1,12 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { ImageGallery } from "@/components/content/ImageGallery";
+import { VideoEmbed } from "@/components/content/VideoEmbed";
 import { LOCALES } from "@/lib/constants";
 import {
   fieldsForNamespace,
-  type GrowthFields,
   type MilestoneCategoryFields,
 } from "@/lib/content/formTypes";
+import {
+  collectLearningPathImageUrls,
+  learningPathItemHasContent,
+} from "@/lib/content/learningPathMedia";
 import {
   dailyTipDayNumber,
   dailyTipWeekNumber,
@@ -45,30 +50,6 @@ function DetailField({
   );
 }
 
-function GrowthPanel({ title, growth }: { title: string; growth: GrowthFields }) {
-  const entries = (
-    [
-      ["weight_range", "Weight range"],
-      ["length_range", "Length range"],
-      ["head_circumference_range", "Head circumference range"],
-      ["weight_average", "Weight average"],
-      ["length_average", "Length average"],
-      ["head_average", "Head average"],
-    ] as const
-  ).filter(([key]) => growth[key]?.trim());
-
-  if (entries.length === 0) return null;
-
-  return (
-    <div className="space-y-2 rounded-xl border border-gray-200 bg-white p-4">
-      <p className="text-sm font-semibold text-gray-900">{title}</p>
-      {entries.map(([key, label]) => (
-        <DetailField key={key} label={label} value={growth[key]} />
-      ))}
-    </div>
-  );
-}
-
 function LocaleContentPanel({
   namespace,
   localeData,
@@ -89,16 +70,14 @@ function LocaleContentPanel({
 
   const categories =
     (localeData.categories as MilestoneCategoryFields[] | undefined) ?? [];
-  const growthBoys = localeData.growth_boys as GrowthFields | undefined;
-  const growthGirls = localeData.growth_girls as GrowthFields | undefined;
 
   const hasMilestoneContent =
     namespace === "milestone" &&
-    (categories.some(
-      (category) => category.title.trim() || category.itemsText.trim(),
-    ) ||
-      growthBoys ||
-      growthGirls);
+    categories.some(
+      (category) =>
+        category.title.trim() ||
+        category.items.some((item) => learningPathItemHasContent(item)),
+    );
 
   if (!hasSimpleContent && !hasMilestoneContent) {
     return (
@@ -119,54 +98,65 @@ function LocaleContentPanel({
       ))}
 
       {namespace === "milestone" ? (
-        <>
-          <div className="grid gap-4 lg:grid-cols-2">
-            {growthBoys ? (
-              <GrowthPanel title="Growth standards (boys)" growth={growthBoys} />
-            ) : null}
-            {growthGirls ? (
-              <GrowthPanel title="Growth standards (girls)" growth={growthGirls} />
-            ) : null}
+        categories.filter(
+          (category) =>
+            category.title.trim() ||
+            category.items.some((item) => learningPathItemHasContent(item)),
+        ).length > 0 ? (
+          <div className="space-y-3 border-t border-gray-200 pt-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+              Checklist
+            </p>
+            {categories.map((category, index) => {
+              const hasItems = category.items.some((item) =>
+                learningPathItemHasContent(item),
+              );
+              if (!category.title.trim() && !hasItems) {
+                return null;
+              }
+
+              return (
+                <div
+                  key={index}
+                  className="space-y-2 rounded-xl border border-gray-200 bg-white p-4"
+                >
+                  <p className="text-sm font-semibold text-gray-900">
+                    {category.title || `Category ${index + 1}`}
+                  </p>
+                  {hasItems ? (
+                    <ul className="space-y-2">
+                      {category.items.map((item, itemIndex) => {
+                        if (!learningPathItemHasContent(item)) {
+                          return null;
+                        }
+                        const images = collectLearningPathImageUrls(item);
+                        return (
+                          <li
+                            key={itemIndex}
+                            className="rounded-lg border border-gray-100 bg-gray-50/80 p-3 text-sm text-gray-700"
+                          >
+                            <p className="font-medium text-gray-900">
+                              {item.label || `Item ${itemIndex + 1}`}
+                            </p>
+                            {item.explanation.trim() ? (
+                              <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600">
+                                {item.explanation.trim()}
+                              </p>
+                            ) : null}
+                            <ImageGallery urls={images} />
+                            {item.video_url.trim() ? (
+                              <VideoEmbed url={item.video_url} />
+                            ) : null}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : null}
+                </div>
+              );
+            })}
           </div>
-
-          {categories.filter(
-            (category) => category.title.trim() || category.itemsText.trim(),
-          ).length > 0 ? (
-            <div className="space-y-3 border-t border-gray-200 pt-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-                Development categories
-              </p>
-              {categories.map((category, index) => {
-                if (!category.title.trim() && !category.itemsText.trim()) {
-                  return null;
-                }
-
-                const items = category.itemsText
-                  .split("\n")
-                  .map((line) => line.trim())
-                  .filter(Boolean);
-
-                return (
-                  <div
-                    key={index}
-                    className="space-y-2 rounded-xl border border-gray-200 bg-white p-4"
-                  >
-                    <p className="text-sm font-semibold text-gray-900">
-                      {category.title || `Category ${index + 1}`}
-                    </p>
-                    {items.length > 0 ? (
-                      <ul className="list-disc space-y-1 pl-5 text-sm text-gray-700">
-                        {items.map((item, itemIndex) => (
-                          <li key={itemIndex}>{item}</li>
-                        ))}
-                      </ul>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
-          ) : null}
-        </>
+        ) : null
       ) : null}
     </div>
   );

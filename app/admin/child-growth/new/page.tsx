@@ -25,7 +25,7 @@ export default function NewChildGrowthPeriodPage() {
   const { saving, error, success } = useAppSelector((state) => state.childGrowth);
 
   const [form, setForm] = useState<ChildGrowthPeriodFormState>(() =>
-    createEmptyForm(0, "Newborn (0–28 days)"),
+    createEmptyForm(0, "Newborn"),
   );
   const [formError, setFormError] = useState<string | null>(null);
   const [preset, setPreset] = useState("0");
@@ -75,7 +75,7 @@ export default function NewChildGrowthPeriodPage() {
     <>
       <PageHero
         title="New growth period"
-        description="Growth, vaccines, milestones, red flags, nutrition, and visits"
+        description="Growth reference, checklist, red flags, and nutrition"
         icon={TrendingUp}
       />
 

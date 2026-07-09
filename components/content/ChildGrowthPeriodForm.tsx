@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import LearningPathFieldsEditor from "@/components/content/LearningPathFieldsEditor";
 import SectionFieldsEditor from "@/components/content/SectionFieldsEditor";
-import VaccineFieldsEditor from "@/components/content/VaccineFieldsEditor";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -14,11 +13,7 @@ import {
   ageGroupForMonths,
   type ChildAgeGroup,
 } from "@/lib/childGrowth/periods";
-import {
-  EMPTY_MILESTONE_CATEGORY,
-  type GrowthFields,
-  type GrowthMetricSexFields,
-} from "@/lib/content/formTypes";
+import { type GrowthMetricSexFields } from "@/lib/content/formTypes";
 import type { Locale } from "@/lib/types/database";
 import type { ChildGrowthPeriodFormState } from "@/features/childGrowth/childGrowthSlice";
 import { cn } from "@/lib/utils";
@@ -32,20 +27,16 @@ const LOCALE_LABELS: Record<Locale, string> = {
 type SectionKey =
   | "overview"
   | "growth"
-  | "vaccines"
   | "milestones"
   | "red_flags"
-  | "nutrition"
-  | "visits";
+  | "nutrition";
 
 const SECTIONS: { key: SectionKey; label: string }[] = [
   { key: "overview", label: "Overview" },
-  { key: "growth", label: "Growth" },
-  { key: "vaccines", label: "Vaccines" },
-  { key: "milestones", label: "Milestones" },
+  { key: "growth", label: "Growth reference" },
+  { key: "milestones", label: "Checklist" },
   { key: "red_flags", label: "Red flags" },
   { key: "nutrition", label: "Nutrition" },
-  { key: "visits", label: "Visit reminders" },
 ];
 
 type ChildGrowthPeriodFormProps = {
@@ -57,81 +48,6 @@ type ChildGrowthPeriodFormProps = {
   saving?: boolean;
   saveLabel?: string;
 };
-
-function GrowthSexFields({
-  label,
-  fields,
-  onChange,
-}: {
-  label: string;
-  fields: GrowthFields;
-  onChange: (fields: GrowthFields) => void;
-}) {
-  const setField = (key: keyof GrowthFields, fieldValue: string) => {
-    onChange({ ...fields, [key]: fieldValue });
-  };
-
-  return (
-    <div className="space-y-3 rounded-xl border border-gray-200 bg-white p-4">
-      <p className="text-sm font-semibold text-gray-800">{label}</p>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
-          <Label>Weight range</Label>
-          <Input
-            value={fields.weight_range}
-            onChange={(e) => setField("weight_range", e.target.value)}
-            placeholder="e.g. 4.4–7.0 kg"
-            className="mt-1.5"
-          />
-        </div>
-        <div>
-          <Label>Length range</Label>
-          <Input
-            value={fields.length_range}
-            onChange={(e) => setField("length_range", e.target.value)}
-            placeholder="e.g. 54–61 cm"
-            className="mt-1.5"
-          />
-        </div>
-        <div>
-          <Label>Head circumference range</Label>
-          <Input
-            value={fields.head_circumference_range}
-            onChange={(e) =>
-              setField("head_circumference_range", e.target.value)
-            }
-            placeholder="e.g. 36.9–41.3 cm"
-            className="mt-1.5"
-          />
-        </div>
-        <div>
-          <Label>Weight average</Label>
-          <Input
-            value={fields.weight_average}
-            onChange={(e) => setField("weight_average", e.target.value)}
-            className="mt-1.5"
-          />
-        </div>
-        <div>
-          <Label>Length average</Label>
-          <Input
-            value={fields.length_average}
-            onChange={(e) => setField("length_average", e.target.value)}
-            className="mt-1.5"
-          />
-        </div>
-        <div>
-          <Label>Head average</Label>
-          <Input
-            value={fields.head_average}
-            onChange={(e) => setField("head_average", e.target.value)}
-            className="mt-1.5"
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
 
 const METRIC_ROWS: {
   label: string;
@@ -241,7 +157,12 @@ export default function ChildGrowthPeriodForm({
   const setTranslationField = (
     field: Exclude<
       keyof typeof translation,
-      "growth" | "vaccines" | "milestones" | "red_flags" | "nutrition" | "visit_reminders"
+      | "growth"
+      | "vaccines"
+      | "milestones"
+      | "red_flags"
+      | "nutrition"
+      | "visit_reminders"
     >,
     fieldValue: string,
   ) => {
@@ -252,18 +173,6 @@ export default function ChildGrowthPeriodForm({
     updateTranslation({ growth: { ...translation.growth, ...patch } });
   };
 
-  const updateMilestone = (
-    index: number,
-    patch: Partial<(typeof milestones)[number]>,
-  ) => {
-    updateTranslation({
-      milestones: milestones.map((category, i) =>
-        i === index ? { ...category, ...patch } : category,
-      ),
-    });
-  };
-
-  // Which languages already have a title for the active section's main field.
   const localeHasTitle = (locale: Locale) =>
     value.translations[locale].title.trim().length > 0;
 
@@ -292,7 +201,6 @@ export default function ChildGrowthPeriodForm({
 
   return (
     <div className="space-y-5">
-      {/* Sticky toolbar: section tabs, always reachable. */}
       <div className="sticky top-0 z-20 -mx-4 border-b border-gray-200 bg-white/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
         <div className="flex gap-1.5 overflow-x-auto pb-1">
           {SECTIONS.map((section) => (
@@ -313,12 +221,8 @@ export default function ChildGrowthPeriodForm({
         </div>
       </div>
 
-      {/* Language selector for all sections' translated text. */}
-      <div className="flex flex-wrap items-center gap-3">
-        {localeTabs}
-      </div>
+      <div className="flex flex-wrap items-center gap-3">{localeTabs}</div>
 
-      {/* ---- Overview ---- */}
       {activeSection === "overview" ? (
         <div className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -412,15 +316,15 @@ export default function ChildGrowthPeriodForm({
         </div>
       ) : null}
 
-      {/* ---- Growth ---- */}
       {activeSection === "growth" ? (
         <div className="space-y-5">
           <div className="space-y-4 rounded-xl border border-emerald-100 bg-emerald-50/40 p-4">
             <div>
-              <Label className="text-base">Growth reference metrics (numeric)</Label>
+              <Label className="text-base">Growth reference metrics</Label>
               <p className="mt-0.5 text-xs text-gray-500">
                 Shared across languages. Powers the mobile growth chart,
-                progress %, and status (underweight / normal / overweight).
+                progress %, and status. Boys/girls text ranges are no longer
+                edited here — use these numeric references only.
               </p>
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
@@ -449,113 +353,26 @@ export default function ChildGrowthPeriodForm({
 
           <div className="space-y-4 rounded-xl border border-gray-200 bg-gray-50/80 p-4">
             <Label className="text-base">
-              Growth text ({LOCALE_LABELS[activeLocale]})
+              Growth notes ({LOCALE_LABELS[activeLocale]})
             </Label>
-            <div>
-              <Label>Notes</Label>
-              <Textarea
-                value={translation.growth.notes}
-                onChange={(e) => updateGrowth({ notes: e.target.value })}
-                rows={2}
-                placeholder="General growth guidance for this age"
-                className="mt-1.5"
-              />
-            </div>
-            <GrowthSexFields
-              label="Boys"
-              fields={translation.growth.boys}
-              onChange={(boys) => updateGrowth({ boys })}
-            />
-            <GrowthSexFields
-              label="Girls"
-              fields={translation.growth.girls}
-              onChange={(girls) => updateGrowth({ girls })}
+            <Textarea
+              value={translation.growth.notes}
+              onChange={(e) => updateGrowth({ notes: e.target.value })}
+              rows={3}
+              placeholder="Optional guidance for this age (shown in the app)"
+              className="mt-1.5"
             />
           </div>
         </div>
       ) : null}
 
-      {/* ---- Vaccines ---- */}
-      {activeSection === "vaccines" ? (
-        <div className="space-y-4 rounded-xl border border-gray-200 bg-gray-50/80 p-4">
-          <VaccineFieldsEditor
-            vaccines={translation.vaccines}
-            onChange={(vaccines) => updateTranslation({ vaccines })}
-          />
-        </div>
-      ) : null}
-
-      {/* ---- Milestones ---- */}
       {activeSection === "milestones" ? (
-        <div className="space-y-4 rounded-xl border border-gray-200 bg-gray-50/80 p-4">
-          <div className="flex items-center justify-between">
-            <Label>Milestones</Label>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                updateTranslation({
-                  milestones: [...milestones, { ...EMPTY_MILESTONE_CATEGORY }],
-                })
-              }
-            >
-              <Plus className="mr-1 h-4 w-4" />
-              Add category
-            </Button>
-          </div>
-
-          {milestones.map((category, index) => (
-            <div
-              key={index}
-              className="space-y-3 rounded-xl border border-gray-200 bg-white p-4"
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-gray-700">
-                  Category {index + 1}
-                </p>
-                {milestones.length > 1 ? (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      updateTranslation({
-                        milestones: milestones.filter((_, i) => i !== index),
-                      })
-                    }
-                    className="text-gray-400 hover:text-red-600"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                ) : null}
-              </div>
-              <div>
-                <Label>Category (e.g. Communication, Motor)</Label>
-                <Input
-                  value={category.title}
-                  onChange={(e) =>
-                    updateMilestone(index, { title: e.target.value })
-                  }
-                  className="mt-1.5"
-                />
-              </div>
-              <div>
-                <Label>Milestones (one per line)</Label>
-                <Textarea
-                  value={category.itemsText}
-                  onChange={(e) =>
-                    updateMilestone(index, { itemsText: e.target.value })
-                  }
-                  rows={4}
-                  placeholder="One milestone per line"
-                  className="mt-1.5"
-                />
-              </div>
-            </div>
-          ))}
-        </div>
+        <LearningPathFieldsEditor
+          categories={milestones}
+          onChange={(next) => updateTranslation({ milestones: next })}
+        />
       ) : null}
 
-      {/* ---- Red flags ---- */}
       {activeSection === "red_flags" ? (
         <div className="space-y-4 rounded-xl border border-gray-200 bg-gray-50/80 p-4">
           <SectionFieldsEditor
@@ -567,7 +384,6 @@ export default function ChildGrowthPeriodForm({
         </div>
       ) : null}
 
-      {/* ---- Nutrition ---- */}
       {activeSection === "nutrition" ? (
         <div className="space-y-4 rounded-xl border border-gray-200 bg-gray-50/80 p-4">
           <SectionFieldsEditor
@@ -578,18 +394,6 @@ export default function ChildGrowthPeriodForm({
         </div>
       ) : null}
 
-      {/* ---- Visit reminders ---- */}
-      {activeSection === "visits" ? (
-        <div className="space-y-4 rounded-xl border border-gray-200 bg-gray-50/80 p-4">
-          <SectionFieldsEditor
-            label="Visit reminders"
-            sections={translation.visit_reminders}
-            onChange={(visit_reminders) => updateTranslation({ visit_reminders })}
-          />
-        </div>
-      ) : null}
-
-      {/* Save / delete at the bottom of every section. */}
       {onSave ? (
         <div className="flex flex-wrap items-center gap-3 border-t border-gray-200 pt-4">
           <Button type="button" onClick={onSave} disabled={saving}>

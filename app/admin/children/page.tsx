@@ -19,6 +19,7 @@ import {
   childAgeLabel,
   childDisplayName,
   childMatchesSearch,
+  formatGestationalAge,
 } from "@/lib/children/childUi";
 import { formatDate } from "@/lib/format";
 
@@ -112,8 +113,8 @@ export default function ChildrenPage() {
                 <TableHead className="font-semibold text-gray-700">Mother</TableHead>
                 <TableHead className="font-semibold text-gray-700">Age</TableHead>
                 <TableHead className="font-semibold text-gray-700">Birth</TableHead>
-                <TableHead className="font-semibold text-gray-700">Weight / height</TableHead>
-                <TableHead className="font-semibold text-gray-700">Delivery</TableHead>
+                <TableHead className="font-semibold text-gray-700">GA / hospital</TableHead>
+                <TableHead className="font-semibold text-gray-700">Woreda</TableHead>
                 <TableHead className="font-semibold text-gray-700">Active</TableHead>
                 <TableHead className="w-10" />
               </TableRow>
@@ -171,12 +172,15 @@ export default function ChildrenPage() {
                       {formatDate(child.birth_date)}
                     </TableCell>
                     <TableCell className="text-sm text-gray-600">
-                      {child.birth_weight != null ? `${child.birth_weight} kg` : "-"}
+                      {formatGestationalAge(
+                        child.gestational_age_weeks,
+                        child.gestational_age_days,
+                      )}
                       <span className="mx-1 text-gray-300">·</span>
-                      {child.birth_height != null ? `${child.birth_height} cm` : "-"}
+                      {child.birth_hospital || "-"}
                     </TableCell>
-                    <TableCell className="text-sm capitalize text-gray-600">
-                      {child.delivery_type || "-"}
+                    <TableCell className="text-sm text-gray-600">
+                      {child.woreda || "-"}
                     </TableCell>
                     <TableCell>
                       {child.is_active ? (

@@ -117,9 +117,18 @@ export type ChildGrowthVaccine = {
   benefits: string[];
 };
 
+export type ChildGrowthLearningPathItem = {
+  label: string;
+  explanation?: string;
+  /** First image (legacy / convenience). Prefer image_urls when present. */
+  image_url?: string;
+  image_urls?: string[];
+  video_url?: string;
+};
+
 export type ChildGrowthMilestoneCategory = {
   title: string;
-  items?: string[];
+  items?: (string | ChildGrowthLearningPathItem)[];
 };
 
 export type ChildGrowthMetricSex = {
@@ -168,6 +177,31 @@ export type ChildGrowthPeriodTranslation = {
   updated_at: string;
 };
 
+export type FollowupVisitModules = {
+  growth?: boolean;
+  nutrition?: boolean;
+  vaccines?: boolean;
+  development?: boolean;
+  counseling?: boolean;
+  red_flags?: boolean;
+};
+
+export type ChildFollowupVisitTemplate = {
+  id: string;
+  code: string;
+  sort_order: number;
+  label: string;
+  offset_days: number | null;
+  offset_months: number | null;
+  growth_period_id: string | null;
+  modules: FollowupVisitModules;
+  remind_days_before: number[];
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+  child_growth_periods?: Pick<ChildGrowthPeriod, "id" | "age_months" | "age_label"> | null;
+};
+
 export type PregnancyLog = {
   id: string;
   pregnancy_id: string;
@@ -195,10 +229,27 @@ export type Child = {
   birth_weight: number | null;
   birth_height: number | null;
   delivery_type: string | null;
+  gestational_age_weeks: number | null;
+  gestational_age_days: number | null;
+  birth_hospital: string | null;
+  blood_group: string | null;
+  woreda: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
   profiles?: { full_name: string | null; phone: string | null } | null;
+};
+
+export type ChildUpdatePayload = {
+  name?: string;
+  gender?: "male" | "female";
+  birth_date?: string;
+  birth_weight?: number | null;
+  gestational_age_weeks?: number | null;
+  gestational_age_days?: number | null;
+  birth_hospital?: string | null;
+  blood_group?: string | null;
+  woreda?: string | null;
 };
 
 export type ChildMilestone = {

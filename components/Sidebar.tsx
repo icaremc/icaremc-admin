@@ -58,6 +58,7 @@ const contentItems: NavItem[] = [
   { href: "/admin/content", label: "Overview", icon: BookOpen },
   { href: "/admin/pregnancy-weeks", label: "Pregnancy weeks", icon: Heart, matchPrefix: true },
   { href: "/admin/child-growth", label: "Child milestones", icon: TrendingUp, matchPrefix: true },
+  { href: "/admin/followup-visits", label: "Baby follow-up", icon: CalendarCheck, matchPrefix: true },
   ...CONTENT_NAMESPACES.filter((item) => item.value !== "milestone").map((item) => ({
     href: `/admin/content/${item.value}`,
     label: item.label,

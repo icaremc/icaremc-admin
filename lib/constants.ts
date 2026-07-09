@@ -32,10 +32,19 @@ export const CONTENT_SECTIONS = [
     key: "child_growth",
     label: "Child milestones",
     description:
-      "Growth, vaccines, milestones, red flags, nutrition, and visit reminders (0–18 years)",
+      "Growth reference, checklist, red flags, and nutrition (0–18 years). Vaccines and visits are managed under Baby follow-up.",
     href: "/admin/child-growth",
     addHref: "/admin/child-growth/new",
     addLabel: "Add period",
+  },
+  {
+    key: "followup_visits",
+    label: "Baby follow-up",
+    description:
+      "Visit schedule templates (birth–8 years). Links to child milestone periods for visit content.",
+    href: "/admin/followup-visits",
+    addHref: "/admin/followup-visits/new",
+    addLabel: "Add visit",
   },
   {
     key: "daily_tips",

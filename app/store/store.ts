@@ -15,6 +15,7 @@ import { pregnancyLogsReducer } from "@/features/pregnancyLogs/pregnancyLogsSlic
 import { dailyTipsReducer } from "@/features/dailyTips/dailyTipsSlice";
 import { pregnancyWeeksReducer } from "@/features/pregnancyWeeks/pregnancyWeeksSlice";
 import { childGrowthReducer } from "@/features/childGrowth/childGrowthSlice";
+import { followupVisitsReducer } from "@/features/followupVisits/followupVisitsSlice";
 import { profilesReducer } from "@/features/profiles/profilesSlice";
 import { userDetailReducer } from "@/features/users/userDetailSlice";
 import { payoutReducer } from "@/features/finance/payoutSlice";
@@ -34,6 +35,7 @@ export const store = configureStore({
     admins: adminsReducer,
     pregnancyWeeks: pregnancyWeeksReducer,
     childGrowth: childGrowthReducer,
+    followupVisits: followupVisitsReducer,
     dailyTips: dailyTipsReducer,
     pregnancies: pregnanciesReducer,
     pregnancyLogs: pregnancyLogsReducer,

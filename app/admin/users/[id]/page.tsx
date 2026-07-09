@@ -29,6 +29,7 @@ import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { fetchUserDetail } from "@/features/users/userDetailSlice";
 import { useAdminHasPermission } from "@/lib/useAdminPermissions";
 import { formatDate, formatDateTime, truncate } from "@/lib/format";
+import { formatGestationalAge as formatBirthGestationalAge } from "@/lib/children/childUi";
 import {
   formatGestationalAge,
   gestationalAge,
@@ -572,8 +573,10 @@ export default function UserDetailPage() {
                         <TableHead>Gender</TableHead>
                         <TableHead>Birth date</TableHead>
                         <TableHead>Birth weight</TableHead>
-                        <TableHead>Birth height</TableHead>
-                        <TableHead>Delivery</TableHead>
+                        <TableHead>Gestational age</TableHead>
+                        <TableHead>Hospital</TableHead>
+                        <TableHead>Blood group</TableHead>
+                        <TableHead>Woreda</TableHead>
                         <TableHead>Active</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -591,11 +594,14 @@ export default function UserDetailPage() {
                               : "-"}
                           </TableCell>
                           <TableCell>
-                            {child.birth_height != null
-                              ? `${child.birth_height} cm`
-                              : "-"}
+                            {formatBirthGestationalAge(
+                              child.gestational_age_weeks,
+                              child.gestational_age_days,
+                            )}
                           </TableCell>
-                          <TableCell>{child.delivery_type || "-"}</TableCell>
+                          <TableCell>{child.birth_hospital || "-"}</TableCell>
+                          <TableCell>{child.blood_group || "-"}</TableCell>
+                          <TableCell>{child.woreda || "-"}</TableCell>
                           <TableCell>
                             {child.is_active ? "Yes" : "No"}
                           </TableCell>

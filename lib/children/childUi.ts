@@ -1,5 +1,16 @@
 import type { Child } from "@/lib/types/database";
 
+export const CHILD_BLOOD_GROUPS = [
+  "A+",
+  "A-",
+  "B+",
+  "B-",
+  "AB+",
+  "AB-",
+  "O+",
+  "O-",
+] as const;
+
 export function childAgeInMonths(birthDate: string): number {
   const birth = new Date(birthDate);
   const now = new Date();
@@ -34,6 +45,9 @@ export function childMatchesSearch(child: Child, query: string): boolean {
     child.gender,
     child.delivery_type,
     child.local_id,
+    child.birth_hospital,
+    child.blood_group,
+    child.woreda,
     child.profiles?.full_name,
     child.profiles?.phone,
     child.user_id,
@@ -53,4 +67,14 @@ export function formatMilestoneType(type: string): string {
     return `Month ${month} · #${category + 1}-${item + 1}`;
   }
   return type;
+}
+
+export function formatGestationalAge(
+  weeks: number | null | undefined,
+  days: number | null | undefined,
+): string {
+  if (weeks == null) return "-";
+  const d = days ?? 0;
+  if (d > 0) return `${weeks}w ${d}d`;
+  return `${weeks} weeks`;
 }

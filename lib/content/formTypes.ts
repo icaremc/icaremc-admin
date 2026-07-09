@@ -30,12 +30,32 @@ export type GrowthFields = {
   head_average: string;
 };
 
-export type MilestoneCategoryFields = {
-  title: string;
-  itemsText: string;
+export type LearningPathItemFields = {
+  label: string;
+  explanation: string;
+  /** @deprecated Prefer image_urls; kept for older rows / first-image fallback. */
+  image_url: string;
+  image_urls: string[];
+  video_url: string;
 };
 
-/** Locale-independent numeric growth reference (powers auto-calc + chart). */
+export const EMPTY_LEARNING_PATH_ITEM: LearningPathItemFields = {
+  label: "",
+  explanation: "",
+  image_url: "",
+  image_urls: [],
+  video_url: "",
+};
+
+export type MilestoneCategoryFields = {
+  title: string;
+  items: LearningPathItemFields[];
+};
+
+export const EMPTY_MILESTONE_CATEGORY: MilestoneCategoryFields = {
+  title: "",
+  items: [{ ...EMPTY_LEARNING_PATH_ITEM }],
+};
 export type GrowthMetricSexFields = {
   weight_kg: string;
   weight_min: string;
@@ -76,11 +96,6 @@ export const EMPTY_PREGNANCY_SECTION: PregnancySectionFields = {
   is_urgent: false,
 };
 
-export const EMPTY_MILESTONE_CATEGORY: MilestoneCategoryFields = {
-  title: "",
-  itemsText: "",
-};
-
 export type ContentFieldKind = "text" | "textarea" | "categories" | "growth";
 
 export type ContentFieldDef = {
@@ -97,7 +112,6 @@ export function fieldsForNamespace(namespace: ContentNamespace): ContentFieldDef
   return [
     { key: "months", label: "Age (months)", kind: "text" },
     { key: "label", label: "Label", kind: "text", required: true },
-    { key: "growth", label: "Growth standards", kind: "growth" },
     { key: "categories", label: "Categories", kind: "categories" },
   ];
 }

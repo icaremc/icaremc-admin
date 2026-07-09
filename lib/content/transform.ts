@@ -2,11 +2,18 @@ import type { ContentNamespace, Locale } from "@/lib/types/database";
 import { LOCALES } from "@/lib/constants";
 import {
   EMPTY_GROWTH,
+  EMPTY_LEARNING_PATH_ITEM,
   EMPTY_MILESTONE_CATEGORY,
   type GrowthFields,
+  type LearningPathItemFields,
   type LocaleFormMap,
   type MilestoneCategoryFields,
 } from "./formTypes";
+import {
+  collectLearningPathImageUrls,
+  learningPathItemHasContent,
+  serializeLearningPathItemMedia,
+} from "./learningPathMedia";
 
 function asString(value: unknown): string {
   return typeof value === "string" ? value : "";
@@ -46,15 +53,49 @@ function serializeGrowth(fields: GrowthFields): Record<string, string> {
   return result;
 }
 
+function parseLearningPathItem(raw: unknown): LearningPathItemFields {
+  if (typeof raw === "string") {
+    return { ...EMPTY_LEARNING_PATH_ITEM, label: raw.trim() };
+  }
+  if (raw && typeof raw === "object") {
+    const map = raw as Record<string, unknown>;
+    const imageUrls = collectLearningPathImageUrls({
+      image_url: asString(map.image_url) || asString(map.imageUrl),
+      image_urls: Array.isArray(map.image_urls)
+        ? map.image_urls.filter((u): u is string => typeof u === "string")
+        : Array.isArray(map.imageUrls)
+          ? map.imageUrls.filter((u): u is string => typeof u === "string")
+          : [],
+    });
+    return {
+      label:
+        asString(map.label) || asString(map.text) || asString(map.title),
+      explanation:
+        asString(map.explanation) || asString(map.description),
+      image_url: imageUrls[0] ?? "",
+      image_urls: imageUrls,
+      video_url: asString(map.video_url) || asString(map.videoUrl),
+    };
+  }
+  return { ...EMPTY_LEARNING_PATH_ITEM };
+}
+
 function parseCategories(raw: unknown): MilestoneCategoryFields[] {
   if (!Array.isArray(raw)) return [{ ...EMPTY_MILESTONE_CATEGORY }];
   const categories = raw
     .filter((item) => item && typeof item === "object")
     .map((item) => {
       const map = item as Record<string, unknown>;
+      const items = map.items;
+      const parsedItems = Array.isArray(items)
+        ? items.map(parseLearningPathItem).filter((entry) => entry.label.trim())
+        : [];
       return {
         title: asString(map.title),
-        itemsText: bulletsToText(map.items),
+        items:
+          parsedItems.length > 0
+            ? parsedItems
+            : [{ ...EMPTY_LEARNING_PATH_ITEM }],
       };
     });
   return categories.length > 0 ? categories : [{ ...EMPTY_MILESTONE_CATEGORY }];
@@ -62,10 +103,22 @@ function parseCategories(raw: unknown): MilestoneCategoryFields[] {
 
 function serializeCategories(categories: MilestoneCategoryFields[]) {
   return categories
-    .filter((category) => category.title.trim())
+    .filter((category) =>
+      category.title.trim() ||
+      category.items.some((item) => learningPathItemHasContent(item)),
+    )
     .map((category) => ({
       title: category.title.trim(),
-      items: textToBullets(category.itemsText),
+      items: category.items
+        .filter((item) => learningPathItemHasContent(item))
+        .map((item) => {
+          const explanation = item.explanation.trim();
+          return {
+            label: item.label.trim(),
+            ...(explanation ? { explanation } : {}),
+            ...serializeLearningPathItemMedia(item),
+          };
+        }),
     }));
 }
 

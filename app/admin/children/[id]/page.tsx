@@ -21,9 +21,12 @@ import {
 import {
   childAgeLabel,
   childDisplayName,
+  formatGestationalAge,
   formatMilestoneType,
 } from "@/lib/children/childUi";
 import { formatDate, formatDateTime } from "@/lib/format";
+import ChildBirthEditForm from "@/components/children/ChildBirthEditForm";
+import { updateChild } from "@/features/children/childrenSlice";
 
 function MetaItem({
   label,
@@ -46,7 +49,7 @@ export default function ChildDetailPage() {
   const params = useParams<{ id: string }>();
   const childId = params.id;
   const dispatch = useAppDispatch();
-  const { selected, detailLoading, error } = useAppSelector(
+  const { selected, detailLoading, saving, error } = useAppSelector(
     (state) => state.children,
   );
 
@@ -113,14 +116,29 @@ export default function ChildDetailPage() {
             <section className="admin-panel">
               <h2 className="admin-section-title mb-4">Birth record</h2>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <MetaItem label="Name" value={child.name || childDisplayName(child)} />
                 <MetaItem label="Birth date" value={formatDate(child.birth_date)} />
                 <MetaItem label="Age" value={childAgeLabel(child.birth_date)} />
+                <MetaItem label="Sex" value={child.gender === "female" ? "Female" : "Male"} />
                 <MetaItem
                   label="Birth weight"
                   value={
                     child.birth_weight != null ? `${child.birth_weight} kg` : "-"
                   }
                 />
+                <MetaItem
+                  label="Gestational age"
+                  value={formatGestationalAge(
+                    child.gestational_age_weeks,
+                    child.gestational_age_days,
+                  )}
+                />
+                <MetaItem
+                  label="Birth hospital"
+                  value={child.birth_hospital || "-"}
+                />
+                <MetaItem label="Blood group" value={child.blood_group || "-"} />
+                <MetaItem label="Woreda / area" value={child.woreda || "-"} />
                 <MetaItem
                   label="Birth height"
                   value={
@@ -143,6 +161,17 @@ export default function ChildDetailPage() {
               <p className="mt-4 text-xs text-gray-500">
                 Updated {formatDateTime(child.updated_at)}
               </p>
+            </section>
+
+            <section className="admin-panel">
+              <h2 className="admin-section-title mb-4">Edit birth record</h2>
+              <ChildBirthEditForm
+                child={child}
+                saving={saving}
+                onSave={(patch) => {
+                  dispatch(updateChild({ childId: child.id, patch }));
+                }}
+              />
             </section>
 
             <section>

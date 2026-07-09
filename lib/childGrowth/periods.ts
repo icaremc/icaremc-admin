@@ -22,7 +22,8 @@ export function ageGroupForMonths(ageMonths: number): ChildAgeGroup {
 }
 
 export function formatAgeMonthsLabel(ageMonths: number): string {
-  if (ageMonths === 0) return "Newborn (0–28 days)";
+  if (ageMonths === 0) return "Newborn";
+  if (ageMonths === 1) return "6 weeks";
   if (ageMonths < 12) return `${ageMonths} month${ageMonths === 1 ? "" : "s"}`;
   if (ageMonths % 12 === 0) {
     const years = ageMonths / 12;
@@ -36,8 +37,8 @@ export function formatAgeMonthsLabel(ageMonths: number): string {
 
 /** Standard age checkpoints — admins can add custom periods. */
 export const SUGGESTED_CHILD_GROWTH_PERIODS = [
-  { age_months: 0, age_label: "Newborn (0–28 days)" },
-  { age_months: 1, age_label: "6 weeks / 1.5 months" },
+  { age_months: 0, age_label: "Newborn" },
+  { age_months: 1, age_label: "6 weeks" },
   { age_months: 2, age_label: "2 months" },
   { age_months: 4, age_label: "4 months" },
   { age_months: 6, age_label: "6 months" },

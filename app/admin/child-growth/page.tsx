@@ -35,7 +35,7 @@ export default function ChildGrowthPage() {
     <>
       <PageHero
         title="Child milestones"
-        description="Growth, vaccines, milestones, red flags, nutrition, and visits (0–18 years)"
+        description="Growth reference, checklist, red flags, and nutrition (0–18 years). Vaccines and visits are under Baby follow-up."
         icon={TrendingUp}
         stat={{ label: "Periods", value: periods.length }}
       />

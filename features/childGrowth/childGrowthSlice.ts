@@ -4,15 +4,22 @@ import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
 import {
   EMPTY_GROWTH,
   EMPTY_GROWTH_METRIC,
+  EMPTY_LEARNING_PATH_ITEM,
   EMPTY_MILESTONE_CATEGORY,
   EMPTY_PREGNANCY_SECTION,
   EMPTY_VACCINE,
   type GrowthFields,
   type GrowthMetricSexFields,
+  type LearningPathItemFields,
   type MilestoneCategoryFields,
   type PregnancySectionFields,
   type VaccineFields,
 } from "@/lib/content/formTypes";
+import {
+  collectLearningPathImageUrls,
+  learningPathItemHasContent,
+  serializeLearningPathItemMedia,
+} from "@/lib/content/learningPathMedia";
 import {
   ageGroupForMonths,
   type ChildAgeGroup,
@@ -246,6 +253,46 @@ function serializeMetrics(metrics: ChildGrowthMetricsForm): ChildGrowthMetrics {
   return result;
 }
 
+function parseLearningPathItem(raw: unknown): LearningPathItemFields {
+  if (typeof raw === "string") {
+    return { ...EMPTY_LEARNING_PATH_ITEM, label: raw.trim() };
+  }
+  if (raw && typeof raw === "object") {
+    const map = raw as Record<string, unknown>;
+    const imageUrls = collectLearningPathImageUrls({
+      image_url:
+        typeof map.image_url === "string"
+          ? map.image_url
+          : typeof map.imageUrl === "string"
+            ? map.imageUrl
+            : "",
+      image_urls: Array.isArray(map.image_urls)
+        ? map.image_urls.filter((u): u is string => typeof u === "string")
+        : Array.isArray(map.imageUrls)
+          ? map.imageUrls.filter((u): u is string => typeof u === "string")
+          : [],
+    });
+    return {
+      label:
+        (typeof map.label === "string" ? map.label : "") ||
+        (typeof map.text === "string" ? map.text : "") ||
+        (typeof map.title === "string" ? map.title : ""),
+      explanation:
+        (typeof map.explanation === "string" ? map.explanation : "") ||
+        (typeof map.description === "string" ? map.description : ""),
+      image_url: imageUrls[0] ?? "",
+      image_urls: imageUrls,
+      video_url:
+        typeof map.video_url === "string"
+          ? map.video_url
+          : typeof map.videoUrl === "string"
+            ? map.videoUrl
+            : "",
+    };
+  }
+  return { ...EMPTY_LEARNING_PATH_ITEM };
+}
+
 function parseMilestones(raw: unknown): MilestoneCategoryFields[] {
   if (!Array.isArray(raw) || raw.length === 0) {
     return [{ ...EMPTY_MILESTONE_CATEGORY }];
@@ -255,13 +302,40 @@ function parseMilestones(raw: unknown): MilestoneCategoryFields[] {
     .map((item) => {
       const map = item as Record<string, unknown>;
       const items = map.items;
+      const parsedItems = Array.isArray(items)
+        ? items.map(parseLearningPathItem).filter((entry) => entry.label.trim())
+        : [];
       return {
         title: typeof map.title === "string" ? map.title : "",
-        itemsText: Array.isArray(items)
-          ? items.map((b) => String(b)).join("\n")
-          : "",
+        items:
+          parsedItems.length > 0
+            ? parsedItems
+            : [{ ...EMPTY_LEARNING_PATH_ITEM }],
       };
     });
+}
+
+function serializeMilestones(
+  categories: MilestoneCategoryFields[],
+): ChildGrowthMilestoneCategory[] {
+  return categories
+    .filter((category) =>
+      category.title.trim() ||
+      category.items.some((item) => learningPathItemHasContent(item)),
+    )
+    .map((category) => ({
+      title: category.title.trim(),
+      items: category.items
+        .filter((item) => learningPathItemHasContent(item))
+        .map((item) => {
+          const explanation = item.explanation.trim();
+          return {
+            label: item.label.trim(),
+            ...(explanation ? { explanation } : {}),
+            ...serializeLearningPathItemMedia(item),
+          };
+        }),
+    }));
 }
 
 function serializeSections(
@@ -299,29 +373,10 @@ function serializeGrowthFields(fields: GrowthFields) {
 }
 
 function serializeGrowth(growth: ChildGrowthFormGrowth): ChildGrowthGrowthData {
-  const boys = serializeGrowthFields(growth.boys);
-  const girls = serializeGrowthFields(growth.girls);
+  // Boys/girls text ranges are deprecated — numeric growth_metrics is the source of truth.
   const notes = growth.notes.trim() || undefined;
-  if (!notes && !boys && !girls) return {};
-  return {
-    notes,
-    boys,
-    girls,
-  };
-}
-
-function serializeMilestones(
-  categories: MilestoneCategoryFields[],
-): ChildGrowthMilestoneCategory[] {
-  return categories
-    .filter((category) => category.title.trim() || category.itemsText.trim())
-    .map((category) => ({
-      title: category.title.trim(),
-      items: category.itemsText
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean),
-    }));
+  if (!notes) return {};
+  return { notes };
 }
 
 function translationHasContent(
@@ -330,39 +385,19 @@ function translationHasContent(
   if (slice.title.trim() || slice.subtitle.trim()) return true;
   if (slice.growth.notes.trim()) return true;
   if (
-    [slice.growth.boys, slice.growth.girls].some((sex) =>
-      Object.values(sex).some((v) => v.trim()),
+    slice.milestones.some(
+      (category) =>
+        category.title.trim() ||
+        category.items.some((item) => learningPathItemHasContent(item)),
     )
   ) {
     return true;
   }
-  if (
-    slice.vaccines.some(
-      (vaccine) =>
-        vaccine.name.trim() || vaccine.route.trim() || vaccine.benefitsText.trim(),
-    )
-  ) {
-    return true;
-  }
-  const sectionGroups = [
-    slice.red_flags,
-    slice.nutrition,
-    slice.visit_reminders,
-  ];
-  if (
-    sectionGroups.some((group) =>
-      group.some(
-        (section) =>
-          section.title.trim() ||
-          section.body.trim() ||
-          section.bulletsText.trim(),
-      ),
-    )
-  ) {
-    return true;
-  }
-  return slice.milestones.some(
-    (category) => category.title.trim() || category.itemsText.trim(),
+  return [...slice.red_flags, ...slice.nutrition].some(
+    (section) =>
+      section.title.trim() ||
+      section.body.trim() ||
+      section.bulletsText.trim(),
   );
 }
 
@@ -445,11 +480,12 @@ function formToTranslationRows(
         title: slice.title.trim() || form.age_label.trim() || `Age ${form.age_months} months`,
         subtitle: slice.subtitle.trim() || null,
         growth: serializeGrowth(slice.growth),
-        vaccines: serializeVaccines(slice.vaccines),
+        // Vaccines + visit reminders live in Follow-up / vaccine schedule — clear on save.
+        vaccines: [],
         milestones: serializeMilestones(slice.milestones),
         red_flags: serializeSections(slice.red_flags),
         nutrition: serializeSections(slice.nutrition),
-        visit_reminders: serializeSections(slice.visit_reminders),
+        visit_reminders: [],
       };
     })
     .filter(Boolean) as Omit<
