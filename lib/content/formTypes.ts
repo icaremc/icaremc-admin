@@ -56,6 +56,16 @@ export const EMPTY_MILESTONE_CATEGORY: MilestoneCategoryFields = {
   title: "",
   items: [{ ...EMPTY_LEARNING_PATH_ITEM }],
 };
+
+/** Suggested checklist domains - titles match the mother app learning-path matcher. */
+export const SUGGESTED_MILESTONE_CATEGORIES = [
+  "Communication (speech & language)",
+  "Cognitive",
+  "Physical / movement",
+  "Social / emotional",
+  "Vision",
+  "Hearing",
+] as const;
 export type GrowthMetricSexFields = {
   weight_kg: string;
   weight_min: string;

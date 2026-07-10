@@ -61,12 +61,39 @@ export function childMatchesSearch(child: Child, query: string): boolean {
 }
 
 export function formatMilestoneType(type: string): string {
-  const parts = type.split("-");
+  const key = parseMilestoneItemKey(type).key;
+  const parts = key.split("-");
   if (parts.length === 3 && parts.every((p) => /^\d+$/.test(p))) {
     const [month, category, item] = parts.map(Number);
     return `Month ${month} · #${category + 1}-${item + 1}`;
   }
-  return type;
+  return key;
+}
+
+export type MilestoneAnswerStatus = "yes" | "unsure" | "not_yet";
+
+export function parseMilestoneItemKey(itemKey: string): {
+  key: string;
+  status: MilestoneAnswerStatus;
+} {
+  if (itemKey.startsWith("u:")) {
+    return { key: itemKey.slice(2), status: "unsure" };
+  }
+  if (itemKey.startsWith("n:")) {
+    return { key: itemKey.slice(2), status: "not_yet" };
+  }
+  return { key: itemKey, status: "yes" };
+}
+
+export function formatMilestoneAnswerStatus(status: MilestoneAnswerStatus): string {
+  switch (status) {
+    case "yes":
+      return "Yes";
+    case "unsure":
+      return "Not sure";
+    case "not_yet":
+      return "Not yet";
+  }
 }
 
 export function formatGestationalAge(

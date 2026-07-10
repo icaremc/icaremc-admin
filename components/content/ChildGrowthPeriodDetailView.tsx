@@ -8,7 +8,6 @@ import { LOCALES } from "@/lib/constants";
 import { CHILD_AGE_GROUP_LABELS, type ChildAgeGroup } from "@/lib/childGrowth/periods";
 import { collectLearningPathImageUrls } from "@/lib/content/learningPathMedia";
 import type {
-  ChildGrowthGrowthData,
   ChildGrowthMetrics,
   ChildGrowthMetricSex,
   ChildGrowthPeriod,
@@ -91,19 +90,6 @@ function SectionList({
   );
 }
 
-function GrowthPanel({ growth }: { growth: ChildGrowthGrowthData }) {
-  if (!growth.notes?.trim()) return null;
-
-  return (
-    <div className="space-y-3 border-t border-gray-200 pt-4">
-      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-        Growth notes
-      </p>
-      <DetailField label="Notes" value={growth.notes} />
-    </div>
-  );
-}
-
 function TranslationPanel({
   translation,
 }: {
@@ -121,7 +107,6 @@ function TranslationPanel({
     <div className="space-y-6">
       <DetailField label="Title" value={translation.title} />
       <DetailField label="Subtitle" value={translation.subtitle} />
-      <GrowthPanel growth={translation.growth ?? {}} />
 
       {translation.milestones && translation.milestones.length > 0 ? (
         <div className="space-y-3 border-t border-gray-200 pt-4">
@@ -173,11 +158,11 @@ function TranslationPanel({
         </div>
       ) : null}
 
-      <SectionList label="Red flags" sections={translation.red_flags ?? []} />
       <SectionList
         label="Nutrition guidance"
         sections={translation.nutrition ?? []}
       />
+      <SectionList label="Red flags" sections={translation.red_flags ?? []} />
     </div>
   );
 }
@@ -192,7 +177,7 @@ function metricLine(sex: ChildGrowthMetricSex | undefined, label: string) {
   ) => {
     if (min == null && median == null && max == null) return null;
     const range =
-      min != null && max != null ? `${min}–${max}` : median != null ? `${median}` : "";
+      min != null && max != null ? `${min}-${max}` : median != null ? `${median}` : "";
     const med = median != null ? ` (median ${median})` : "";
     return `${range}${med} ${unit ?? ""}`.trim();
   };

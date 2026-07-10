@@ -54,7 +54,16 @@ export type Pregnancy = {
   created_at: string;
   completed_at: string | null;
   updated_at: string;
-  profiles?: { full_name: string | null; phone: string | null } | null;
+  profiles?: {
+    id?: string;
+    full_name: string | null;
+    phone: string | null;
+    account_type?: string | null;
+    locale?: Locale | null;
+    onboarding_complete?: boolean;
+    notifications_enabled?: boolean;
+    created_at?: string;
+  } | null;
 };
 
 export type PregnancyWeek = {
@@ -195,6 +204,7 @@ export type ChildFollowupVisitTemplate = {
   offset_months: number | null;
   growth_period_id: string | null;
   modules: FollowupVisitModules;
+  vaccines: ChildGrowthVaccine[];
   remind_days_before: number[];
   is_published: boolean;
   created_at: string;
@@ -234,10 +244,20 @@ export type Child = {
   birth_hospital: string | null;
   blood_group: string | null;
   woreda: string | null;
+  photo_url: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
-  profiles?: { full_name: string | null; phone: string | null } | null;
+  profiles?: {
+    id?: string;
+    full_name: string | null;
+    phone: string | null;
+    account_type?: string | null;
+    locale?: Locale | null;
+    onboarding_complete?: boolean;
+    notifications_enabled?: boolean;
+    created_at?: string;
+  } | null;
 };
 
 export type ChildUpdatePayload = {
@@ -252,6 +272,15 @@ export type ChildUpdatePayload = {
   woreda?: string | null;
 };
 
+export type ChildMilestoneCheck = {
+  id: string;
+  user_id: string;
+  child_local_id: string;
+  item_key: string;
+  created_at: string;
+};
+
+/** @deprecated Legacy shape — app uses child_milestone_checks instead. */
 export type ChildMilestone = {
   id: string;
   child_id: string;

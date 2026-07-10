@@ -30,20 +30,11 @@ alter table public.children
 
 drop policy if exists "children_admin_select" on public.children;
 create policy "children_admin_select" on public.children
-  for select using (
-    exists (
-      select 1 from public.profiles p
-      where p.id = auth.uid() and p.is_admin = true
-    )
-  );
+  for select using (public.is_portal_admin());
 
 drop policy if exists "children_admin_update" on public.children;
 create policy "children_admin_update" on public.children
-  for update using (
-    exists (
-      select 1 from public.profiles p
-      where p.id = auth.uid() and p.is_admin = true
-    )
-  );
+  for update using (public.is_portal_admin())
+  with check (public.is_portal_admin());
 
 notify pgrst, 'reload schema';

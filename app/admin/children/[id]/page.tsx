@@ -22,10 +22,13 @@ import {
   childAgeLabel,
   childDisplayName,
   formatGestationalAge,
+  formatMilestoneAnswerStatus,
   formatMilestoneType,
+  parseMilestoneItemKey,
 } from "@/lib/children/childUi";
 import { formatDate, formatDateTime } from "@/lib/format";
 import ChildBirthEditForm from "@/components/children/ChildBirthEditForm";
+import ChildAvatar from "@/components/children/ChildAvatar";
 import { updateChild } from "@/features/children/childrenSlice";
 
 function MetaItem({
@@ -62,8 +65,10 @@ export default function ChildDetailPage() {
   }, [childId, dispatch]);
 
   const child = selected?.child;
-  const milestones = selected?.milestones ?? [];
-  const achievedCount = milestones.filter((m) => m.achieved_date).length;
+  const milestoneChecks = selected?.milestoneChecks ?? [];
+  const achievedCount = milestoneChecks.filter(
+    (row) => parseMilestoneItemKey(row.item_key).status === "yes",
+  ).length;
 
   return (
     <>
@@ -83,22 +88,13 @@ export default function ChildDetailPage() {
       />
 
       <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
-        <div className="mb-6 flex flex-wrap items-center gap-4">
+        <div className="mb-6">
           <Link
             href="/admin/children"
             className="text-sm font-medium text-emerald-600 hover:underline"
           >
             ← All children
           </Link>
-          {child ? (
-            <Link
-              href={`/admin/users/${child.user_id}`}
-              className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900"
-            >
-              <User className="h-4 w-4" />
-              View mother
-            </Link>
-          ) : null}
         </div>
 
         {error ? (
@@ -113,8 +109,61 @@ export default function ChildDetailPage() {
           </div>
         ) : (
           <div className="space-y-8">
+            {child.profiles ? (
+              <section className="admin-panel">
+                <h2 className="admin-section-title mb-4 flex items-center gap-2">
+                  <User className="h-5 w-5 text-emerald-600" />
+                  Parent
+                </h2>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <MetaItem
+                    label="Name"
+                    value={child.profiles.full_name || "—"}
+                  />
+                  <MetaItem label="Phone" value={child.profiles.phone || "—"} />
+                  <MetaItem
+                    label="I am a"
+                    value={child.profiles.account_type || "Mother"}
+                  />
+                  <MetaItem
+                    label="Locale"
+                    value={(child.profiles.locale || "—").toUpperCase()}
+                  />
+                  <MetaItem
+                    label="Onboarding"
+                    value={
+                      child.profiles.onboarding_complete ? "Complete" : "Pending"
+                    }
+                  />
+                  <MetaItem
+                    label="Notifications"
+                    value={
+                      child.profiles.notifications_enabled === false
+                        ? "Disabled"
+                        : "Enabled"
+                    }
+                  />
+                  {child.profiles.created_at ? (
+                    <MetaItem
+                      label="Joined"
+                      value={formatDate(child.profiles.created_at)}
+                    />
+                  ) : null}
+                </div>
+              </section>
+            ) : null}
+
             <section className="admin-panel">
-              <h2 className="admin-section-title mb-4">Birth record</h2>
+              <div className="mb-4 flex flex-wrap items-center gap-4">
+                <ChildAvatar child={child} size="md" />
+                <div>
+                  <h2 className="admin-section-title">Birth record</h2>
+                  <p className="text-sm text-gray-500">
+                    {child.gender === "female" ? "Girl" : "Boy"} ·{" "}
+                    {childAgeLabel(child.birth_date)}
+                  </p>
+                </div>
+              </div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <MetaItem label="Name" value={child.name || childDisplayName(child)} />
                 <MetaItem label="Birth date" value={formatDate(child.birth_date)} />
@@ -178,50 +227,57 @@ export default function ChildDetailPage() {
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <h2 className="admin-section-title flex items-center gap-2">
                   <Flag className="h-5 w-5 text-violet-600" />
-                  Milestone progress ({milestones.length})
+                  Milestone progress ({milestoneChecks.length})
                 </h2>
                 <Link
-                  href="/admin/content/milestone"
+                  href="/admin/child-growth"
                   className="text-sm font-medium text-emerald-700 hover:underline"
                 >
-                  Edit milestone content →
+                  Edit learning path content →
                 </Link>
               </div>
 
-              {milestones.length === 0 ? (
+              {milestoneChecks.length === 0 ? (
                 <div className="admin-panel py-8 text-center text-sm text-gray-500">
-                  No milestones recorded yet for this child.
+                  No learning path answers recorded yet for this child.
                 </div>
               ) : (
                 <div className="admin-table-wrap">
                   <Table>
                     <TableHeader>
                       <TableRow className="border-b border-white/20 bg-gradient-to-r from-violet-50/50 to-purple-50/50">
-                        <TableHead>Milestone</TableHead>
-                        <TableHead>Achieved</TableHead>
-                        <TableHead>Notes</TableHead>
+                        <TableHead>Item</TableHead>
+                        <TableHead>Answer</TableHead>
+                        <TableHead>Recorded</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {milestones.map((row) => (
-                        <TableRow key={row.id}>
-                          <TableCell className="font-medium text-gray-900">
-                            {formatMilestoneType(row.milestone_type)}
-                          </TableCell>
-                          <TableCell>
-                            {row.achieved_date ? (
-                              <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
-                                {formatDate(row.achieved_date)}
+                      {milestoneChecks.map((row) => {
+                        const parsed = parseMilestoneItemKey(row.item_key);
+                        return (
+                          <TableRow key={row.id}>
+                            <TableCell className="font-medium text-gray-900">
+                              {formatMilestoneType(row.item_key)}
+                            </TableCell>
+                            <TableCell>
+                              <span
+                                className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                  parsed.status === "yes"
+                                    ? "bg-emerald-100 text-emerald-800"
+                                    : parsed.status === "unsure"
+                                      ? "bg-amber-100 text-amber-800"
+                                      : "bg-gray-100 text-gray-700"
+                                }`}
+                              >
+                                {formatMilestoneAnswerStatus(parsed.status)}
                               </span>
-                            ) : (
-                              <span className="text-xs text-gray-400">Not dated</span>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-sm text-gray-600">
-                            {row.notes || "-"}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                            </TableCell>
+                            <TableCell className="text-sm text-gray-600">
+                              {formatDateTime(row.created_at)}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>

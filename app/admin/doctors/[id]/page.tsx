@@ -108,7 +108,7 @@ function AvailabilityTable({ slots }: { slots: DoctorAvailabilitySlot[] | undefi
             <TableRow key={slot.id}>
               <TableCell className="font-medium">{DAY_NAMES[slot.day_of_week]}</TableCell>
               <TableCell>
-                {formatDbTime(slot.start_time)} – {formatDbTime(slot.end_time)}
+                {formatDbTime(slot.start_time)} - {formatDbTime(slot.end_time)}
               </TableCell>
               <TableCell>{slot.slot_duration_minutes} min</TableCell>
             </TableRow>

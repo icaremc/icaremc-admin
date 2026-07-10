@@ -1,12 +1,13 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { supabase } from "@/lib/supabaseClient";
-import type { Child, ChildMilestone, ChildUpdatePayload } from "@/lib/types/database";
+import type { Child, ChildMilestoneCheck, ChildUpdatePayload } from "@/lib/types/database";
 
-const CHILD_SELECT = "*, profiles(full_name, phone)";
+const CHILD_SELECT =
+  "*, profiles(id, full_name, phone, account_type, locale, onboarding_complete, notifications_enabled, created_at)";
 
 export type ChildDetailPayload = {
   child: Child;
-  milestones: ChildMilestone[];
+  milestoneChecks: ChildMilestoneCheck[];
 };
 
 type ChildrenState = {
@@ -43,21 +44,34 @@ export const fetchChildren = createAsyncThunk(
 export const fetchChildDetail = createAsyncThunk(
   "children/fetchDetail",
   async (childId: string, { rejectWithValue }) => {
-    const [childRes, milestonesRes] = await Promise.all([
-      supabase.from("children").select(CHILD_SELECT).eq("id", childId).single(),
-      supabase
-        .from("child_milestones")
-        .select("*")
-        .eq("child_id", childId)
-        .order("achieved_date", { ascending: false, nullsFirst: false }),
-    ]);
+    const childRes = await supabase
+      .from("children")
+      .select(CHILD_SELECT)
+      .eq("id", childId)
+      .single();
 
     if (childRes.error) return rejectWithValue(childRes.error.message);
-    if (milestonesRes.error) return rejectWithValue(milestonesRes.error.message);
+
+    const child = childRes.data as Child;
+    if (!child.local_id) {
+      return {
+        child,
+        milestoneChecks: [],
+      } satisfies ChildDetailPayload;
+    }
+
+    const checksRes = await supabase
+      .from("child_milestone_checks")
+      .select("*")
+      .eq("user_id", child.user_id)
+      .eq("child_local_id", child.local_id)
+      .order("created_at", { ascending: false });
+
+    if (checksRes.error) return rejectWithValue(checksRes.error.message);
 
     return {
-      child: childRes.data as Child,
-      milestones: (milestonesRes.data ?? []) as ChildMilestone[],
+      child,
+      milestoneChecks: (checksRes.data ?? []) as ChildMilestoneCheck[],
     } satisfies ChildDetailPayload;
   },
 );

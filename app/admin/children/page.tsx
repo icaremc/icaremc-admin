@@ -21,6 +21,7 @@ import {
   childMatchesSearch,
   formatGestationalAge,
 } from "@/lib/children/childUi";
+import ChildAvatar from "@/components/children/ChildAvatar";
 import { formatDate } from "@/lib/format";
 
 function GenderBadge({ gender }: { gender: "male" | "female" }) {
@@ -142,11 +143,16 @@ export default function ChildrenPage() {
                     onClick={() => router.push(`/admin/children/${child.id}`)}
                   >
                     <TableCell>
-                      <div className="font-medium text-gray-900">
-                        {childDisplayName(child)}
-                      </div>
-                      <div className="mt-1">
-                        <GenderBadge gender={child.gender} />
+                      <div className="flex items-center gap-3">
+                        <ChildAvatar child={child} />
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {childDisplayName(child)}
+                          </div>
+                          <div className="mt-1">
+                            <GenderBadge gender={child.gender} />
+                          </div>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>

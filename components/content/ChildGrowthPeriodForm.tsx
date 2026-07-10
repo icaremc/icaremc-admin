@@ -6,7 +6,6 @@ import SectionFieldsEditor from "@/components/content/SectionFieldsEditor";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { LOCALES } from "@/lib/constants";
 import {
   CHILD_AGE_GROUP_LABELS,
@@ -35,8 +34,8 @@ const SECTIONS: { key: SectionKey; label: string }[] = [
   { key: "overview", label: "Overview" },
   { key: "growth", label: "Growth reference" },
   { key: "milestones", label: "Checklist" },
-  { key: "red_flags", label: "Red flags" },
   { key: "nutrition", label: "Nutrition" },
+  { key: "red_flags", label: "Red flags" },
 ];
 
 type ChildGrowthPeriodFormProps = {
@@ -167,10 +166,6 @@ export default function ChildGrowthPeriodForm({
     fieldValue: string,
   ) => {
     updateTranslation({ [field]: fieldValue });
-  };
-
-  const updateGrowth = (patch: Partial<typeof translation.growth>) => {
-    updateTranslation({ growth: { ...translation.growth, ...patch } });
   };
 
   const localeHasTitle = (locale: Locale) =>
@@ -324,7 +319,7 @@ export default function ChildGrowthPeriodForm({
               <p className="mt-0.5 text-xs text-gray-500">
                 Shared across languages. Powers the mobile growth chart,
                 progress %, and status. Boys/girls text ranges are no longer
-                edited here — use these numeric references only.
+                edited here. Use these numeric references only.
               </p>
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
@@ -350,19 +345,6 @@ export default function ChildGrowthPeriodForm({
               />
             </div>
           </div>
-
-          <div className="space-y-4 rounded-xl border border-gray-200 bg-gray-50/80 p-4">
-            <Label className="text-base">
-              Growth notes ({LOCALE_LABELS[activeLocale]})
-            </Label>
-            <Textarea
-              value={translation.growth.notes}
-              onChange={(e) => updateGrowth({ notes: e.target.value })}
-              rows={3}
-              placeholder="Optional guidance for this age (shown in the app)"
-              className="mt-1.5"
-            />
-          </div>
         </div>
       ) : null}
 
@@ -373,6 +355,16 @@ export default function ChildGrowthPeriodForm({
         />
       ) : null}
 
+      {activeSection === "nutrition" ? (
+        <div className="space-y-4 rounded-xl border border-gray-200 bg-gray-50/80 p-4">
+          <SectionFieldsEditor
+            label="Nutrition guidance"
+            sections={translation.nutrition}
+            onChange={(nutrition) => updateTranslation({ nutrition })}
+          />
+        </div>
+      ) : null}
+
       {activeSection === "red_flags" ? (
         <div className="space-y-4 rounded-xl border border-gray-200 bg-gray-50/80 p-4">
           <SectionFieldsEditor
@@ -380,16 +372,6 @@ export default function ChildGrowthPeriodForm({
             sections={translation.red_flags}
             onChange={(red_flags) => updateTranslation({ red_flags })}
             urgentLabel="High priority alert"
-          />
-        </div>
-      ) : null}
-
-      {activeSection === "nutrition" ? (
-        <div className="space-y-4 rounded-xl border border-gray-200 bg-gray-50/80 p-4">
-          <SectionFieldsEditor
-            label="Nutrition guidance"
-            sections={translation.nutrition}
-            onChange={(nutrition) => updateTranslation({ nutrition })}
           />
         </div>
       ) : null}

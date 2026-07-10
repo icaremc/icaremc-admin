@@ -41,14 +41,14 @@ export default function NewFollowupVisitTemplatePage() {
   return (
     <>
       <PageHero
-        title="Add follow-up visit"
-        description="Define when this visit is due relative to birth, and which modules it includes."
+        title="Add visit"
+        description="Set when parents are reminded and which vaccines are given at this visit."
         icon={CalendarCheck}
       />
       <div className="mx-auto max-w-[900px] px-6 py-8 lg:px-8">
         <div className="mb-4">
-          <Link href="/admin/followup-visits" className="text-sm text-emerald-700 hover:underline">
-            ← Back to follow-up templates
+          <Link href="/admin/child-growth/follow-up" className="text-sm text-emerald-700 hover:underline">
+            ← Back to visit schedule
           </Link>
         </div>
         {error ? (

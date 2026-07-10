@@ -32,24 +32,15 @@ export const CONTENT_SECTIONS = [
     key: "child_growth",
     label: "Child milestones",
     description:
-      "Growth reference, checklist, red flags, and nutrition (0–18 years). Vaccines and visits are managed under Baby follow-up.",
+      "Growth checkpoints, checklist, red flags, nutrition, vaccination reminders, and routine check-ups (0-18 years).",
     href: "/admin/child-growth",
     addHref: "/admin/child-growth/new",
     addLabel: "Add period",
   },
   {
-    key: "followup_visits",
-    label: "Baby follow-up",
-    description:
-      "Visit schedule templates (birth–8 years). Links to child milestone periods for visit content.",
-    href: "/admin/followup-visits",
-    addHref: "/admin/followup-visits/new",
-    addLabel: "Add visit",
-  },
-  {
     key: "daily_tips",
     label: "Daily tips",
-    description: "One tip per day within each pregnancy week (days 1–7)",
+    description: "One tip per day within each pregnancy week (days 1-7)",
     href: "/admin/content/daily_tip",
     addHref: "/admin/content/daily_tip/new",
     addLabel: "Add tip",

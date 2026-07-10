@@ -12,19 +12,19 @@ export const DAILY_TIP_TRIMESTERS: {
   {
     id: 1,
     label: "First trimester",
-    range: "Weeks 1–13",
+    range: "Weeks 1-13",
     weeks: Array.from({ length: 13 }, (_, i) => i + 1),
   },
   {
     id: 2,
     label: "Second trimester",
-    range: "Weeks 14–27",
+    range: "Weeks 14-27",
     weeks: Array.from({ length: 14 }, (_, i) => i + 14),
   },
   {
     id: 3,
     label: "Third trimester",
-    range: "Weeks 28–42",
+    range: "Weeks 28-42",
     weeks: Array.from({ length: 15 }, (_, i) => i + 28),
   },
 ];

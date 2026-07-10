@@ -266,7 +266,7 @@ export default function ContentTranslationForm({
           </select>
         </div>
         <p className="text-xs text-gray-500">
-          One tip per day (1–7) within each pregnancy week. The app shows the tip
+          One tip per day (1-7) within each pregnancy week. The app shows the tip
           matching the mother&apos;s current week and day.
         </p>
       </div>

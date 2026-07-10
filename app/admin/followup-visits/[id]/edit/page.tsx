@@ -53,20 +53,20 @@ export default function EditFollowupVisitTemplatePage() {
   };
 
   const onDelete = async () => {
-    if (!window.confirm("Delete this visit template? Existing child visits may block delete.")) {
+    if (!window.confirm("Delete this visit? Parents may already have it on their schedule.")) {
       return;
     }
     const result = await dispatch(deleteFollowupVisitTemplate(id));
     if (deleteFollowupVisitTemplate.fulfilled.match(result)) {
-      router.replace("/admin/followup-visits");
+      router.replace("/admin/child-growth/follow-up");
     }
   };
 
   return (
     <>
       <PageHero
-        title="Edit follow-up visit"
-        description={form.label || "Update schedule and modules"}
+        title="Edit visit"
+        description={form.label || "Update schedule and what parents see"}
         icon={CalendarCheck}
       />
       <div className="mx-auto max-w-[900px] px-6 py-8 lg:px-8">
@@ -77,8 +77,8 @@ export default function EditFollowupVisitTemplatePage() {
           >
             ← Back to detail
           </Link>
-          <Link href="/admin/followup-visits" className="text-sm text-gray-500 hover:underline">
-            All templates
+          <Link href="/admin/child-growth/follow-up" className="text-sm text-gray-500 hover:underline">
+            All visits
           </Link>
         </div>
         {error ? (

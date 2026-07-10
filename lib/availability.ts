@@ -38,7 +38,7 @@ export function summarizeAvailabilitySlots(
   return active
     .map(
       (slot) =>
-        `${DAY_NAMES[slot.day_of_week]} ${formatDbTime(slot.start_time)}–${formatDbTime(slot.end_time)}`,
+        `${DAY_NAMES[slot.day_of_week]} ${formatDbTime(slot.start_time)}-${formatDbTime(slot.end_time)}`,
     )
     .join(" · ");
 }

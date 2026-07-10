@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { TrendingUp } from "lucide-react";
+import ChildMilestonesTabs from "@/components/childGrowth/ChildMilestonesTabs";
 import PageHero from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,10 +36,12 @@ export default function ChildGrowthPage() {
     <>
       <PageHero
         title="Child milestones"
-        description="Growth reference, checklist, red flags, and nutrition (0–18 years). Vaccines and visits are under Baby follow-up."
+        description="Development content parents see at each age: checklist, growth ranges, red flags, and nutrition."
         icon={TrendingUp}
-        stat={{ label: "Periods", value: periods.length }}
+        stat={{ label: "Ages", value: periods.length }}
       />
+
+      <ChildMilestonesTabs />
 
       <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
         {canManageContent ? (

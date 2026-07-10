@@ -137,7 +137,7 @@ export default function ChildBirthEditForm({ child, saving, onSave }: Props) {
             onChange={(e) => setGaDays(e.target.value)}
             inputMode="numeric"
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm"
-            placeholder="0–6"
+            placeholder="0-6"
           />
         </label>
         <label className="block text-sm sm:col-span-2">

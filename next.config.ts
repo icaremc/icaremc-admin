@@ -14,6 +14,11 @@ const nextConfig: NextConfig = {
         destination: "/admin/child-growth/:path*",
         permanent: false,
       },
+      {
+        source: "/admin/followup-visits",
+        destination: "/admin/child-growth/follow-up",
+        permanent: false,
+      },
     ];
   },
 };

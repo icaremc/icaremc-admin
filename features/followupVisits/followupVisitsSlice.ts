@@ -1,5 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "@/app/store/store";
+import { EMPTY_VACCINE, type VaccineFields } from "@/lib/content/formTypes";
+import { parseVaccines, serializeVaccines } from "@/lib/content/vaccines";
 import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
 import { supabase } from "@/lib/supabaseClient";
 import type {
@@ -14,7 +16,7 @@ export type FollowupVisitTemplateFormState = {
   offset_type: "days" | "months";
   offset_value: number;
   growth_period_id: string;
-  modules: Required<FollowupVisitModules>;
+  vaccines: VaccineFields[];
   remind_days_before: string;
   is_published: boolean;
 };
@@ -31,13 +33,13 @@ type FollowupVisitsState = {
 const TEMPLATE_SELECT =
   "*, child_growth_periods(id, age_months, age_label)";
 
-export const defaultFollowupModules = (): Required<FollowupVisitModules> => ({
-  growth: true,
-  nutrition: true,
+export const vaccinesOnlyModules = (): Required<FollowupVisitModules> => ({
+  growth: false,
+  nutrition: false,
   vaccines: true,
-  development: true,
-  counseling: true,
-  red_flags: true,
+  development: false,
+  counseling: false,
+  red_flags: false,
 });
 
 export const emptyFollowupTemplateForm = (): FollowupVisitTemplateFormState => ({
@@ -47,7 +49,7 @@ export const emptyFollowupTemplateForm = (): FollowupVisitTemplateFormState => (
   offset_type: "days",
   offset_value: 0,
   growth_period_id: "",
-  modules: defaultFollowupModules(),
+  vaccines: [{ ...EMPTY_VACCINE }],
   remind_days_before: "7, 1, 0",
   is_published: true,
 });
@@ -79,10 +81,7 @@ export function templateToForm(
         ? (template.offset_months ?? 0)
         : (template.offset_days ?? 0),
     growth_period_id: template.growth_period_id ?? "",
-    modules: {
-      ...defaultFollowupModules(),
-      ...template.modules,
-    },
+    vaccines: parseVaccines(template.vaccines),
     remind_days_before: formatRemindDays(template.remind_days_before),
     is_published: template.is_published,
   };
@@ -95,7 +94,8 @@ function formToPayload(form: FollowupVisitTemplateFormState, opts?: { includeCod
     offset_days: form.offset_type === "days" ? form.offset_value : null,
     offset_months: form.offset_type === "months" ? form.offset_value : null,
     growth_period_id: form.growth_period_id.trim() || null,
-    modules: form.modules,
+    modules: vaccinesOnlyModules(),
+    vaccines: serializeVaccines(form.vaccines),
     remind_days_before: parseRemindDays(form.remind_days_before),
     is_published: form.is_published,
   };
@@ -285,7 +285,7 @@ const followupVisitsSlice = createSlice({
       })
       .addCase(createFollowupVisitTemplate.fulfilled, (state, action) => {
         state.saving = false;
-        state.success = "Visit template created";
+        state.success = "Check-up created";
         state.templates = [...state.templates, action.payload].sort(
           (a, b) => a.sort_order - b.sort_order,
         );
@@ -301,7 +301,7 @@ const followupVisitsSlice = createSlice({
       })
       .addCase(updateFollowupVisitTemplate.fulfilled, (state, action) => {
         state.saving = false;
-        state.success = "Visit template saved";
+        state.success = "Check-up saved";
         state.selected = action.payload;
         const index = state.templates.findIndex((t) => t.id === action.payload.id);
         if (index >= 0) state.templates[index] = action.payload;

@@ -206,7 +206,7 @@ export default function AppointmentDetailPage() {
     <>
       <PageHero
         title={heroTitle}
-        description="Booking details and patient–doctor chat"
+        description="Booking details and patient-doctor chat"
         icon={CalendarCheck}
         stat={{
           label: "Messages",

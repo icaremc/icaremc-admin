@@ -22,6 +22,7 @@ import { uploadLearningPathImages } from "@/lib/childGrowth/learningPathImageApi
 import { collectLearningPathImageUrls } from "@/lib/content/learningPathMedia";
 import {
   EMPTY_LEARNING_PATH_ITEM,
+  SUGGESTED_MILESTONE_CATEGORIES,
   type LearningPathItemFields,
   type MilestoneCategoryFields,
 } from "@/lib/content/formTypes";
@@ -247,12 +248,32 @@ export default function LearningPathFieldsEditor({
     }
   }
 
-  function addCategory() {
+  function addCategory(title = "") {
     onChange([
       ...categories,
-      { title: "", items: [{ ...EMPTY_LEARNING_PATH_ITEM }] },
+      { title, items: [{ ...EMPTY_LEARNING_PATH_ITEM }] },
     ]);
   }
+
+  function addSuggestedCategory(title: string) {
+    const exists = categories.some(
+      (category) =>
+        category.title.trim().toLowerCase() === title.trim().toLowerCase(),
+    );
+    if (exists) return;
+    addCategory(title);
+  }
+
+  const missingSuggestions = SUGGESTED_MILESTONE_CATEGORIES.filter(
+    (title) =>
+      !categories.some(
+        (category) =>
+          category.title.trim().toLowerCase() === title.toLowerCase() ||
+          category.title.toLowerCase().includes(
+            title.split(/[/(]/)[0]!.trim().toLowerCase(),
+          ),
+      ),
+  );
 
   return (
     <div className="space-y-4">
@@ -261,14 +282,35 @@ export default function LearningPathFieldsEditor({
           <p className="text-sm font-semibold text-gray-900">Categories</p>
           <p className="text-xs text-gray-500">
             {categories.length} categor
-            {categories.length === 1 ? "y" : "ies"}
+            {categories.length === 1 ? "y" : "ies"} · include Vision & Hearing
+            for the mother app
           </p>
         </div>
-        <Button type="button" variant="outline" size="sm" onClick={addCategory}>
+        <Button type="button" variant="outline" size="sm" onClick={() => addCategory()}>
           <Plus className="mr-1 h-4 w-4" />
           Category
         </Button>
       </div>
+
+      {missingSuggestions.length > 0 ? (
+        <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
+          <p className="mb-2 text-xs font-medium text-emerald-900">
+            Suggested domains (tap to add)
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {missingSuggestions.map((title) => (
+              <button
+                key={title}
+                type="button"
+                onClick={() => addSuggestedCategory(title)}
+                className="rounded-full border border-emerald-200 bg-white px-2.5 py-1 text-xs font-medium text-emerald-800 transition hover:border-emerald-400 hover:bg-emerald-50"
+              >
+                + {title}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       {uploadError ? (
         <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -279,7 +321,7 @@ export default function LearningPathFieldsEditor({
       {categories.length === 0 ? (
         <button
           type="button"
-          onClick={addCategory}
+          onClick={() => addCategory()}
           className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-gray-300 bg-white px-4 py-10 text-sm text-gray-500 transition hover:border-emerald-400 hover:bg-emerald-50/40 hover:text-emerald-800"
         >
           <Plus className="h-5 w-5" />
@@ -301,7 +343,7 @@ export default function LearningPathFieldsEditor({
                   onChange={(e) =>
                     updateCategory(categoryIndex, { title: e.target.value })
                   }
-                  placeholder="Category name"
+                  placeholder="e.g. Vision, Hearing, Communication…"
                   className="h-9 border-0 bg-transparent px-2 shadow-none focus-visible:ring-0"
                 />
                 {categories.length > 1 ? (

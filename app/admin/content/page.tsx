@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
   BookOpen,
-  CalendarCheck,
   Heart,
   Lightbulb,
   Plus,
@@ -29,14 +28,12 @@ type ContentOverviewStats = {
   pregnancyWeeks: SectionStats;
   dailyTips: SectionStats;
   childGrowth: SectionStats;
-  followupVisits: SectionStats;
 };
 
 const emptyStats: ContentOverviewStats = {
   pregnancyWeeks: { total: 0, active: 0 },
   dailyTips: { total: 0, active: 0 },
   childGrowth: { total: 0, active: 0 },
-  followupVisits: { total: 0, active: 0 },
 };
 
 const sectionMeta: Record<
@@ -45,7 +42,6 @@ const sectionMeta: Record<
 > = {
   pregnancy_weeks: { icon: Heart, accent: "emerald" },
   child_growth: { icon: TrendingUp, accent: "emerald" },
-  followup_visits: { icon: CalendarCheck, accent: "violet" },
   daily_tips: { icon: Lightbulb, accent: "teal" },
 };
 
@@ -98,14 +94,9 @@ async function fetchContentStats(): Promise<ContentOverviewStats> {
       detail: `${pregnancyWeeksPublished} published of 42 weeks`,
     },
     childGrowth: {
-      total: childGrowthTotal,
-      active: childGrowthPublished,
-      detail: `${childGrowthPublished} published checkpoints`,
-    },
-    followupVisits: {
-      total: followupTotal,
-      active: followupPublished,
-      detail: `${followupPublished} published visit templates`,
+      total: childGrowthTotal + followupTotal,
+      active: childGrowthPublished + followupPublished,
+      detail: `${childGrowthPublished} milestones · ${followupPublished} check-ups`,
     },
     dailyTips: {
       total: dailyTipsTotal,
@@ -124,8 +115,6 @@ function statsForSection(
       return stats.pregnancyWeeks;
     case "child_growth":
       return stats.childGrowth;
-    case "followup_visits":
-      return stats.followupVisits;
     case "daily_tips":
       return stats.dailyTips;
   }
@@ -164,7 +153,6 @@ export default function ContentIndexPage() {
     () =>
       stats.pregnancyWeeks.total +
       stats.childGrowth.total +
-      stats.followupVisits.total +
       stats.dailyTips.total,
     [stats],
   );

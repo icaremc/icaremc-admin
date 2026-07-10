@@ -36,10 +36,13 @@ export function groupFollowupTemplatesByMilestone(
     map.set(key, {
       periodId,
       ageMonths: template.child_growth_periods?.age_months ?? null,
-      label: milestoneDisplayLabel(
-        template.child_growth_periods?.age_label,
-        template.child_growth_periods?.age_months,
-      ),
+      label:
+        periodId == null
+          ? "Between milestones"
+          : milestoneDisplayLabel(
+              template.child_growth_periods?.age_label,
+              template.child_growth_periods?.age_months,
+            ),
       templates: [template],
     });
   }
@@ -54,6 +57,19 @@ export function groupFollowupTemplatesByMilestone(
       if (b.periodId == null) return -1;
       return (a.ageMonths ?? 0) - (b.ageMonths ?? 0);
     });
+}
+
+export function vaccineSummary(
+  template: ChildFollowupVisitTemplate,
+  maxNames = 2,
+): string {
+  const names = (template.vaccines ?? [])
+    .map((v) => v.name?.trim())
+    .filter(Boolean);
+  if (names.length === 0) return "None";
+  if (names.length <= maxNames) return names.join(", ");
+  const shown = names.slice(0, maxNames).join(", ");
+  return `${shown} +${names.length - maxNames} more`;
 }
 
 export function offsetLabel(days: number | null, months: number | null): string {

@@ -58,7 +58,6 @@ const contentItems: NavItem[] = [
   { href: "/admin/content", label: "Overview", icon: BookOpen },
   { href: "/admin/pregnancy-weeks", label: "Pregnancy weeks", icon: Heart, matchPrefix: true },
   { href: "/admin/child-growth", label: "Child milestones", icon: TrendingUp, matchPrefix: true },
-  { href: "/admin/followup-visits", label: "Baby follow-up", icon: CalendarCheck, matchPrefix: true },
   ...CONTENT_NAMESPACES.filter((item) => item.value !== "milestone").map((item) => ({
     href: `/admin/content/${item.value}`,
     label: item.label,
@@ -99,6 +98,12 @@ function isItemActive(pathname: string | null, item: NavItem) {
   if (!item.matchPrefix) return false;
   if (item.href === "/admin/content") {
     return pathname.startsWith("/admin/content/");
+  }
+  if (item.href === "/admin/child-growth") {
+    return (
+      pathname.startsWith("/admin/child-growth") ||
+      pathname.startsWith("/admin/followup-visits")
+    );
   }
   return pathname.startsWith(`${item.href}/`);
 }

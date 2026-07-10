@@ -469,6 +469,12 @@ export default function UserDetailPage() {
                   </p>
                 </div>
                 <div>
+                  <p className="text-xs font-medium uppercase text-gray-500">I am a</p>
+                  <p className="text-sm text-gray-900">
+                    {profile.account_type || "Mother"}
+                  </p>
+                </div>
+                <div>
                   <p className="text-xs font-medium uppercase text-gray-500">Locale</p>
                   <p className="text-sm uppercase text-gray-900">
                     {profile.locale || "-"}
