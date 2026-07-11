@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   DEFAULT_LEGAL_SLUGS,
+  labelForLegalSlug,
   type LegalDocument,
   type LegalSection,
 } from "@/lib/legal/legalDocuments";
@@ -156,7 +157,7 @@ export default function LegalDocumentsPage() {
           );
         });
       }
-      setMessage("Legal document saved. MC, DR, and marketing will load this text.");
+      setMessage("Policy saved. MC, DR, and marketing will load this text.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
     } finally {
@@ -168,7 +169,7 @@ export default function LegalDocumentsPage() {
     <>
       <PageHero
         title="Policies"
-        description="Terms, privacy, and cancellation policy. Doctor cancel fines are under Finance settings."
+        description="Terms, privacy (patient and doctors), cancellation, and medical disclaimer. Edit the app About page under About the app."
         icon={FileText}
       />
 
@@ -184,7 +185,7 @@ export default function LegalDocumentsPage() {
                 onClick={() => selectSlug(slug)}
                 disabled={loading}
               >
-                {slug}
+                {labelForLegalSlug(slug)}
               </Button>
             ))}
           </div>

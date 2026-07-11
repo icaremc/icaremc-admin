@@ -26,6 +26,7 @@ import {
   TrendingUp,
   Users,
   Wallet,
+  Info,
   type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
@@ -69,6 +70,7 @@ const contentItems: NavItem[] = [
 
 const appSettingsItems: NavItem[] = [
   { href: "/admin/app-version", label: "App release", icon: Rocket },
+  { href: "/admin/about", label: "About the app", icon: Info, matchPrefix: true },
   { href: "/admin/legal", label: "Policies", icon: FileText, matchPrefix: true },
   { href: "/admin/push", label: "Push notifications", icon: Megaphone },
 ];
@@ -323,6 +325,14 @@ export default function Sidebar() {
         <p className="mt-3 text-center text-xs text-gray-500">
           © {new Date().getFullYear()} ICare MC
         </p>
+        <a
+          href="https://www.zulu-tech.com"
+          target="_blank"
+          rel="noreferrer"
+          className="mt-1 block text-center text-xs text-gray-400 underline-offset-2 hover:text-gray-600 hover:underline"
+        >
+          Developed by Zulu Tech
+        </a>
       </div>
     </aside>
   );

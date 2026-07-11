@@ -14,8 +14,24 @@ export const DEFAULT_LEGAL_SLUGS = [
   "cancellation-policy",
   "terms-of-service",
   "privacy-policy",
+  "doctors-privacy-policy",
   "medical-disclaimer",
 ] as const;
+
+export const ABOUT_APP_SLUG = "about-app";
+
+export const LEGAL_SLUG_LABELS: Record<string, string> = {
+  "about-app": "About app",
+  "cancellation-policy": "Cancellation policy",
+  "terms-of-service": "Terms of Service",
+  "privacy-policy": "Privacy Policy",
+  "doctors-privacy-policy": "Doctors Privacy Policy",
+  "medical-disclaimer": "Medical disclaimer",
+};
+
+export function labelForLegalSlug(slug: string): string {
+  return LEGAL_SLUG_LABELS[slug] ?? slug;
+}
 
 export function normalizeLegalDocument(row: {
   slug?: string;
