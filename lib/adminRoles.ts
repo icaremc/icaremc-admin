@@ -81,7 +81,7 @@ export const ADMIN_ROLES = [
   {
     value: "viewer",
     label: "Viewer",
-    description: "Read-only access across mothers, doctors, content, and health data",
+    description: "Read-only access across parents, doctors, content, and health data",
     permissions: [
       "view_dashboard",
       "view_activity_log",

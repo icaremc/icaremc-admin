@@ -191,7 +191,7 @@ export default function PregnancyWeekEditPage() {
                   setForm({ ...form, is_published: e.target.checked })
                 }
               />
-              Published (visible in mobile app)
+              Published
             </label>
 
             <PregnancyWeekForm

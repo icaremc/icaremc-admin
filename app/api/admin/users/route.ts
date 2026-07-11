@@ -18,7 +18,7 @@ function parseCreateBody(body: unknown): CreateUserInput | string {
 
   if (!email) return "Email is required";
   if (password.length < 8) return "Password must be at least 8 characters";
-  if (!isAppUserRole(role)) return "Role must be mother or partner";
+  if (!isAppUserRole(role)) return "Role must be parent or partner";
 
   const locale =
     typeof data.locale === "string" &&

@@ -266,8 +266,8 @@ export default function ContentTranslationForm({
           </select>
         </div>
         <p className="text-xs text-gray-500">
-          One tip per day (1-7) within each pregnancy week. The app shows the tip
-          matching the mother&apos;s current week and day.
+          One tip per day (1-7) within each pregnancy week. Shown for the
+          matching gestational week and day.
         </p>
       </div>
     );
@@ -300,7 +300,7 @@ export default function ContentTranslationForm({
         </div>
         <p className="mt-2 text-xs text-gray-500">
           Fill in each language separately. English is required; Amharic and
-          Oromo fall back to English in the app when empty.
+          Oromo fall back to English when empty.
         </p>
       </div>
 

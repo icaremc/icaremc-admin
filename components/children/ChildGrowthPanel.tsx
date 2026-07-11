@@ -241,8 +241,7 @@ export default function ChildGrowthPanel({
           <div>
             <h2 className="admin-section-title">Growth status</h2>
             <p className="mt-1 text-sm text-gray-500">
-              WHO Child Growth Standards (−2 to +2 SD), same reference as the
-              mother app.
+              WHO Child Growth Standards (−2 to +2 SD).
               {latest
                 ? ` Latest measurement ${formatDate(latest.measured_on)}.`
                 : " No measurements recorded yet."}
@@ -290,8 +289,8 @@ export default function ChildGrowthPanel({
           </div>
         ) : (
           <p className="text-sm text-gray-500">
-            Parents record weight, height, and head circumference in the mother
-            app. Those points will appear here with WHO status.
+            Parents record weight, height, and head circumference over time.
+            Those points will appear here with WHO status.
           </p>
         )}
       </section>

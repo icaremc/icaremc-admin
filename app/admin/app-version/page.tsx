@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { Smartphone } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
@@ -76,18 +75,17 @@ export default function AppVersionSettingsPage() {
   return (
     <>
       <PageHero
-        title="App version policy"
-        description="Set minimum versions and choose mandatory or optional updates for each app"
+        title="App release"
+        description="Set minimum versions and choose mandatory or optional updates for each client"
         icon={Smartphone}
       />
 
       <div className="mx-auto max-w-3xl px-6 py-8 lg:px-8">
-        <Link
-          href="/admin/content"
-          className="text-sm font-medium text-emerald-600 hover:underline"
-        >
-          ← Back to content
-        </Link>
+        <div className="mb-6">
+          <p className="text-sm text-gray-500">
+            Manage release gates for iCare MC and Doctors.
+          </p>
+        </div>
 
         <div className="mt-6 flex flex-wrap gap-2">
           {APP_VERSION_TARGET_LIST.map((option) => (

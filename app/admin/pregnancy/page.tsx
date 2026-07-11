@@ -74,7 +74,7 @@ export default function PregnanciesPage() {
             <TableHeader>
               <TableRow className="border-b border-white/20 bg-gradient-to-r from-emerald-50/50 to-teal-50/50">
                 <TableHead className="font-semibold text-gray-700">#</TableHead>
-                <TableHead className="font-semibold text-gray-700">Mother</TableHead>
+                <TableHead className="font-semibold text-gray-700">Parent</TableHead>
                 <TableHead className="font-semibold text-gray-700">Status</TableHead>
                 <TableHead className="font-semibold text-gray-700">LMP</TableHead>
                 <TableHead className="font-semibold text-gray-700">EDD</TableHead>

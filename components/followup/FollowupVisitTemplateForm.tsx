@@ -151,7 +151,7 @@ export default function FollowupVisitTemplateForm({
                 className="mt-1.5"
               />
               <p className="mt-1 text-xs text-gray-500">
-                Internal id for the app. Cannot change later.
+                Internal id. Cannot change later.
               </p>
             </div>
             <div>

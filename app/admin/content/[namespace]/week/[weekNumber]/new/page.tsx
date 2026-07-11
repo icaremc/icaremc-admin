@@ -144,7 +144,7 @@ export default function NewDailyTipForWeekPage() {
               checked={form.is_active}
               onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
             />
-            <Label htmlFor="active">Active (visible in mobile app)</Label>
+            <Label htmlFor="active">Active</Label>
           </div>
 
           <DailyTipForm

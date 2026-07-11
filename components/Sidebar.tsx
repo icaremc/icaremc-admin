@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import {
   Baby,
   Activity,
@@ -17,6 +17,7 @@ import {
   LayoutDashboard,
   LogOut,
   Megaphone,
+  Rocket,
   Settings2,
   Shield,
   Stethoscope,
@@ -66,6 +67,12 @@ const contentItems: NavItem[] = [
   })),
 ];
 
+const appSettingsItems: NavItem[] = [
+  { href: "/admin/app-version", label: "App release", icon: Rocket },
+  { href: "/admin/legal", label: "Policies", icon: FileText, matchPrefix: true },
+  { href: "/admin/push", label: "Push notifications", icon: Megaphone },
+];
+
 const financeItems: NavItem[] = [
   { href: "/admin/finance/payout-request", label: "Payout request", icon: DollarSign },
   { href: "/admin/finance/payment", label: "Payment", icon: CreditCard },
@@ -75,8 +82,7 @@ const financeItems: NavItem[] = [
 ];
 
 const adminItems: NavItem[] = [
-  { href: "/admin/activity", label: "Activity log", icon: Activity },
-  { href: "/admin/push", label: "Push notifications", icon: Megaphone },
+  { href: "/admin/activity", label: "Activity log", icon: Activity, matchPrefix: true },
   { href: "/admin/admins", label: "Portal admins", icon: Shield },
 ];
 
@@ -183,17 +189,6 @@ function NavSection({
   );
 }
 
-function FlatSection({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <li className="pt-5">
-      <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
-        {title}
-      </p>
-      <ul className="space-y-0.5">{children}</ul>
-    </li>
-  );
-}
-
 export default function Sidebar() {
   const pathname = usePathname();
   const adminRole = useAppSelector((state) => state.auth.user?.adminRole);
@@ -206,6 +201,9 @@ export default function Sidebar() {
     canAccessRoute(adminRole, item.href),
   );
   const visibleContent = contentItems.filter((item) =>
+    canAccessRoute(adminRole, item.href),
+  );
+  const visibleAppSettings = appSettingsItems.filter((item) =>
     canAccessRoute(adminRole, item.href),
   );
   const visibleFinance = financeItems.filter((item) =>
@@ -251,7 +249,7 @@ export default function Sidebar() {
 
             {visibleMothers.length > 0 ? (
               <NavSection
-                title="Mothers"
+                title="Parents"
                 items={visibleMothers}
                 defaultOpen={sectionActive(pathname, visibleMothers)}
                 compact
@@ -286,13 +284,21 @@ export default function Sidebar() {
             ) : null}
 
             {visibleAdmin.length > 0 ? (
-              <FlatSection title="Administration">
-                {visibleAdmin.map((item) => (
-                  <li key={item.href}>
-                    <NavLink item={item} />
-                  </li>
-                ))}
-              </FlatSection>
+              <NavSection
+                title="Administration"
+                items={visibleAdmin}
+                defaultOpen={sectionActive(pathname, visibleAdmin)}
+                compact
+              />
+            ) : null}
+
+            {visibleAppSettings.length > 0 ? (
+              <NavSection
+                title="App settings"
+                items={visibleAppSettings}
+                defaultOpen={sectionActive(pathname, visibleAppSettings)}
+                compact
+              />
             ) : null}
           </ul>
         </nav>

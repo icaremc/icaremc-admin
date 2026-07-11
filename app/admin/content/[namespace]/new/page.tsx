@@ -102,7 +102,7 @@ function NewDailyTipPage() {
               checked={form.is_active}
               onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
             />
-            <Label htmlFor="active">Active (visible in mobile app)</Label>
+            <Label htmlFor="active">Active</Label>
           </div>
 
           <DailyTipForm value={form} onChange={setForm} />
@@ -240,7 +240,7 @@ export default function NewContentItemPage() {
               onChange={(e) => setIsPublished(e.target.checked)}
             />
             <Label htmlFor="published">
-              Published (visible in mobile app)
+              Published
             </Label>
           </div>
 

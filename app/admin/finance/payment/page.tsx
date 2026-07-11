@@ -43,7 +43,7 @@ export default function FinancePaymentsPage() {
     <>
       <PageHero
         title="Payments"
-        description="Appointment payments and payment status from the patient app"
+        description="Appointment payments and payment status"
         icon={CreditCard}
         stat={{ label: "Collected", value: formatMoney(paidTotal, "ETB") }}
       />

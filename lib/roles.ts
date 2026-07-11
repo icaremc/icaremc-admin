@@ -5,13 +5,13 @@ export type { AppUserRole };
 export const APP_USER_ROLES = [
   {
     value: "mother",
-    label: "Mother",
-    description: "Mobile app account for expecting mothers",
+    label: "Parent",
+    description: "Account for expecting parents",
   },
   {
     value: "partner",
     label: "Partner",
-    description: "Mobile app account for partners or parents",
+    description: "Account for partners or caregivers",
   },
 ] as const satisfies ReadonlyArray<{
   value: AppUserRole;
@@ -24,7 +24,7 @@ export function isAppUserRole(value: string): value is AppUserRole {
 }
 
 export function accountTypeForRole(role: AppUserRole): string {
-  return role === "partner" ? "Partner" : "Mother";
+  return role === "partner" ? "Partner" : "Parent";
 }
 
 export type CreateUserInput = {

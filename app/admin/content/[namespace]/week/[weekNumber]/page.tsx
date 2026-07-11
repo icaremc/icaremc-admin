@@ -156,7 +156,7 @@ export default function DailyTipWeekPage() {
     <>
       <PageHero
         title={`Week ${weekNumber}`}
-        description="One tip per day. Mothers in this gestational week see the matching day"
+        description="One tip per day for this gestational week"
         icon={Lightbulb}
         stat={{ label: "Days filled", value: `${filledDays}/7` }}
       />

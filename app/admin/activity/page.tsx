@@ -27,7 +27,7 @@ import { formatDateTime } from "@/lib/format";
 const SOURCE_OPTIONS = [
   { value: "all", label: "All activity" },
   { value: "admin", label: "Admin portal" },
-  { value: "platform", label: "Mobile app" },
+  { value: "platform", label: "Platform" },
 ] as const;
 
 const ACTOR_TYPE_OPTIONS = [
@@ -73,7 +73,7 @@ export default function ActivityLogPage() {
     <>
       <PageHero
         title="Activity log"
-        description="Admin portal actions and mobile app events, including logins and appointments"
+        description="Admin portal actions and platform events, including logins and appointments"
         icon={Activity}
         stat={{ label: "Recent events", value: logs.length }}
       />

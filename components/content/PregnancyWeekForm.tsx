@@ -209,7 +209,7 @@ export default function PregnancyWeekForm({
           />
         </div>
         <div>
-          <Label>Mother changes</Label>
+          <Label>Parent changes</Label>
           <Textarea
             value={translation.mother_changes}
             onChange={(e) =>

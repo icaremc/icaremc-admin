@@ -171,7 +171,7 @@ export default function ContentEditPage() {
                 onChange={(e) => setIsPublished(e.target.checked)}
               />
               <Label htmlFor="published">
-                Published (visible in mobile app)
+                Published
               </Label>
             </div>
 

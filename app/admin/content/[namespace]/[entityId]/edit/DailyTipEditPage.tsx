@@ -127,10 +127,10 @@ export default function DailyTipEditPage() {
             >
               <div>
                 <p className="text-sm font-medium text-gray-900">
-                  Visible in mobile app
+                  Visible when published
                 </p>
                 <p className="text-xs text-gray-500">
-                  Inactive tips are kept but not shown to mothers
+                  Inactive tips are kept but not shown to parents
                 </p>
               </div>
               <div className="flex items-center gap-3">

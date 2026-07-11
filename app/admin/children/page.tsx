@@ -61,7 +61,7 @@ export default function ChildrenPage() {
     <>
       <PageHero
         title="Children"
-        description="Birth records linked to mothers and pregnancies. Milestone progress is tracked per child"
+        description="Birth records linked to parents and pregnancies. Milestone progress is tracked per child"
         icon={Baby}
         stat={{ label: "Active profiles", value: stats.active }}
       />
@@ -76,7 +76,7 @@ export default function ChildrenPage() {
           </div>
           <div className="rounded-xl border border-teal-100 bg-teal-50/50 px-4 py-3">
             <p className="text-xs font-medium uppercase tracking-wide text-teal-700">
-              Active in app
+              Active
             </p>
             <p className="mt-1 text-2xl font-bold text-gray-900">{stats.active}</p>
           </div>
@@ -94,7 +94,7 @@ export default function ChildrenPage() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search name, mother, gender, delivery…"
+              placeholder="Search name, parent, gender, delivery…"
               className="w-full rounded-[var(--radius)] border border-gray-200 bg-white py-2.5 pl-10 pr-4 text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200/50"
             />
           </div>
@@ -111,7 +111,7 @@ export default function ChildrenPage() {
             <TableHeader>
               <TableRow className="border-b border-white/20 bg-gradient-to-r from-emerald-50/50 to-teal-50/50">
                 <TableHead className="font-semibold text-gray-700">Child</TableHead>
-                <TableHead className="font-semibold text-gray-700">Mother</TableHead>
+                <TableHead className="font-semibold text-gray-700">Parent</TableHead>
                 <TableHead className="font-semibold text-gray-700">Age</TableHead>
                 <TableHead className="font-semibold text-gray-700">Birth</TableHead>
                 <TableHead className="font-semibold text-gray-700">GA / hospital</TableHead>
@@ -165,7 +165,7 @@ export default function ChildrenPage() {
                           {child.profiles.full_name}
                         </Link>
                       ) : (
-                        <span className="text-sm text-gray-500">Unknown mother</span>
+                        <span className="text-sm text-gray-500">Unknown parent</span>
                       )}
                       {child.profiles?.phone ? (
                         <p className="text-xs text-gray-500">{child.profiles.phone}</p>

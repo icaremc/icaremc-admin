@@ -132,7 +132,7 @@ export default function DailyTipForm({
           <div>
             <h3 className="text-sm font-semibold text-gray-900">Translations</h3>
             <p className="text-xs text-gray-500">
-              Add a title per language, shown on the home screen in the app
+              Add a title per language, shown on the home screen
             </p>
           </div>
         </div>
@@ -155,7 +155,7 @@ export default function DailyTipForm({
               id="title"
               value={translation.title}
               onChange={(e) => updateTranslation({ title: e.target.value })}
-              placeholder="Short headline mothers see first"
+              placeholder="Short headline parents see first"
               className="mt-1.5 border-emerald-200/60 bg-white"
             />
           </div>

@@ -136,7 +136,7 @@ export function fcmErrorMessage(error: unknown): string {
 
   if (code === "messaging/mismatched-credential") {
     return (
-      "The Firebase service account does not match the mobile app project. " +
+      "The Firebase service account does not match the client project. " +
       "Use credentials from the same Firebase project as the app (icaremc)."
     );
   }

@@ -15,7 +15,7 @@ export const CONTENT_NAMESPACES: {
   {
     value: "daily_tip",
     label: "Daily tips",
-    description: "Health tips grouped by pregnancy week, shown based on the mother's current week",
+    description: "Health tips grouped by pregnancy week, shown by current week",
   },
 ];
 
@@ -23,7 +23,7 @@ export const CONTENT_SECTIONS = [
   {
     key: "pregnancy_weeks",
     label: "Pregnancy weeks",
-    description: "Week-by-week guidance, sections, and translations for the mobile app",
+    description: "Week-by-week guidance, sections, and translations",
     href: "/admin/pregnancy-weeks",
     addHref: "/admin/pregnancy-weeks/new",
     addLabel: "Add week",

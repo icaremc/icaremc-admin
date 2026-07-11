@@ -63,7 +63,7 @@ export default function PaymentSettingsPage() {
       }
       setChapa(data.paymentSettings?.chapa ?? chapa);
       setUpdatedAt(data.updatedAt ?? null);
-      setMessage("Payment settings saved. The mobile app will use these keys on next launch.");
+      setMessage("Payment settings saved.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
     } finally {
@@ -82,7 +82,7 @@ export default function PaymentSettingsPage() {
     <>
       <PageHero
         title="Payment settings"
-        description="Configure Chapa checkout keys for appointment payments in the patient app."
+        description="Configure Chapa checkout keys for appointment payments."
         icon={CreditCard}
         stat={{ label: "Gateway", value: "Chapa" }}
       />
@@ -230,7 +230,7 @@ export default function PaymentSettingsPage() {
 
           <p className="text-xs text-gray-500">
             Restricted to <span className="font-medium">super admins</span>. Secret keys are
-            stored in Supabase and fetched by the signed-in patient app.
+            stored in Supabase and used for signed-in checkout.
           </p>
         </section>
       </div>

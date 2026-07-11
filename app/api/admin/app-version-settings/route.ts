@@ -116,8 +116,8 @@ export async function PATCH(request: Request) {
       {
         eventType: ADMIN_ACTIVITY_EVENTS.SETTINGS_UPDATED,
         eventLabel: settingsUpdatedEventLabel(
-          `${app} app version settings`,
-          "minimum app versions",
+          `${app} version settings`,
+          "minimum client versions",
         ),
         resourceType: "app_settings",
         resourceId: rowId,

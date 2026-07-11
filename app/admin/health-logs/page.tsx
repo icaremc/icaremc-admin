@@ -49,7 +49,7 @@ export default function PregnancyLogsPage() {
               <TableHeader>
                 <TableRow className="border-b border-white/20 bg-gradient-to-r from-emerald-50/50 to-teal-50/50">
                   <TableHead className="font-semibold text-gray-700">Week</TableHead>
-                  <TableHead className="font-semibold text-gray-700">Mother</TableHead>
+                  <TableHead className="font-semibold text-gray-700">Parent</TableHead>
                   <TableHead className="font-semibold text-gray-700">Weight</TableHead>
                   <TableHead className="font-semibold text-gray-700">Height</TableHead>
                   <TableHead className="font-semibold text-gray-700">Blood pressure</TableHead>
@@ -87,7 +87,7 @@ export default function PregnancyLogsPage() {
                               href={`/admin/users/${userId}`}
                               className="text-emerald-700 hover:underline"
                             >
-                              {motherName || "Unknown mother"}
+                              {motherName || "Unknown parent"}
                             </Link>
                           ) : (
                             "-"

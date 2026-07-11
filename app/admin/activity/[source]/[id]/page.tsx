@@ -114,7 +114,7 @@ export default function ActivityLogDetailPage() {
                   : "bg-sky-50 text-sky-700"
               }`}
             >
-              {log.source === "admin" ? "Admin portal" : "Mobile app"}
+              {log.source === "admin" ? "Admin portal" : "Platform"}
             </span>
           </div>
         </section>

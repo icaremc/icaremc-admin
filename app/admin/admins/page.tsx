@@ -247,7 +247,7 @@ export default function AdminsPage() {
     <>
       <PageHero
         title="Admins"
-        description="Portal accounts with role-based access, separate from mobile app users"
+        description="Portal accounts with role-based access"
         icon={Shield}
         stat={{ label: "Active admins", value: activeCount }}
       />

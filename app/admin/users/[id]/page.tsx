@@ -365,7 +365,7 @@ function PregnancyCard({
 
         {!vitalsOpen && !latestLog ? (
           <p className="mt-3 text-sm text-gray-500">
-            No vitals logged yet in the mobile app.
+            No vitals logged yet.
           </p>
         ) : null}
 
@@ -375,7 +375,7 @@ function PregnancyCard({
               <VitalsTable logs={logs} />
             ) : (
               <p className="text-sm text-gray-500">
-                No vitals logged yet in the mobile app.
+                No vitals logged yet.
               </p>
             )}
           </div>
@@ -471,7 +471,7 @@ export default function UserDetailPage() {
                 <div>
                   <p className="text-xs font-medium uppercase text-gray-500">I am a</p>
                   <p className="text-sm text-gray-900">
-                    {profile.account_type || "Mother"}
+                    {profile.account_type || "Parent"}
                   </p>
                 </div>
                 <div>

@@ -5,7 +5,7 @@ export const siteConfig = {
   shortName: "ICare MC",
   title: "ICare MC | Pregnancy & child care",
   description:
-    "Track pregnancy weeks, daily health tips, milestones, and appointments for mothers and caregivers. Available in English, Amharic, and Oromo.",
+    "Track pregnancy weeks, daily health tips, milestones, and appointments for parents and caregivers. Available in English, Amharic, and Oromo.",
   adminTitle: "ICare MC Admin",
   adminDescription:
     "Admin portal for managing ICare MC content, users, and health data.",

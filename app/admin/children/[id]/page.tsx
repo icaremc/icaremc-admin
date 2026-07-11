@@ -45,7 +45,7 @@ const TABS: {
   {
     id: "parent",
     label: "Parent",
-    description: "Mother account",
+    description: "Parent account",
     icon: User,
   },
   {
@@ -288,7 +288,7 @@ export default function ChildDetailPage() {
                   value={child.delivery_type || "-"}
                 />
                 <MetaItem
-                  label="Active in app"
+                  label="Active"
                   value={child.is_active ? "Yes" : "No"}
                 />
                 <MetaItem
@@ -337,7 +337,7 @@ export default function ChildDetailPage() {
                 <MetaItem label="Phone" value={child.profiles.phone || "—"} />
                 <MetaItem
                   label="I am a"
-                  value={child.profiles.account_type || "Mother"}
+                  value={child.profiles.account_type || "Parent"}
                 />
                 <MetaItem
                   label="Locale"

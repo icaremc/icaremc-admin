@@ -104,7 +104,7 @@ function BroadcastForm({
           />
         </div>
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-gray-600">In-app route</label>
+          <label className="text-xs font-medium text-gray-600">Deep link route</label>
           <Input
             value={route}
             onChange={(e) => setRoute(e.target.value)}
@@ -162,7 +162,7 @@ export default function PushPage() {
         title="Push notifications"
         description="Send a push notification to individual users/doctors or broadcast to all."
         icon={Megaphone}
-        stat={{ label: "Audience", value: "Doctors + Mothers" }}
+        stat={{ label: "Audience", value: "Doctors + Parents" }}
       />
 
       <div className="mx-auto max-w-[1200px] space-y-6 px-6 py-8 lg:px-8">
@@ -174,8 +174,8 @@ export default function PushPage() {
         />
 
         <BroadcastForm
-          title="Broadcast to mothers"
-          description="Sends to all mother accounts with a device token and notifications enabled."
+          title="Broadcast to parents"
+          description="Sends to all parent accounts with a device token and notifications enabled."
           endpoint="/api/admin/users/push"
           extraBody={{ role: "mother" }}
         />

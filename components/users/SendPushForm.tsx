@@ -117,8 +117,8 @@ export default function SendPushForm({ userId, role }: Props) {
   if (effectiveRole !== "mother") {
     return (
       <p className="text-sm text-gray-500">
-        Push notifications are only sent to mother accounts with the mobile app
-        installed.
+        Push notifications are only sent to parent accounts with notifications
+        enabled.
       </p>
     );
   }
@@ -138,7 +138,7 @@ export default function SendPushForm({ userId, role }: Props) {
       badgeLabel = "No device token";
       badgeClass = "bg-amber-100 text-amber-800";
     } else if (!notificationsEnabled) {
-      badgeLabel = "Notifications off in app";
+      badgeLabel = "Notifications off";
       badgeClass = "bg-amber-100 text-amber-800";
     } else {
       badgeLabel = "Cannot send";
@@ -195,7 +195,7 @@ export default function SendPushForm({ userId, role }: Props) {
             </div>
             <div className="space-y-1.5">
               <label htmlFor="push-route" className="text-xs font-medium text-gray-600">
-                In-app route (optional)
+                Deep link route (optional)
               </label>
               <Input
                 id="push-route"

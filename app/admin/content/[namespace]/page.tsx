@@ -91,7 +91,7 @@ function DailyTipWeeksView() {
     <>
       <PageHero
         title="Daily tips"
-        description="Health tips by pregnancy week and day. Mothers see the match for their current week"
+        description="Health tips by pregnancy week and day"
         icon={Lightbulb}
         stat={{ label: "Active tips", value: stats.active }}
       />
@@ -112,7 +112,7 @@ function DailyTipWeeksView() {
           </div>
           <div className="rounded-xl border border-cyan-100 bg-cyan-50/50 px-4 py-3">
             <p className="text-xs font-medium uppercase tracking-wide text-cyan-700">
-              Active in app
+              Active
             </p>
             <p className="mt-1 text-2xl font-bold text-gray-900">{stats.active}</p>
           </div>
@@ -153,7 +153,7 @@ function DailyTipWeeksView() {
             <Lightbulb className="mx-auto h-10 w-10 text-emerald-400" />
             <p className="mt-4 text-lg font-medium text-gray-900">No tips yet</p>
             <p className="mt-1 text-sm text-gray-500">
-              Create tips for each week and day so mothers get relevant advice.
+              Create tips for each week and day.
             </p>
             {canManageContent ? (
             <Link href="/admin/content/daily_tip/new" className="mt-6 inline-block">

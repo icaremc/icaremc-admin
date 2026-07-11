@@ -198,19 +198,6 @@ export default function ContentIndexPage() {
         </section>
 
         <section>
-          <h2 className="text-lg font-semibold text-gray-900">Mobile app</h2>
-          <div className="mt-4">
-            <Link
-              href="/admin/app-version"
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-800 shadow-sm transition hover:border-emerald-200 hover:text-emerald-700"
-            >
-              App version &amp; force update
-              <ArrowRight className="h-4 w-4 opacity-60" />
-            </Link>
-          </div>
-        </section>
-
-        <section>
           <h2 className="text-lg font-semibold text-gray-900">
             Content libraries
           </h2>
@@ -248,7 +235,7 @@ export default function ContentIndexPage() {
                         <p className="text-xs text-gray-500">
                           {loading
                             ? "Loading…"
-                            : `${sectionStats.active} live in app`}
+                            : `${sectionStats.active} published`}
                         </p>
                       </div>
                     </div>

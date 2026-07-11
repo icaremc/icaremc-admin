@@ -2,7 +2,7 @@ export const APP_VERSION_TARGETS = {
   mc: {
     rowId: "app_version",
     label: "iCare MC",
-    description: "Patient mobile app",
+    description: "Patient client",
     versionHint: "Match icare_mc pubspec.yaml version when you release.",
     supportsLocalizedMessages: true,
     defaultMessageEn:
@@ -15,22 +15,11 @@ export const APP_VERSION_TARGETS = {
   doctors: {
     rowId: "app_version_doctors",
     label: "iCare Doctors",
-    description: "Provider mobile app",
+    description: "Provider client",
     versionHint: "Match icare_doctors pubspec.yaml version when you release.",
     supportsLocalizedMessages: false,
     defaultMessageEn:
       "A new version of iCare Doctors is available with important updates. Please update to continue.",
-    defaultMessageAm: "",
-    defaultMessageOm: "",
-  },
-  admin: {
-    rowId: "app_version_admin",
-    label: "Admin panel",
-    description: "This web dashboard (icaremc-admin)",
-    versionHint: "Match icaremc-admin package.json version when you deploy.",
-    supportsLocalizedMessages: false,
-    defaultMessageEn:
-      "A new version of the ICare admin panel is available. Refresh the page or redeploy to continue with the latest features.",
     defaultMessageAm: "",
     defaultMessageOm: "",
   },
@@ -46,7 +35,7 @@ export const APP_VERSION_TARGET_LIST = Object.entries(APP_VERSION_TARGETS).map(
 );
 
 export function isAppVersionTarget(value: string | null): value is AppVersionTarget {
-  return value === "mc" || value === "doctors" || value === "admin";
+  return value === "mc" || value === "doctors";
 }
 
 export function resolveAppVersionTarget(value: string | null): AppVersionTarget {

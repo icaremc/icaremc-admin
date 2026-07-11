@@ -15,7 +15,7 @@ export function pushReadiness(profile: MotherPushProfile) {
   if (profile.role && profile.role !== "mother") {
     return {
       canSend: false,
-      reason: "Push is only available for mother accounts.",
+      reason: "Push is only available for parent accounts.",
     } as const;
   }
 
@@ -23,14 +23,14 @@ export function pushReadiness(profile: MotherPushProfile) {
     return {
       canSend: false,
       reason:
-        "No FCM token on this profile. Ask the user to open the mobile app while signed in and allow notifications.",
+        "No FCM token on this profile. Ask the user to sign in and allow notifications.",
     } as const;
   }
 
   if (profile.notifications_enabled === false) {
     return {
       canSend: false,
-      reason: "Notifications are disabled in the mobile app settings.",
+      reason: "Notifications are disabled in settings.",
     } as const;
   }
 

@@ -98,7 +98,7 @@ function ChatHistory({
         <MessageSquare className="mx-auto h-8 w-8 text-gray-300" />
         <p className="mt-3 text-sm font-medium text-gray-700">No messages yet</p>
         <p className="mt-1 text-sm text-gray-500">
-          Chat opens when the patient and doctor start messaging in the app.
+          Chat opens when the patient and doctor start messaging.
         </p>
       </div>
     );

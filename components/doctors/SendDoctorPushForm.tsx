@@ -126,7 +126,7 @@ export default function SendDoctorPushForm({ doctorId }: Props) {
       badgeLabel = "No device token";
       badgeClass = "bg-amber-100 text-amber-800";
     } else if (!notificationsEnabled) {
-      badgeLabel = "Notifications off in app";
+      badgeLabel = "Notifications off";
       badgeClass = "bg-amber-100 text-amber-800";
     } else {
       badgeLabel = "Cannot send";
@@ -187,7 +187,7 @@ export default function SendDoctorPushForm({ doctorId }: Props) {
                 htmlFor="doctor-push-route"
                 className="text-xs font-medium text-gray-600"
               >
-                In-app route (optional)
+                Deep link route (optional)
               </label>
               <Input
                 id="doctor-push-route"

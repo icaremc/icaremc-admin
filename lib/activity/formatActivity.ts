@@ -175,7 +175,7 @@ export function activityTechnicalSection(log: CombinedActivityLog): ActivityDeta
   const rows: Array<{ label: string; value: string }> = [
     { label: "Event type", value: log.event_type },
     { label: "Log ID", value: log.id },
-    { label: "Source", value: log.source === "admin" ? "Admin portal" : "Mobile app" },
+    { label: "Source", value: log.source === "admin" ? "Admin portal" : "Platform" },
   ];
 
   if (log.resource_type) {

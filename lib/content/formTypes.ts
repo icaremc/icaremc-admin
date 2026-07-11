@@ -57,7 +57,7 @@ export const EMPTY_MILESTONE_CATEGORY: MilestoneCategoryFields = {
   items: [{ ...EMPTY_LEARNING_PATH_ITEM }],
 };
 
-/** Suggested checklist domains - titles match the mother app learning-path matcher. */
+/** Suggested checklist domains - titles match learning-path categories. */
 export const SUGGESTED_MILESTONE_CATEGORIES = [
   "Communication (speech & language)",
   "Cognitive",
