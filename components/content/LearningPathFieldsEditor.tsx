@@ -278,14 +278,7 @@ export default function LearningPathFieldsEditor({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <div>
-          <p className="text-sm font-semibold text-gray-900">Categories</p>
-          <p className="text-xs text-gray-500">
-            {categories.length} categor
-            {categories.length === 1 ? "y" : "ies"} · include Vision & Hearing
-            for the mother app
-          </p>
-        </div>
+        <p className="text-sm font-semibold text-gray-900">Categories</p>
         <Button type="button" variant="outline" size="sm" onClick={() => addCategory()}>
           <Plus className="mr-1 h-4 w-4" />
           Category

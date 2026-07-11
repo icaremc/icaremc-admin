@@ -2,34 +2,71 @@
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useEffect, type ReactNode } from "react";
-import { Baby, Flag, User } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { Baby, Flag, LineChart, Pencil, Syringe, User } from "lucide-react";
 import PageHero from "@/components/PageHero";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
+import ChildAvatar from "@/components/children/ChildAvatar";
+import ChildBirthEditForm from "@/components/children/ChildBirthEditForm";
+import ChildGrowthPanel from "@/components/children/ChildGrowthPanel";
+import ChildMilestonesPanel from "@/components/children/ChildMilestonesPanel";
+import ChildVaccinesPanel from "@/components/children/ChildVaccinesPanel";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import {
   childrenActions,
   fetchChildDetail,
+  updateChild,
 } from "@/features/children/childrenSlice";
 import {
   childAgeLabel,
   childDisplayName,
   formatGestationalAge,
-  formatMilestoneAnswerStatus,
-  formatMilestoneType,
   parseMilestoneItemKey,
 } from "@/lib/children/childUi";
 import { formatDate, formatDateTime } from "@/lib/format";
-import ChildBirthEditForm from "@/components/children/ChildBirthEditForm";
-import ChildAvatar from "@/components/children/ChildAvatar";
-import { updateChild } from "@/features/children/childrenSlice";
+import { cn } from "@/lib/utils";
+import type { ChildUpdatePayload } from "@/lib/types/database";
+
+type DetailTab = "child" | "parent" | "growth" | "vaccines" | "milestones";
+
+const TABS: {
+  id: DetailTab;
+  label: string;
+  description: string;
+  icon: typeof Baby;
+}[] = [
+  {
+    id: "child",
+    label: "Child",
+    description: "Birth record",
+    icon: Baby,
+  },
+  {
+    id: "parent",
+    label: "Parent",
+    description: "Mother account",
+    icon: User,
+  },
+  {
+    id: "growth",
+    label: "Growth",
+    description: "WHO charts & status",
+    icon: LineChart,
+  },
+  {
+    id: "vaccines",
+    label: "Vaccines",
+    description: "Doses given",
+    icon: Syringe,
+  },
+  {
+    id: "milestones",
+    label: "Milestones",
+    description: "Checklist progress",
+    icon: Flag,
+  },
+];
 
 function MetaItem({
   label,
@@ -55,6 +92,8 @@ export default function ChildDetailPage() {
   const { selected, detailLoading, saving, error } = useAppSelector(
     (state) => state.children,
   );
+  const [activeTab, setActiveTab] = useState<DetailTab>("child");
+  const [editOpen, setEditOpen] = useState(false);
 
   useEffect(() => {
     if (!childId) return;
@@ -66,9 +105,30 @@ export default function ChildDetailPage() {
 
   const child = selected?.child;
   const milestoneChecks = selected?.milestoneChecks ?? [];
+  const measurements = selected?.measurements ?? [];
+  const vaccineRecords = selected?.vaccineRecords ?? [];
+  const vaccineSchedule = selected?.vaccineSchedule ?? [];
+  const growthPeriods = selected?.growthPeriods ?? [];
+
   const achievedCount = milestoneChecks.filter(
     (row) => parseMilestoneItemKey(row.item_key).status === "yes",
   ).length;
+  const vaccinesGiven = vaccineRecords.filter((row) => row.received).length;
+
+  const handleSaveBirthRecord = async (patch: ChildUpdatePayload) => {
+    if (!child) return;
+    const result = await dispatch(updateChild({ childId: child.id, patch }));
+    if (updateChild.fulfilled.match(result)) {
+      setEditOpen(false);
+    }
+  };
+
+  const tabBadge = (tabId: DetailTab): number | null => {
+    if (tabId === "milestones") return milestoneChecks.length;
+    if (tabId === "growth") return measurements.length;
+    if (tabId === "vaccines") return vaccinesGiven;
+    return null;
+  };
 
   return (
     <>
@@ -77,7 +137,7 @@ export default function ChildDetailPage() {
         description={
           child
             ? `${child.gender === "female" ? "Girl" : "Boy"} · ${childAgeLabel(child.birth_date)}`
-            : "Birth record and milestone progress"
+            : "Birth record, growth, vaccines, and milestones"
         }
         icon={Baby}
         stat={
@@ -86,6 +146,56 @@ export default function ChildDetailPage() {
             : undefined
         }
       />
+
+      {!detailLoading && child ? (
+        <div className="border-b border-gray-200 bg-white">
+          <div className="mx-auto flex max-w-[1200px] gap-1 overflow-x-auto px-6 lg:px-8">
+            {TABS.map((tab) => {
+              const Icon = tab.icon;
+              const active = activeTab === tab.id;
+              const badge = tabBadge(tab.id);
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    "whitespace-nowrap border-b-2 px-4 py-3 text-left transition-colors",
+                    active
+                      ? "border-emerald-600 text-emerald-700"
+                      : "border-transparent text-gray-500 hover:border-gray-200 hover:text-gray-800",
+                  )}
+                >
+                  <span className="flex items-center gap-2 text-sm font-medium">
+                    <Icon className="h-4 w-4 shrink-0" />
+                    {tab.label}
+                    {badge != null && badge > 0 ? (
+                      <span
+                        className={cn(
+                          "rounded-md px-1.5 py-0.5 text-[10px] font-semibold",
+                          active
+                            ? "bg-emerald-100 text-emerald-800"
+                            : "bg-gray-100 text-gray-600",
+                        )}
+                      >
+                        {badge}
+                      </span>
+                    ) : null}
+                  </span>
+                  <span
+                    className={cn(
+                      "mt-0.5 block text-xs font-normal",
+                      active ? "text-emerald-600/80" : "text-gray-400",
+                    )}
+                  >
+                    {tab.description}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
 
       <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
         <div className="mb-6">
@@ -107,72 +217,49 @@ export default function ChildDetailPage() {
           <div className="admin-panel py-12 text-center text-sm text-gray-500">
             Loading child…
           </div>
-        ) : (
-          <div className="space-y-8">
-            {child.profiles ? (
-              <section className="admin-panel">
-                <h2 className="admin-section-title mb-4 flex items-center gap-2">
-                  <User className="h-5 w-5 text-emerald-600" />
-                  Parent
-                </h2>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <MetaItem
-                    label="Name"
-                    value={child.profiles.full_name || "—"}
-                  />
-                  <MetaItem label="Phone" value={child.profiles.phone || "—"} />
-                  <MetaItem
-                    label="I am a"
-                    value={child.profiles.account_type || "Mother"}
-                  />
-                  <MetaItem
-                    label="Locale"
-                    value={(child.profiles.locale || "—").toUpperCase()}
-                  />
-                  <MetaItem
-                    label="Onboarding"
-                    value={
-                      child.profiles.onboarding_complete ? "Complete" : "Pending"
-                    }
-                  />
-                  <MetaItem
-                    label="Notifications"
-                    value={
-                      child.profiles.notifications_enabled === false
-                        ? "Disabled"
-                        : "Enabled"
-                    }
-                  />
-                  {child.profiles.created_at ? (
-                    <MetaItem
-                      label="Joined"
-                      value={formatDate(child.profiles.created_at)}
-                    />
-                  ) : null}
-                </div>
-              </section>
-            ) : null}
-
+        ) : activeTab === "child" ? (
+          <div className="space-y-6">
             <section className="admin-panel">
-              <div className="mb-4 flex flex-wrap items-center gap-4">
-                <ChildAvatar child={child} size="md" />
-                <div>
-                  <h2 className="admin-section-title">Birth record</h2>
-                  <p className="text-sm text-gray-500">
-                    {child.gender === "female" ? "Girl" : "Boy"} ·{" "}
-                    {childAgeLabel(child.birth_date)}
-                  </p>
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-wrap items-center gap-4">
+                  <ChildAvatar child={child} size="md" />
+                  <div>
+                    <h2 className="admin-section-title">Birth record</h2>
+                    <p className="text-sm text-gray-500">
+                      {child.gender === "female" ? "Girl" : "Boy"} ·{" "}
+                      {childAgeLabel(child.birth_date)}
+                    </p>
+                  </div>
                 </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditOpen(true)}
+                >
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit birth record
+                </Button>
               </div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <MetaItem label="Name" value={child.name || childDisplayName(child)} />
-                <MetaItem label="Birth date" value={formatDate(child.birth_date)} />
+                <MetaItem
+                  label="Name"
+                  value={child.name || childDisplayName(child)}
+                />
+                <MetaItem
+                  label="Birth date"
+                  value={formatDate(child.birth_date)}
+                />
                 <MetaItem label="Age" value={childAgeLabel(child.birth_date)} />
-                <MetaItem label="Sex" value={child.gender === "female" ? "Female" : "Male"} />
+                <MetaItem
+                  label="Sex"
+                  value={child.gender === "female" ? "Female" : "Male"}
+                />
                 <MetaItem
                   label="Birth weight"
                   value={
-                    child.birth_weight != null ? `${child.birth_weight} kg` : "-"
+                    child.birth_weight != null
+                      ? `${child.birth_weight} kg`
+                      : "-"
                   }
                 />
                 <MetaItem
@@ -191,7 +278,9 @@ export default function ChildDetailPage() {
                 <MetaItem
                   label="Birth height"
                   value={
-                    child.birth_height != null ? `${child.birth_height} cm` : "-"
+                    child.birth_height != null
+                      ? `${child.birth_height} cm`
+                      : "-"
                   }
                 />
                 <MetaItem
@@ -212,78 +301,90 @@ export default function ChildDetailPage() {
               </p>
             </section>
 
-            <section className="admin-panel">
-              <h2 className="admin-section-title mb-4">Edit birth record</h2>
+            <Modal
+              open={editOpen}
+              onClose={() => setEditOpen(false)}
+              title="Edit birth record"
+              className="max-h-[90vh] max-w-2xl overflow-y-auto"
+            >
               <ChildBirthEditForm
                 child={child}
                 saving={saving}
-                onSave={(patch) => {
-                  dispatch(updateChild({ childId: child.id, patch }));
-                }}
+                onSave={handleSaveBirthRecord}
               />
-            </section>
-
-            <section>
+            </Modal>
+          </div>
+        ) : activeTab === "parent" ? (
+          child.profiles ? (
+            <section className="admin-panel">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <h2 className="admin-section-title flex items-center gap-2">
-                  <Flag className="h-5 w-5 text-violet-600" />
-                  Milestone progress ({milestoneChecks.length})
+                  <User className="h-5 w-5 text-emerald-600" />
+                  Parent
                 </h2>
                 <Link
-                  href="/admin/child-growth"
+                  href={`/admin/users/${child.user_id}`}
                   className="text-sm font-medium text-emerald-700 hover:underline"
                 >
-                  Edit learning path content →
+                  Open user profile →
                 </Link>
               </div>
-
-              {milestoneChecks.length === 0 ? (
-                <div className="admin-panel py-8 text-center text-sm text-gray-500">
-                  No learning path answers recorded yet for this child.
-                </div>
-              ) : (
-                <div className="admin-table-wrap">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-b border-white/20 bg-gradient-to-r from-violet-50/50 to-purple-50/50">
-                        <TableHead>Item</TableHead>
-                        <TableHead>Answer</TableHead>
-                        <TableHead>Recorded</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {milestoneChecks.map((row) => {
-                        const parsed = parseMilestoneItemKey(row.item_key);
-                        return (
-                          <TableRow key={row.id}>
-                            <TableCell className="font-medium text-gray-900">
-                              {formatMilestoneType(row.item_key)}
-                            </TableCell>
-                            <TableCell>
-                              <span
-                                className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                  parsed.status === "yes"
-                                    ? "bg-emerald-100 text-emerald-800"
-                                    : parsed.status === "unsure"
-                                      ? "bg-amber-100 text-amber-800"
-                                      : "bg-gray-100 text-gray-700"
-                                }`}
-                              >
-                                {formatMilestoneAnswerStatus(parsed.status)}
-                              </span>
-                            </TableCell>
-                            <TableCell className="text-sm text-gray-600">
-                              {formatDateTime(row.created_at)}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <MetaItem
+                  label="Name"
+                  value={child.profiles.full_name || "—"}
+                />
+                <MetaItem label="Phone" value={child.profiles.phone || "—"} />
+                <MetaItem
+                  label="I am a"
+                  value={child.profiles.account_type || "Mother"}
+                />
+                <MetaItem
+                  label="Locale"
+                  value={(child.profiles.locale || "—").toUpperCase()}
+                />
+                <MetaItem
+                  label="Onboarding"
+                  value={
+                    child.profiles.onboarding_complete
+                      ? "Complete"
+                      : "Pending"
+                  }
+                />
+                <MetaItem
+                  label="Notifications"
+                  value={
+                    child.profiles.notifications_enabled === false
+                      ? "Disabled"
+                      : "Enabled"
+                  }
+                />
+                {child.profiles.created_at ? (
+                  <MetaItem
+                    label="Joined"
+                    value={formatDate(child.profiles.created_at)}
+                  />
+                ) : null}
+              </div>
             </section>
-          </div>
+          ) : (
+            <div className="admin-panel py-8 text-center text-sm text-gray-500">
+              No parent profile linked to this child.
+            </div>
+          )
+        ) : activeTab === "growth" ? (
+          <ChildGrowthPanel child={child} measurements={measurements} />
+        ) : activeTab === "vaccines" ? (
+          <ChildVaccinesPanel
+            child={child}
+            records={vaccineRecords}
+            schedule={vaccineSchedule}
+          />
+        ) : (
+          <ChildMilestonesPanel
+            checks={milestoneChecks}
+            periods={growthPeriods}
+          />
         )}
       </div>
     </>

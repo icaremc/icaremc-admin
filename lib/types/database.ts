@@ -280,6 +280,46 @@ export type ChildMilestoneCheck = {
   created_at: string;
 };
 
+export type ChildGrowthMeasurement = {
+  id: string;
+  user_id: string;
+  child_local_id: string;
+  measured_on: string;
+  age_months: number | null;
+  weight_kg: number | null;
+  height_cm: number | null;
+  head_circumference_cm: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ChildVaccineRecord = {
+  id: string;
+  user_id: string;
+  child_local_id: string;
+  vaccine_key: string;
+  vaccine_name: string;
+  age_months: number | null;
+  received: boolean;
+  date_received: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type VaccineDoseSchedule = {
+  id: string;
+  code: string;
+  display_name: string;
+  dose_number: number;
+  series_code: string;
+  eligible_from_days: number;
+  eligible_until_days: number | null;
+  preferred_visit_codes: string[];
+  is_published: boolean;
+  sort_order: number;
+};
+
 /** @deprecated Legacy shape — app uses child_milestone_checks instead. */
 export type ChildMilestone = {
   id: string;

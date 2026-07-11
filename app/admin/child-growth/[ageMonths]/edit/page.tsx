@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { TrendingUp } from "lucide-react";
 import ChildGrowthPeriodForm from "@/components/content/ChildGrowthPeriodForm";
 import PageHero from "@/components/PageHero";
+import SavedToast from "@/components/SavedToast";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import {
   childGrowthActions,
@@ -18,13 +19,14 @@ import {
 export default function ChildGrowthPeriodEditPage() {
   const params = useParams<{ ageMonths: string }>();
   const dispatch = useAppDispatch();
-  const { selected, loading, saving, error, success } = useAppSelector(
+  const { selected, loading, saving, error } = useAppSelector(
     (state) => state.childGrowth,
   );
 
   const ageMonths = Number(params.ageMonths);
   const [form, setForm] = useState<ChildGrowthPeriodFormState | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [showSavedToast, setShowSavedToast] = useState(false);
 
   useEffect(() => {
     dispatch(childGrowthActions.clearChildGrowthMessages());
@@ -39,6 +41,12 @@ export default function ChildGrowthPeriodEditPage() {
     }
   }, [selected]);
 
+  useEffect(() => {
+    if (!showSavedToast) return;
+    const timeout = window.setTimeout(() => setShowSavedToast(false), 2500);
+    return () => window.clearTimeout(timeout);
+  }, [showSavedToast]);
+
   const handleSave = async () => {
     if (!form) return;
     setFormError(null);
@@ -52,7 +60,7 @@ export default function ChildGrowthPeriodEditPage() {
     if (saveChildGrowthPeriod.rejected.match(result)) {
       setFormError(result.payload as string);
     } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      setShowSavedToast(true);
     }
   };
 
@@ -85,11 +93,6 @@ export default function ChildGrowthPeriodEditPage() {
             {error}
           </div>
         ) : null}
-        {success ? (
-          <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
-            {success}
-          </div>
-        ) : null}
         {formError ? (
           <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
             {formError}
@@ -110,6 +113,8 @@ export default function ChildGrowthPeriodEditPage() {
           </div>
         )}
       </div>
+
+      <SavedToast open={showSavedToast} message="Saved" />
     </>
   );
 }

@@ -221,7 +221,7 @@ function MetricsPanel({ metrics }: { metrics: ChildGrowthMetrics }) {
   return (
     <div className="rounded-xl border border-emerald-100 bg-emerald-50/40 p-4">
       <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
-        Growth reference metrics (numeric)
+        Growth reference metrics
       </p>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         {boys}
@@ -239,9 +239,6 @@ export default function ChildGrowthPeriodDetailView({
   period,
 }: ChildGrowthPeriodDetailViewProps) {
   const [activeLocale, setActiveLocale] = useState<Locale>("en");
-  const englishTitle = period.child_growth_period_translations?.find(
-    (item) => item.language_code === "en",
-  )?.title;
 
   const translation = period.child_growth_period_translations?.find(
     (item) => item.language_code === activeLocale,
@@ -294,26 +291,6 @@ export default function ChildGrowthPeriodDetailView({
           </p>
         </div>
       </div>
-
-      {period.image_note?.trim() ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
-            Image note
-          </p>
-          <p className="mt-1 text-sm text-gray-800">{period.image_note}</p>
-        </div>
-      ) : null}
-
-      {englishTitle ? (
-        <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">
-            English title
-          </p>
-          <p className="mt-1 text-base font-medium text-gray-900">
-            {englishTitle}
-          </p>
-        </div>
-      ) : null}
 
       <MetricsPanel metrics={period.growth_metrics ?? {}} />
 

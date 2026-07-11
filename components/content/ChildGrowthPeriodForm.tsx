@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import LearningPathFieldsEditor from "@/components/content/LearningPathFieldsEditor";
 import SectionFieldsEditor from "@/components/content/SectionFieldsEditor";
 import { Button } from "@/components/ui/button";
@@ -131,6 +131,25 @@ export default function ChildGrowthPeriodForm({
   const [activeLocale, setActiveLocale] = useState<Locale>("en");
   const translation = value.translations[activeLocale];
   const milestones = translation.milestones;
+
+  useEffect(() => {
+    if (!onSave) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey)) return;
+      if (event.key.toLowerCase() !== "s") return;
+      if (event.defaultPrevented) return;
+
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("[data-ignore-save-shortcut]")) return;
+
+      event.preventDefault();
+      if (!saving) onSave();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onSave, saving]);
 
   const setAgeMonths = (ageMonths: number) => {
     onChange({
@@ -266,17 +285,6 @@ export default function ChildGrowthPeriodForm({
                 )}
               </select>
             </div>
-            <div>
-              <Label htmlFor="image_note">Image note</Label>
-              <Input
-                id="image_note"
-                value={value.image_note}
-                onChange={(e) =>
-                  onChange({ ...value, image_note: e.target.value })
-                }
-                className="mt-1.5"
-              />
-            </div>
           </div>
 
           <label className="flex items-center gap-2 text-sm text-gray-700">
@@ -318,8 +326,7 @@ export default function ChildGrowthPeriodForm({
               <Label className="text-base">Growth reference metrics</Label>
               <p className="mt-0.5 text-xs text-gray-500">
                 Shared across languages. Powers the mobile growth chart,
-                progress %, and status. Boys/girls text ranges are no longer
-                edited here. Use these numeric references only.
+                progress %, and status.
               </p>
             </div>
             <div className="grid gap-4 lg:grid-cols-2">
@@ -381,6 +388,7 @@ export default function ChildGrowthPeriodForm({
           <Button type="button" onClick={onSave} disabled={saving}>
             {saving ? "Saving…" : saveLabel}
           </Button>
+          <span className="text-xs text-gray-400">Ctrl+S / ⌘S to save</span>
           {onDelete ? (
             <Button type="button" variant="destructive" onClick={onDelete}>
               Delete
