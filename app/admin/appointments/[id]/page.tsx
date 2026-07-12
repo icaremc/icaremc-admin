@@ -67,7 +67,7 @@ function PaymentBadge({ appt }: { appt: Appointment }) {
     paid: "Paid",
     partial: "Partial payment",
     unpaid: "Unpaid",
-    waived: "Waived",
+    waived: "Charge skipped",
   };
   return (
     <span
@@ -105,7 +105,7 @@ function ChatHistory({
   }
 
   return (
-    <div className="max-h-[32rem] space-y-3 overflow-y-auto rounded-xl border border-gray-200 bg-gray-50/80 p-4">
+    <div className="max-h-128 space-y-3 overflow-y-auto rounded-xl border border-gray-200 bg-gray-50/80 p-4">
       {messages.map((message) => {
         const isPatient = message.sender_id === patientId;
         const senderName = isPatient ? patientName : doctorName;

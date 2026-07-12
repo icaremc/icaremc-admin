@@ -6,6 +6,7 @@ import PageHero from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  ABOUT_APP_SLUG,
   DEFAULT_LEGAL_SLUGS,
   labelForLegalSlug,
   type LegalDocument,
@@ -74,7 +75,9 @@ export default function LegalDocumentsPage() {
 
   const slugOptions = useMemo(() => {
     const fromDb = documents.map((doc) => doc.slug);
-    return Array.from(new Set([...DEFAULT_LEGAL_SLUGS, ...fromDb]));
+    return Array.from(new Set([...DEFAULT_LEGAL_SLUGS, ...fromDb])).filter(
+      (slug) => slug !== ABOUT_APP_SLUG,
+    );
   }, [documents]);
 
   function selectSlug(slug: string) {
@@ -169,7 +172,7 @@ export default function LegalDocumentsPage() {
     <>
       <PageHero
         title="Policies"
-        description="Terms, privacy (patient and doctors), cancellation, and medical disclaimer. Edit the app About page under About the app."
+        description="Terms, privacy (patient and doctors), cancellation, and medical disclaimer."
         icon={FileText}
       />
 

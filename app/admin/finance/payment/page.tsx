@@ -125,7 +125,9 @@ export default function FinancePaymentsPage() {
                                 : "bg-gray-100 text-gray-700",
                           )}
                         >
-                          {appt.payment_status}
+                          {appt.payment_status === "waived"
+                            ? "Charge skipped"
+                            : appt.payment_status}
                         </span>
                       </TableCell>
                       <TableCell className="text-sm text-gray-500">

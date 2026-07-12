@@ -97,7 +97,7 @@ function paymentBadge(appt: Appointment) {
     paid: "Paid",
     partial: "Partial payment",
     unpaid: "Unpaid",
-    waived: "Waived",
+    waived: "Charge skipped",
   };
   return (
     <span
@@ -482,7 +482,7 @@ export default function AppointmentsPage() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search patient, doctor, phone, service…"
-              className="w-full rounded-[var(--radius)] border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm text-gray-900 shadow-sm placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200/50"
+              className="w-full rounded-lg border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm text-gray-900 shadow-sm placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200/50"
             />
           </div>
         </div>
