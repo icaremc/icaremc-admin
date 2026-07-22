@@ -446,7 +446,7 @@ export default function AppointmentsPage() {
         stat={{ label: "Upcoming", value: upcomingCount }}
       />
 
-      <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+      <div className="admin-page">
         <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {statFilters.map(({ value, label, statKey, accent }) => {
             const count = stats[statKey] ?? 0;

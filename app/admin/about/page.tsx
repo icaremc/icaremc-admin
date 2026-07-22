@@ -140,7 +140,7 @@ export default function AboutAppPage() {
         icon={Info}
       />
 
-      <div className="mx-auto max-w-[960px] space-y-6 px-6 py-8 lg:px-8">
+      <div className="admin-page admin-page-settings">
         <div className="flex flex-wrap items-center justify-end gap-2">
           <Button
             type="button"

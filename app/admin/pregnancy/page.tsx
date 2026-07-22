@@ -62,7 +62,7 @@ export default function PregnanciesPage() {
         stat={{ label: "Active", value: activeCount }}
       />
 
-      <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+      <div className="admin-page">
         {error ? (
           <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
             {error}

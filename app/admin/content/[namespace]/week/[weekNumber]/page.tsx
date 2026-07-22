@@ -140,7 +140,7 @@ export default function DailyTipWeekPage() {
           description="Choose a pregnancy week between 1 and 42"
           icon={Lightbulb}
         />
-        <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+        <div className="admin-page">
           <Link
             href="/admin/content/daily_tip"
             className="text-sm font-medium text-emerald-600 hover:underline"
@@ -161,7 +161,7 @@ export default function DailyTipWeekPage() {
         stat={{ label: "Days filled", value: `${filledDays}/7` }}
       />
 
-      <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+      <div className="admin-page">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <Link
             href="/admin/content/daily_tip"

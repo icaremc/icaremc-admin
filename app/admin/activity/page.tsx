@@ -78,7 +78,7 @@ export default function ActivityLogPage() {
         stat={{ label: "Recent events", value: logs.length }}
       />
 
-      <div className="mx-auto max-w-[1400px] px-6 py-8 lg:px-8">
+      <div className="admin-page admin-page-wide">
         <div className="mb-6 flex flex-wrap items-end gap-4">
           <div className="space-y-1">
             <label className="text-xs font-medium text-gray-600">Source</label>

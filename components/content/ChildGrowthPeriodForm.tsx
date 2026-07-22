@@ -75,7 +75,8 @@ function MetricSexFields({
   return (
     <div className="space-y-3 rounded-xl border border-gray-200 bg-white p-4">
       <p className="text-sm font-semibold text-gray-800">{label}</p>
-      <div className="space-y-2">
+      <div className="overflow-x-auto">
+        <div className="min-w-[320px] space-y-2">
         <div className="grid grid-cols-[1fr_repeat(3,80px)] items-center gap-2 text-xs font-medium text-gray-400">
           <span />
           <span className="text-center">Min</span>
@@ -113,6 +114,7 @@ function MetricSexFields({
             />
           </div>
         ))}
+        </div>
       </div>
     </div>
   );

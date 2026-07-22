@@ -3,6 +3,7 @@ import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
 import { logAdminActivityFromAuth } from "@/lib/activity/logFromAuth";
 import { requireAdminManagePermission } from "@/lib/adminAuth";
 import { slugifyCategoryName } from "@/lib/doctors/display";
+import { parseDoctorCategoryCareFocus } from "@/lib/doctors/careFocus";
 import {
   removeSpecialityImage,
   uploadSpecialityImage,
@@ -34,6 +35,7 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (contentType.includes("multipart/form-data")) {
       const formData = await request.formData();
       const name = readTextField(formData, "name");
+      const careFocusRaw = readTextField(formData, "care_focus");
       const isActive = formData.get("is_active");
       const image = formData.get("image");
       const removeImage = formData.get("remove_image") === "true";
@@ -51,6 +53,10 @@ export async function PATCH(request: Request, context: RouteContext) {
         }
         updates.name = name;
         updates.slug = slug;
+      }
+
+      if (careFocusRaw !== undefined && careFocusRaw !== "") {
+        updates.care_focus = parseDoctorCategoryCareFocus(careFocusRaw);
       }
 
       if (typeof isActive === "string") {
@@ -119,6 +125,10 @@ export async function PATCH(request: Request, context: RouteContext) {
 
       if (typeof data.is_active === "boolean") {
         updates.is_active = data.is_active;
+      }
+
+      if (typeof data.care_focus === "string") {
+        updates.care_focus = parseDoctorCategoryCareFocus(data.care_focus);
       }
     }
 

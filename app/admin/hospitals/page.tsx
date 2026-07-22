@@ -125,7 +125,7 @@ export default function HospitalsPage() {
         stat={{ label: "Active hospitals", value: activeCount }}
       />
 
-      <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+      <div className="admin-page">
         {canManageDoctors ? (
         <div className="mb-6 flex justify-end">
           <Button

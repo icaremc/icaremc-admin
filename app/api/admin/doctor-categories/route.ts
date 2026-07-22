@@ -3,6 +3,7 @@ import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
 import { logAdminActivityFromAuth } from "@/lib/activity/logFromAuth";
 import { requireAdminManagePermission, requireAdminViewPermission } from "@/lib/adminAuth";
 import { slugifyCategoryName } from "@/lib/doctors/display";
+import { parseDoctorCategoryCareFocus } from "@/lib/doctors/careFocus";
 import { uploadSpecialityImage } from "@/lib/specialities/storage";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
 import type { DoctorCategory } from "@/lib/types/doctors";
@@ -79,16 +80,31 @@ export async function POST(request: Request) {
     );
   }
 
+  const careFocus = parseDoctorCategoryCareFocus(
+    readTextField(formData, "care_focus"),
+  );
+  const sortOrderRaw = readTextField(formData, "sort_order");
   const image = formData.get("image");
 
   try {
     const client = createServiceSupabaseClient();
-    const sortOrder = await nextSortOrder(client);
+    let sortOrder = await nextSortOrder(client);
+    if (sortOrderRaw) {
+      const parsed = Number.parseInt(sortOrderRaw, 10);
+      if (!Number.isInteger(parsed) || parsed < 1) {
+        return NextResponse.json(
+          { error: "Sort order must be a positive whole number" },
+          { status: 400 },
+        );
+      }
+      sortOrder = parsed;
+    }
     const { data: category, error } = await client
       .from("doctor_categories")
       .insert({
         name,
         slug,
+        care_focus: careFocus,
         sort_order: sortOrder,
         is_active: true,
       })

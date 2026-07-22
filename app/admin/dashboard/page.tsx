@@ -95,7 +95,7 @@ function DashboardContent() {
     <>
       <PageHero title={greeting} icon={LayoutDashboard} />
 
-      <div className="mx-auto max-w-[1200px] space-y-8 px-6 py-8 lg:px-8">
+      <div className="admin-page space-y-8">
         {error || analyticsError ? (
           <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
             {error ?? analyticsError}

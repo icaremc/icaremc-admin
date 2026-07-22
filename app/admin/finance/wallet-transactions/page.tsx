@@ -66,7 +66,7 @@ export default function WalletTransactionsPage() {
         stat={{ label: "Entries", value: filtered.length }}
       />
 
-      <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+      <div className="admin-page">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <input
             type="search"

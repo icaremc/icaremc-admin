@@ -69,7 +69,7 @@ export default function EditFollowupVisitTemplatePage() {
         description={form.label || "Update schedule and what parents see"}
         icon={CalendarCheck}
       />
-      <div className="mx-auto max-w-[900px] px-6 py-8 lg:px-8">
+      <div className="admin-page admin-page-narrow">
         <div className="mb-4 flex flex-wrap gap-4">
           <Link
             href={`/admin/followup-visits/${id}`}

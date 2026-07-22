@@ -252,7 +252,7 @@ export default function AdminsPage() {
         stat={{ label: "Active admins", value: activeCount }}
       />
 
-      <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+      <div className="admin-page">
         {!canManageAdmins ? (
           <div className="mb-6 rounded-[var(--radius)] border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
             Only super admins can create or edit admin accounts. You are signed

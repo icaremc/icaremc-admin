@@ -1,8 +1,13 @@
+import type { DoctorCategoryCareFocus } from "@/lib/doctors/careFocus";
+
+export type { DoctorCategoryCareFocus };
+
 export type DoctorCategory = {
   id: string;
   name: string;
   slug: string;
   image_url: string | null;
+  care_focus: DoctorCategoryCareFocus;
   is_active: boolean;
   sort_order: number;
   created_at: string;

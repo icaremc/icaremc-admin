@@ -289,7 +289,7 @@ function PayoutRequestContent() {
         }
       />
 
-      <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+      <div className="admin-page">
         {segmentLabel ? (
           <div className="mb-4 flex items-center justify-between rounded-xl border border-violet-200 bg-violet-50 px-4 py-3">
             <p className="text-sm font-semibold text-violet-800">

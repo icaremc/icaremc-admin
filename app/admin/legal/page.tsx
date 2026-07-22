@@ -176,7 +176,7 @@ export default function LegalDocumentsPage() {
         icon={FileText}
       />
 
-      <div className="mx-auto max-w-[960px] space-y-6 px-6 py-8 lg:px-8">
+      <div className="admin-page admin-page-settings">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-2">
             {slugOptions.map((slug) => (

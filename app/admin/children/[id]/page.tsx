@@ -149,7 +149,7 @@ export default function ChildDetailPage() {
 
       {!detailLoading && child ? (
         <div className="border-b border-gray-200 bg-white">
-          <div className="mx-auto flex max-w-[1200px] gap-1 overflow-x-auto px-6 lg:px-8">
+          <div className="admin-tabs-bar">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
@@ -197,7 +197,7 @@ export default function ChildDetailPage() {
         </div>
       ) : null}
 
-      <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+      <div className="admin-page">
         <div className="mb-6">
           <Link
             href="/admin/children"

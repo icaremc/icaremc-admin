@@ -87,7 +87,7 @@ export default function PaymentSettingsPage() {
         stat={{ label: "Gateway", value: "Chapa" }}
       />
 
-      <div className="mx-auto max-w-[960px] space-y-6 px-6 py-8 lg:px-8">
+      <div className="admin-page admin-page-settings">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-gray-500">
             {updatedAt

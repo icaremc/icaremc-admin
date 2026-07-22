@@ -45,7 +45,7 @@ export default function NewFollowupVisitTemplatePage() {
         description="Set when parents are reminded and which vaccines are given at this visit."
         icon={CalendarCheck}
       />
-      <div className="mx-auto max-w-[900px] px-6 py-8 lg:px-8">
+      <div className="admin-page admin-page-narrow">
         <div className="mb-4">
           <Link href="/admin/child-growth/follow-up" className="text-sm text-emerald-700 hover:underline">
             ← Back to visit schedule

@@ -31,7 +31,7 @@ export default function ChildMilestonesTabs() {
 
   return (
     <div className="border-b border-gray-200 bg-white">
-      <div className="mx-auto flex max-w-[1200px] gap-1 overflow-x-auto px-6 lg:px-8">
+      <div className="admin-tabs-bar">
         {TABS.map((tab) => {
           const active = tab.isActive(pathname);
           return (

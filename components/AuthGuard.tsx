@@ -78,7 +78,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (checking) {
     return (
-      <div className="ml-[260px] grid min-h-screen w-full place-items-center bg-gray-50">
+      <div className="grid min-h-screen w-full place-items-center bg-gray-50 px-4">
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
           Checking access…

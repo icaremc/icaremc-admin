@@ -49,7 +49,7 @@ export default function FollowupVisitTemplateDetailPage() {
         }
         icon={CalendarCheck}
       />
-      <div className="mx-auto max-w-[900px] px-6 py-8 lg:px-8">
+      <div className="admin-page admin-page-narrow">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <Link
             href="/admin/child-growth/follow-up"

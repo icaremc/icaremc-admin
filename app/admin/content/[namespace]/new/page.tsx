@@ -68,7 +68,7 @@ function NewDailyTipPage() {
         icon={FileText}
       />
 
-      <div className="mx-auto max-w-4xl px-6 py-8 lg:px-8">
+      <div className="admin-page admin-page-form">
         <div className="mb-6">
           <Link
             href="/admin/content/daily_tip"
@@ -192,7 +192,7 @@ export default function NewContentItemPage() {
         icon={FileText}
       />
 
-      <div className="mx-auto max-w-4xl px-6 py-8 lg:px-8">
+      <div className="admin-page admin-page-form">
         <div className="mb-6">
           <Link
             href={`/admin/content/${namespace}`}

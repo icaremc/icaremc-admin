@@ -85,7 +85,7 @@ export default function FinanceSettingsPage() {
         stat={{ label: "Min withdraw", value: settings.minimumAmountWithdraw }}
       />
 
-      <div className="mx-auto max-w-[720px] space-y-6 px-6 py-8 lg:px-8">
+      <div className="admin-page admin-page-settings-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-gray-500">
             {updatedAt

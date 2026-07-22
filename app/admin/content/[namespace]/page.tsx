@@ -96,7 +96,7 @@ function DailyTipWeeksView() {
         stat={{ label: "Active tips", value: stats.active }}
       />
 
-      <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+      <div className="admin-page">
         <div className="mb-6 grid gap-3 sm:grid-cols-3">
           <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 px-4 py-3">
             <p className="text-xs font-medium uppercase tracking-wide text-emerald-700">
@@ -326,7 +326,7 @@ export default function ContentNamespacePage() {
           description="This section is not available in the admin portal"
           icon={FileText}
         />
-        <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+        <div className="admin-page">
           <Link
             href="/admin/content"
             className="text-sm font-medium text-emerald-600 hover:underline"
@@ -350,7 +350,7 @@ export default function ContentNamespacePage() {
         stat={{ label: "Items", value: items.length }}
       />
 
-      <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+      <div className="admin-page">
         {canManageContent ? (
         <div className="mb-6 flex justify-end">
           <Link href={`/admin/content/${namespace}/new`}>

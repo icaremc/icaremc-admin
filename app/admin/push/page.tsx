@@ -165,7 +165,7 @@ export default function PushPage() {
         stat={{ label: "Audience", value: "Doctors + Parents" }}
       />
 
-      <div className="mx-auto max-w-[1200px] space-y-6 px-6 py-8 lg:px-8">
+      <div className="admin-page space-y-6">
         <BroadcastForm
           title="Broadcast to verified doctors"
           description="Sends to all verified doctors who have a device token and notifications enabled."

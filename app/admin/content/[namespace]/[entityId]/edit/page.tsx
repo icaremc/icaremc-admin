@@ -116,7 +116,7 @@ export default function ContentEditPage() {
         icon={FileText}
       />
 
-      <div className="mx-auto max-w-4xl px-6 py-8 lg:px-8">
+      <div className="admin-page admin-page-form">
         <div className="mb-6 flex flex-wrap items-center gap-4">
           <Link
             href={contentEntityPath(namespace, entityId)}

@@ -80,7 +80,7 @@ export default function AppVersionSettingsPage() {
         icon={Smartphone}
       />
 
-      <div className="mx-auto max-w-3xl px-6 py-8 lg:px-8">
+      <div className="admin-page admin-page-compact">
         <div className="mb-6">
           <p className="text-sm text-gray-500">
             Manage release gates for iCare MC and Doctors.

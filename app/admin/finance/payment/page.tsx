@@ -48,7 +48,7 @@ export default function FinancePaymentsPage() {
         stat={{ label: "Collected", value: formatMoney(paidTotal, "ETB") }}
       />
 
-      <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+      <div className="admin-page">
         {error ? (
           <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}

@@ -33,7 +33,7 @@ export default function ChildGrowthFollowUpPage() {
 
       <ChildMilestonesTabs />
 
-      <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+      <div className="admin-page">
         {canManageContent ? (
           <div className="mb-6 flex justify-end">
             <Link href="/admin/followup-visits/new">

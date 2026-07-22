@@ -65,7 +65,7 @@ export default function ActivityLogDetailPage() {
 
   if (error || !log) {
     return (
-      <div className="mx-auto max-w-[900px] px-6 py-12">
+      <div className="admin-page admin-page-narrow py-12">
         <p className="text-red-600">{error ?? "Activity log not found"}</p>
         <Link
           href="/admin/activity"

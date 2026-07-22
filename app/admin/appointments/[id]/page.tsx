@@ -214,7 +214,7 @@ export default function AppointmentDetailPage() {
         }}
       />
 
-      <div className="mx-auto max-w-[1200px] space-y-6 px-6 py-8 lg:px-8">
+      <div className="admin-page space-y-6">
         <Link
           href="/admin/appointments"
           className="inline-flex items-center gap-2 text-sm text-emerald-700 hover:underline"

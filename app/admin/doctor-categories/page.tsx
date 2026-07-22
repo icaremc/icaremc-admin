@@ -23,15 +23,25 @@ import {
   updateDoctorCategory,
 } from "@/features/doctorCategories/doctorCategoriesSlice";
 import { specialityHasImage } from "@/lib/doctors/display";
+import {
+  DOCTOR_CATEGORY_CARE_FOCUS_OPTIONS,
+  doctorCategoryCareFocusLabel,
+  parseDoctorCategoryCareFocus,
+  type DoctorCategoryCareFocus,
+} from "@/lib/doctors/careFocus";
 import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import { formatDateTime } from "@/lib/format";
 import type { DoctorCategory } from "@/lib/types/doctors";
 
-const emptyForm = { name: "" };
+const emptyForm = {
+  name: "",
+  care_focus: "both" as DoctorCategoryCareFocus,
+};
 
 type EditFormState = {
   name: string;
   sort_order: string;
+  care_focus: DoctorCategoryCareFocus;
   remove_image: boolean;
 };
 
@@ -102,6 +112,7 @@ export default function DoctorCategoriesPage() {
   const [editForm, setEditForm] = useState<EditFormState>({
     name: "",
     sort_order: "",
+    care_focus: "both",
     remove_image: false,
   });
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
@@ -123,6 +134,11 @@ export default function DoctorCategoriesPage() {
     [categories],
   );
 
+  const nextAutoSortOrder = useMemo(() => {
+    if (categories.length === 0) return 1;
+    return Math.max(...categories.map((category) => category.sort_order)) + 1;
+  }, [categories]);
+
   const resetCreateForm = () => {
     setForm(emptyForm);
     setImageFile(null);
@@ -132,7 +148,12 @@ export default function DoctorCategoriesPage() {
 
   const resetEditForm = () => {
     setEditingCategory(null);
-    setEditForm({ name: "", sort_order: "", remove_image: false });
+    setEditForm({
+      name: "",
+      sort_order: "",
+      care_focus: "both",
+      remove_image: false,
+    });
     setEditImageFile(null);
     if (editImagePreview?.startsWith("blob:")) URL.revokeObjectURL(editImagePreview);
     setEditImagePreview(null);
@@ -154,6 +175,7 @@ export default function DoctorCategoriesPage() {
   const buildCreateFormData = () => {
     const formData = new FormData();
     formData.set("name", form.name.trim());
+    formData.set("care_focus", form.care_focus);
     if (imageFile) formData.set("image", imageFile);
     return formData;
   };
@@ -162,7 +184,14 @@ export default function DoctorCategoriesPage() {
     if (!editingCategory) return null;
     const formData = new FormData();
     formData.set("name", editForm.name.trim());
-    formData.set("sort_order", editForm.sort_order.trim());
+    formData.set("care_focus", editForm.care_focus);
+    const nextSort = editForm.sort_order.trim();
+    if (
+      nextSort &&
+      nextSort !== String(editingCategory.sort_order)
+    ) {
+      formData.set("sort_order", nextSort);
+    }
     if (editForm.remove_image) formData.set("remove_image", "true");
     if (editImageFile) formData.set("image", editImageFile);
     return formData;
@@ -186,6 +215,7 @@ export default function DoctorCategoriesPage() {
     setEditForm({
       name: category.name,
       sort_order: String(category.sort_order),
+      care_focus: parseDoctorCategoryCareFocus(category.care_focus),
       remove_image: false,
     });
     setEditImageFile(null);
@@ -239,12 +269,11 @@ export default function DoctorCategoriesPage() {
     <>
       <PageHero
         title="Speciality"
-        description="Specialities doctors pick when completing their profile."
         icon={Tags}
         stat={{ label: "Active specialities", value: activeCount }}
       />
 
-      <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+      <div className="admin-page">
         {canManageDoctors ? (
         <div className="mb-6 flex justify-end">
           <Button
@@ -315,8 +344,30 @@ export default function DoctorCategoriesPage() {
                     }))
                   }
                   className="mt-1"
-                  required
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  New specialities auto-number. Change this only to reorder.
+                </p>
+              </div>
+              <div>
+                <Label htmlFor="edit-speciality-care-focus">Care type</Label>
+                <select
+                  id="edit-speciality-care-focus"
+                  value={editForm.care_focus}
+                  onChange={(event) =>
+                    setEditForm((current) => ({
+                      ...current,
+                      care_focus: parseDoctorCategoryCareFocus(event.target.value),
+                    }))
+                  }
+                  className="mt-1 flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                >
+                  {DOCTOR_CATEGORY_CARE_FOCUS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <Label htmlFor="edit-speciality-image">Replace image</Label>
@@ -398,8 +449,28 @@ export default function DoctorCategoriesPage() {
                 required
               />
               <p className="mt-1 text-xs text-gray-500">
-                Sort order is assigned automatically (1, 2, 3…).
+                Sort order will be {nextAutoSortOrder} (auto). Edit later only if you need to reorder.
               </p>
+            </div>
+            <div>
+              <Label htmlFor="speciality-care-focus">Care type</Label>
+              <select
+                id="speciality-care-focus"
+                value={form.care_focus}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    care_focus: parseDoctorCategoryCareFocus(event.target.value),
+                  })
+                }
+                className="mt-1 flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+              >
+                {DOCTOR_CATEGORY_CARE_FOCUS_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
             <div>
               <Label htmlFor="speciality-image">Image (optional)</Label>
@@ -439,10 +510,10 @@ export default function DoctorCategoriesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Speciality</TableHead>
-                <TableHead>Filter slug</TableHead>
+                <TableHead>Care type</TableHead>
                 <TableHead>Sort</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Updated</TableHead>
+                <TableHead className="hidden sm:table-cell">Updated</TableHead>
                 {canManageDoctors ? (
                   <TableHead className="text-right">Actions</TableHead>
                 ) : null}
@@ -451,13 +522,13 @@ export default function DoctorCategoriesPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-gray-500">
+                  <TableCell colSpan={canManageDoctors ? 6 : 5} className="py-10 text-center text-gray-500">
                     Loading specialities…
                   </TableCell>
                 </TableRow>
               ) : categories.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-gray-500">
+                  <TableCell colSpan={canManageDoctors ? 6 : 5} className="py-10 text-center text-gray-500">
                     No specialities yet. Add options doctors can choose from.
                   </TableCell>
                 </TableRow>
@@ -479,8 +550,10 @@ export default function DoctorCategoriesPage() {
                         <span className="font-medium text-gray-900">{category.name}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="font-mono text-sm text-gray-600">
-                      {category.slug}
+                    <TableCell>
+                      <span className="inline-flex rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+                        {doctorCategoryCareFocusLabel(category.care_focus)}
+                      </span>
                     </TableCell>
                     <TableCell>{category.sort_order}</TableCell>
                     <TableCell>
@@ -511,7 +584,7 @@ export default function DoctorCategoriesPage() {
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className="text-sm text-gray-500">
+                    <TableCell className="hidden text-sm text-gray-500 sm:table-cell">
                       {formatDateTime(category.updated_at)}
                     </TableCell>
                     {canManageDoctors ? (

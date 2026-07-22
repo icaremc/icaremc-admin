@@ -171,7 +171,7 @@ export default function PayoutRequestDetailPage() {
         }
       />
 
-      <div className="mx-auto max-w-[1200px] space-y-8 px-6 py-8 lg:px-8">
+      <div className="admin-page space-y-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <span
             className={cn(

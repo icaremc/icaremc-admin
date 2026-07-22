@@ -90,7 +90,7 @@ export default function NewDailyTipForWeekPage() {
           description="Choose a pregnancy week between 1 and 42"
           icon={FileText}
         />
-        <div className="mx-auto max-w-4xl px-6 py-8 lg:px-8">
+        <div className="admin-page admin-page-form">
           <Link
             href="/admin/content/daily_tip"
             className="text-sm font-medium text-emerald-600 hover:underline"
@@ -110,7 +110,7 @@ export default function NewDailyTipForWeekPage() {
         icon={FileText}
       />
 
-      <div className="mx-auto max-w-4xl px-6 py-8 lg:px-8">
+      <div className="admin-page admin-page-form">
         <div className="mb-6">
           <Link
             href={dailyTipWeekPath(weekNumber)}

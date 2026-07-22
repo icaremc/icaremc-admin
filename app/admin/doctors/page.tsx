@@ -93,7 +93,7 @@ export default function DoctorsPage() {
         stat={{ label: "Pending approval", value: pendingCount }}
       />
 
-      <div className="mx-auto max-w-[1200px] px-6 py-8 lg:px-8">
+      <div className="admin-page">
         <div className="mb-4 flex flex-wrap items-center gap-2">
           {filters.map(({ value, label }) => {
             const count =
