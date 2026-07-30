@@ -57,13 +57,7 @@ async function countTableOptional(table: string): Promise<number> {
 }
 
 async function countMilestones(): Promise<number> {
-  const { count, error } = await supabase
-    .from("content_translations")
-    .select("*", { count: "exact", head: true })
-    .eq("namespace", "milestone");
-
-  if (error) return 0;
-  return count ?? 0;
+  return countTableOptional("child_growth_periods");
 }
 
 async function countRecentPregnancyLogs(): Promise<number> {

@@ -65,7 +65,7 @@ const contentItems: NavItem[] = [
   { href: "/admin/content", label: "Overview", icon: BookOpen },
   { href: "/admin/pregnancy-weeks", label: "Pregnancy weeks", icon: Heart, matchPrefix: true },
   { href: "/admin/child-growth", label: "Child milestones", icon: TrendingUp, matchPrefix: true },
-  ...CONTENT_NAMESPACES.filter((item) => item.value !== "milestone").map((item) => ({
+  ...CONTENT_NAMESPACES.map((item) => ({
     href: `/admin/content/${item.value}`,
     label: item.label,
     icon: FileText,
@@ -166,7 +166,7 @@ function NavSection({
         type="button"
         onClick={() => setOpen(!open)}
         className={cn(
-          "group mb-2 flex w-full items-center justify-between gap-3 rounded-[var(--radius)] px-3 py-1.5 transition-colors",
+          "group mb-2 flex w-full items-center justify-between gap-3 rounded-(--radius) px-3 py-1.5 transition-colors",
           active ? "text-emerald-700" : "text-gray-500 hover:text-gray-700",
         )}
       >

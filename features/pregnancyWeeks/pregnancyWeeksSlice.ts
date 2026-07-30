@@ -7,6 +7,7 @@ import {
   EMPTY_PREGNANCY_SECTION,
   type PregnancySectionFields,
 } from "@/lib/content/formTypes";
+import { syncLocaleTranslationRows } from "@/lib/content/syncLocaleRows";
 import type {
   Locale,
   PregnancyWeek,
@@ -254,18 +255,15 @@ export const savePregnancyWeek = createAsyncThunk(
       weekId = data.id;
     }
 
-    await supabase
-      .from("pregnancy_week_translations")
-      .delete()
-      .eq("pregnancy_week_id", weekId);
-
     const rows = formToTranslationRows(weekId!, form);
-    if (rows.length > 0) {
-      const { error } = await supabase
-        .from("pregnancy_week_translations")
-        .insert(rows);
-      if (error) return rejectWithValue(error.message);
-    }
+    const syncError = await syncLocaleTranslationRows({
+      table: "pregnancy_week_translations",
+      parentColumn: "pregnancy_week_id",
+      parentId: weekId!,
+      onConflict: "pregnancy_week_id,language_code",
+      rows,
+    });
+    if (syncError) return rejectWithValue(syncError);
 
     const { data, error } = await supabase
       .from("pregnancy_weeks")

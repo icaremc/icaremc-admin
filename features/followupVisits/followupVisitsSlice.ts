@@ -2,17 +2,24 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "@/app/store/store";
 import { EMPTY_VACCINE, type VaccineFields } from "@/lib/content/formTypes";
 import { parseVaccines, serializeVaccines } from "@/lib/content/vaccines";
+import {
+  emptyNameTranslations,
+  nameTranslationRowsFromForm,
+  nameTranslationsFromRows,
+  type NameTranslationsForm,
+} from "@/lib/i18n/nameTranslations";
 import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
 import { supabase } from "@/lib/supabaseClient";
 import type {
   ChildFollowupVisitTemplate,
   FollowupVisitModules,
+  Locale,
 } from "@/lib/types/database";
 
 export type FollowupVisitTemplateFormState = {
   code: string;
   sort_order: number;
-  label: string;
+  labelTranslations: NameTranslationsForm;
   offset_type: "days" | "months";
   offset_value: number;
   growth_period_id: string;
@@ -45,7 +52,7 @@ export const vaccinesOnlyModules = (): Required<FollowupVisitModules> => ({
 export const emptyFollowupTemplateForm = (): FollowupVisitTemplateFormState => ({
   code: "",
   sort_order: 100,
-  label: "",
+  labelTranslations: emptyNameTranslations(),
   offset_type: "days",
   offset_value: 0,
   growth_period_id: "",
@@ -67,6 +74,16 @@ function formatRemindDays(values: number[] | null | undefined): string {
   return values.join(", ");
 }
 
+function labelTranslationsFromTemplate(
+  template: ChildFollowupVisitTemplate,
+): NameTranslationsForm {
+  const map = template.label_translations ?? {};
+  const rows = (["en", "am", "om"] as Locale[])
+    .filter((locale) => typeof map[locale] === "string" && map[locale]!.trim())
+    .map((locale) => ({ language_code: locale, name: map[locale]!.trim() }));
+  return nameTranslationsFromRows(rows, template.label);
+}
+
 export function templateToForm(
   template: ChildFollowupVisitTemplate,
 ): FollowupVisitTemplateFormState {
@@ -74,7 +91,7 @@ export function templateToForm(
   return {
     code: template.code,
     sort_order: template.sort_order,
-    label: template.label,
+    labelTranslations: labelTranslationsFromTemplate(template),
     offset_type: offsetType,
     offset_value:
       offsetType === "months"
@@ -88,9 +105,16 @@ export function templateToForm(
 }
 
 function formToPayload(form: FollowupVisitTemplateFormState, opts?: { includeCode?: boolean }) {
+  const enLabel = form.labelTranslations.en.name.trim();
+  const labelTranslations: Partial<Record<Locale, string>> = {};
+  for (const row of nameTranslationRowsFromForm(form.labelTranslations)) {
+    labelTranslations[row.language_code] = row.name;
+  }
+
   const payload: Record<string, unknown> = {
     sort_order: form.sort_order,
-    label: form.label.trim(),
+    label: enLabel,
+    label_translations: labelTranslations,
     offset_days: form.offset_type === "days" ? form.offset_value : null,
     offset_months: form.offset_type === "months" ? form.offset_value : null,
     growth_period_id: form.growth_period_id.trim() || null,
@@ -149,8 +173,8 @@ export const createFollowupVisitTemplate = createAsyncThunk(
     if (!form.code.trim()) {
       return rejectWithValue("Code is required.");
     }
-    if (!form.label.trim()) {
-      return rejectWithValue("Label is required.");
+    if (!form.labelTranslations.en.name.trim()) {
+      return rejectWithValue("English visit name is required.");
     }
 
     const { data: inserted, error: insertError } = await supabase
@@ -185,8 +209,8 @@ export const updateFollowupVisitTemplate = createAsyncThunk(
     );
     if (denied) return rejectWithValue(denied);
 
-    if (!payload.form.label.trim()) {
-      return rejectWithValue("Label is required.");
+    if (!payload.form.labelTranslations.en.name.trim()) {
+      return rejectWithValue("English visit name is required.");
     }
 
     // Update without nested embed + .single() (that caused the coerce error

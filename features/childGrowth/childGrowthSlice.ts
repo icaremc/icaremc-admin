@@ -20,6 +20,7 @@ import {
   learningPathItemHasContent,
   serializeLearningPathItemMedia,
 } from "@/lib/content/learningPathMedia";
+import { syncLocaleTranslationRows } from "@/lib/content/syncLocaleRows";
 import {
   ageGroupForMonths,
   type ChildAgeGroup,
@@ -586,18 +587,15 @@ export const saveChildGrowthPeriod = createAsyncThunk(
       periodId = data.id;
     }
 
-    await supabase
-      .from("child_growth_period_translations")
-      .delete()
-      .eq("period_id", periodId);
-
     const rows = formToTranslationRows(periodId!, form);
-    if (rows.length > 0) {
-      const { error } = await supabase
-        .from("child_growth_period_translations")
-        .insert(rows);
-      if (error) return rejectWithValue(error.message);
-    }
+    const syncError = await syncLocaleTranslationRows({
+      table: "child_growth_period_translations",
+      parentColumn: "period_id",
+      parentId: periodId!,
+      onConflict: "period_id,language_code",
+      rows,
+    });
+    if (syncError) return rejectWithValue(syncError);
 
     const { data, error } = await supabase
       .from("child_growth_periods")

@@ -3,6 +3,7 @@ import type { RootState } from "@/app/store/store";
 import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
 import { supabase } from "@/lib/supabaseClient";
 import { logContentDeleted, logContentSaved } from "@/lib/client/adminActivityEvents";
+import { syncLocaleTranslationRows } from "@/lib/content/syncLocaleRows";
 import type { DailyTip, DailyTipTranslation, Locale } from "@/lib/types/database";
 
 export type DailyTipFormTranslation = {
@@ -207,18 +208,15 @@ export const saveDailyTip = createAsyncThunk(
       tipId = data.id;
     }
 
-    await supabase
-      .from("daily_tip_translations")
-      .delete()
-      .eq("tip_id", tipId);
-
     const rows = formToTranslationRows(tipId!, payload.form);
-    if (rows.length > 0) {
-      const { error } = await supabase
-        .from("daily_tip_translations")
-        .insert(rows);
-      if (error) return rejectWithValue(error.message);
-    }
+    const syncError = await syncLocaleTranslationRows({
+      table: "daily_tip_translations",
+      parentColumn: "tip_id",
+      parentId: tipId!,
+      onConflict: "tip_id,language_code",
+      rows,
+    });
+    if (syncError) return rejectWithValue(syncError);
 
     const { data, error } = await supabase
       .from("daily_tips")

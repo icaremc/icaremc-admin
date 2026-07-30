@@ -66,7 +66,10 @@ export default function EditFollowupVisitTemplatePage() {
     <>
       <PageHero
         title="Edit visit"
-        description={form.label || "Update schedule and what parents see"}
+        description={
+          form.labelTranslations.en.name.trim() ||
+          "Update schedule and what parents see"
+        }
         icon={CalendarCheck}
       />
       <div className="admin-page admin-page-narrow">

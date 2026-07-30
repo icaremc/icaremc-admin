@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { TrendingUp } from "lucide-react";
 import ChildGrowthPeriodForm from "@/components/content/ChildGrowthPeriodForm";
@@ -10,6 +10,7 @@ import SavedToast from "@/components/SavedToast";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import {
   childGrowthActions,
+  deleteChildGrowthPeriod,
   fetchChildGrowthPeriod,
   periodToForm,
   saveChildGrowthPeriod,
@@ -18,6 +19,7 @@ import {
 
 export default function ChildGrowthPeriodEditPage() {
   const params = useParams<{ ageMonths: string }>();
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const { selected, loading, saving, error } = useAppSelector(
     (state) => state.childGrowth,
@@ -64,6 +66,24 @@ export default function ChildGrowthPeriodEditPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!selected?.id) return;
+    if (
+      !window.confirm(
+        "Delete this milestone period and its translations? This cannot be undone.",
+      )
+    ) {
+      return;
+    }
+    setFormError(null);
+    const result = await dispatch(deleteChildGrowthPeriod(selected.id));
+    if (deleteChildGrowthPeriod.fulfilled.match(result)) {
+      router.replace("/admin/child-growth");
+    } else {
+      setFormError(result.payload as string);
+    }
+  };
+
   return (
     <>
       <PageHero
@@ -107,6 +127,7 @@ export default function ChildGrowthPeriodEditPage() {
               value={form}
               onChange={setForm}
               onSave={handleSave}
+              onDelete={handleDelete}
               saving={saving}
               saveLabel="Save changes"
             />

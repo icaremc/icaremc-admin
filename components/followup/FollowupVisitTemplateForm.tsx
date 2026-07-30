@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
+import NameLocaleTabs from "@/components/content/NameLocaleTabs";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import VaccineFieldsEditor from "@/components/content/VaccineFieldsEditor";
-import type { ChildGrowthPeriod } from "@/lib/types/database";
+import type { ChildGrowthPeriod, Locale } from "@/lib/types/database";
 import type { FollowupVisitTemplateFormState } from "@/features/followupVisits/followupVisitsSlice";
 import { milestoneDisplayLabel } from "@/lib/followup/display";
 
@@ -29,6 +31,8 @@ export default function FollowupVisitTemplateForm({
   saving = false,
   saveLabel = "Save",
 }: FollowupVisitTemplateFormProps) {
+  const [labelLocale, setLabelLocale] = useState<Locale>("en");
+
   const update = (patch: Partial<FollowupVisitTemplateFormState>) => {
     onChange({ ...value, ...patch });
   };
@@ -37,18 +41,37 @@ export default function FollowupVisitTemplateForm({
     <div className="space-y-6">
       <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-5">
         <div className="space-y-4">
-          <div>
-            <Label htmlFor="followup-label">Visit name</Label>
-            <Input
-              id="followup-label"
-              value={value.label}
-              onChange={(e) => update({ label: e.target.value })}
-              placeholder="e.g. 6 weeks, 9 months"
-              className="mt-1.5"
+          <div className="space-y-3">
+            <NameLocaleTabs
+              active={labelLocale}
+              translations={value.labelTranslations}
+              onChange={setLabelLocale}
             />
-            <p className="mt-1 text-xs text-gray-500">
-              Shown on the parent&apos;s calendar and reminders.
-            </p>
+            <div>
+              <Label htmlFor="followup-label">
+                Visit name ({labelLocale.toUpperCase()}
+                {labelLocale === "en" ? " required" : ""})
+              </Label>
+              <Input
+                id="followup-label"
+                value={value.labelTranslations[labelLocale].name}
+                onChange={(e) =>
+                  update({
+                    labelTranslations: {
+                      ...value.labelTranslations,
+                      [labelLocale]: { name: e.target.value },
+                    },
+                  })
+                }
+                placeholder="e.g. 6 weeks, 9 months"
+                className="mt-1.5"
+                required={labelLocale === "en"}
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                English is required; Amharic and Oromo fall back to English when empty.
+                Shown on the parent&apos;s calendar and reminders.
+              </p>
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -105,55 +128,20 @@ export default function FollowupVisitTemplateForm({
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="followup-remind">Reminder days before</Label>
-            <Input
-              id="followup-remind"
-              value={value.remind_days_before}
-              onChange={(e) => update({ remind_days_before: e.target.value })}
-              placeholder="7, 1, 0"
-              className="mt-1.5 max-w-xs"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              When to notify parents before the visit.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="rounded-xl border border-gray-200 bg-white p-4 sm:p-5">
-        <p className="text-sm text-gray-600">
-          List every vaccine given at this visit. Parents mark each dose once;
-          it won&apos;t repeat at later visits.
-        </p>
-        <div className="mt-4">
-          <VaccineFieldsEditor
-            label="Vaccines at this visit"
-            vaccines={value.vaccines}
-            onChange={(vaccines) => update({ vaccines })}
-          />
-        </div>
-      </div>
-
-      {isNew ? (
-        <details className="rounded-xl border border-gray-200 bg-gray-50/80 p-4 text-sm">
-          <summary className="cursor-pointer font-medium text-gray-700">
-            Advanced
-          </summary>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          {isNew ? (
             <div>
-              <Label htmlFor="followup-code">Code</Label>
+              <Label htmlFor="followup-code">Internal code</Label>
               <Input
                 id="followup-code"
                 value={value.code}
                 onChange={(e) => update({ code: e.target.value })}
-                placeholder="visit_6w"
-                className="mt-1.5"
+                placeholder="e.g. w6"
+                className="mt-1.5 max-w-xs font-mono text-sm"
               />
-              <p className="mt-1 text-xs text-gray-500">
-                Internal id. Cannot change later.
-              </p>
             </div>
+          ) : null}
+
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="followup-sort">Sort order</Label>
               <Input
@@ -165,34 +153,56 @@ export default function FollowupVisitTemplateForm({
                     sort_order: Number.parseInt(e.target.value, 10) || 0,
                   })
                 }
+                className="mt-1.5 max-w-xs"
+              />
+            </div>
+            <div>
+              <Label htmlFor="followup-remind">Remind days before</Label>
+              <Input
+                id="followup-remind"
+                value={value.remind_days_before}
+                onChange={(e) => update({ remind_days_before: e.target.value })}
+                placeholder="7, 1, 0"
                 className="mt-1.5"
               />
             </div>
           </div>
-        </details>
-      ) : null}
 
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={value.is_published}
-          onChange={(e) => update({ is_published: e.target.checked })}
-        />
-        Published (shown on the parent&apos;s schedule)
-      </label>
-
-      <div className="flex flex-wrap gap-3">
-        {onSave ? (
-          <Button onClick={onSave} disabled={saving}>
-            {saving ? "Saving…" : saveLabel}
-          </Button>
-        ) : null}
-        {onDelete ? (
-          <Button variant="destructive" onClick={onDelete} disabled={saving}>
-            Delete
-          </Button>
-        ) : null}
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              checked={value.is_published}
+              onChange={(e) => update({ is_published: e.target.checked })}
+            />
+            Published
+          </label>
+        </div>
       </div>
+
+      <VaccineFieldsEditor
+        vaccines={value.vaccines}
+        onChange={(vaccines) => update({ vaccines })}
+      />
+
+      {(onSave || onDelete) && (
+        <div className="flex flex-wrap gap-3 border-t border-gray-200 pt-4">
+          {onSave ? (
+            <Button type="button" onClick={onSave} disabled={saving}>
+              {saving ? "Saving…" : saveLabel}
+            </Button>
+          ) : null}
+          {onDelete ? (
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={onDelete}
+              disabled={saving}
+            >
+              Delete
+            </Button>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }

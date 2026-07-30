@@ -32,21 +32,32 @@ async function replaceCategoryTranslations(
   categoryId: string,
   form: NameTranslationsForm,
 ) {
-  await client
-    .from("doctor_category_translations")
-    .delete()
-    .eq("category_id", categoryId);
-
   const rows = nameTranslationRowsFromForm(form).map((row) => ({
     category_id: categoryId,
     language_code: row.language_code,
     name: row.name,
   }));
 
-  if (rows.length === 0) return;
+  if (rows.length > 0) {
+    const { error } = await client.from("doctor_category_translations").upsert(rows, {
+      onConflict: "category_id,language_code",
+    });
+    if (error) throw new Error(error.message);
+  }
 
-  const { error } = await client.from("doctor_category_translations").insert(rows);
-  if (error) throw new Error(error.message);
+  let deleteQuery = client
+    .from("doctor_category_translations")
+    .delete()
+    .eq("category_id", categoryId);
+  if (rows.length > 0) {
+    deleteQuery = deleteQuery.not(
+      "language_code",
+      "in",
+      `(${rows.map((row) => `"${row.language_code}"`).join(",")})`,
+    );
+  }
+  const { error: deleteError } = await deleteQuery;
+  if (deleteError) throw new Error(deleteError.message);
 }
 
 export async function PATCH(request: Request, context: RouteContext) {

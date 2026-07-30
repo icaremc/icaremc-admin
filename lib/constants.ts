@@ -8,11 +8,6 @@ export const CONTENT_NAMESPACES: {
   description: string;
 }[] = [
   {
-    value: "milestone",
-    label: "Child milestones",
-    description: "Milestones by age in months",
-  },
-  {
     value: "daily_tip",
     label: "Daily tips",
     description: "Health tips grouped by pregnancy week, shown by current week",

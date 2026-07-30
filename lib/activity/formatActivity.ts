@@ -91,7 +91,7 @@ export function activityResourceHref(log: CombinedActivityLog): string | null {
       return `/admin/child-growth`;
     }
     case "daily_tip":
-      return `/admin/content/daily-tips`;
+      return `/admin/content/daily_tip`;
     case "content_translation": {
       const namespace = meta.namespace;
       const entityId = meta.entity_id;

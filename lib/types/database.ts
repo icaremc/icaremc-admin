@@ -200,6 +200,7 @@ export type ChildFollowupVisitTemplate = {
   code: string;
   sort_order: number;
   label: string;
+  label_translations?: Partial<Record<Locale, string>> | null;
   offset_days: number | null;
   offset_months: number | null;
   growth_period_id: string | null;
