@@ -15,6 +15,7 @@ import {
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { fetchPregnancyLogs } from "@/features/pregnancyLogs/pregnancyLogsSlice";
 import { formatDateTime, truncate } from "@/lib/format";
+import { formatSymptomsList } from "@/lib/pregnancy/formatSymptoms";
 
 export default function PregnancyLogsPage() {
   const dispatch = useAppDispatch();
@@ -108,7 +109,7 @@ export default function PregnancyLogsPage() {
                           {log.temperature != null ? `${log.temperature} °C` : "-"}
                         </TableCell>
                         <TableCell>
-                          {log.symptoms.length ? log.symptoms.join(", ") : "-"}
+                          {log.symptoms.length ? formatSymptomsList(log.symptoms) : "-"}
                         </TableCell>
                         <TableCell className="text-gray-600">
                           {truncate(log.notes ?? "", 60)}

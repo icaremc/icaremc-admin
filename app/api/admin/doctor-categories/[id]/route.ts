@@ -5,6 +5,11 @@ import { requireAdminManagePermission } from "@/lib/adminAuth";
 import { slugifyCategoryName } from "@/lib/doctors/display";
 import { parseDoctorCategoryCareFocus } from "@/lib/doctors/careFocus";
 import {
+  nameTranslationRowsFromForm,
+  readNameTranslationsFromFormData,
+  type NameTranslationsForm,
+} from "@/lib/i18n/nameTranslations";
+import {
   removeSpecialityImage,
   uploadSpecialityImage,
 } from "@/lib/specialities/storage";
@@ -13,10 +18,35 @@ import type { DoctorCategory } from "@/lib/types/doctors";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
+const CATEGORY_SELECT =
+  "*, doctor_category_translations(id, category_id, language_code, name, created_at, updated_at)";
+
 function readTextField(formData: FormData, key: string): string | undefined {
   const value = formData.get(key);
   if (value == null) return undefined;
   return typeof value === "string" ? value.trim() : "";
+}
+
+async function replaceCategoryTranslations(
+  client: ReturnType<typeof createServiceSupabaseClient>,
+  categoryId: string,
+  form: NameTranslationsForm,
+) {
+  await client
+    .from("doctor_category_translations")
+    .delete()
+    .eq("category_id", categoryId);
+
+  const rows = nameTranslationRowsFromForm(form).map((row) => ({
+    category_id: categoryId,
+    language_code: row.language_code,
+    name: row.name,
+  }));
+
+  if (rows.length === 0) return;
+
+  const { error } = await client.from("doctor_category_translations").insert(rows);
+  if (error) throw new Error(error.message);
 }
 
 export async function PATCH(request: Request, context: RouteContext) {
@@ -31,19 +61,20 @@ export async function PATCH(request: Request, context: RouteContext) {
   try {
     const client = createServiceSupabaseClient();
     const updates: Record<string, unknown> = {};
+    let translations: NameTranslationsForm | null = null;
 
     if (contentType.includes("multipart/form-data")) {
       const formData = await request.formData();
-      const name = readTextField(formData, "name");
-      const careFocusRaw = readTextField(formData, "care_focus");
-      const isActive = formData.get("is_active");
-      const image = formData.get("image");
-      const removeImage = formData.get("remove_image") === "true";
+      const hasNameField =
+        formData.has("name_en") || formData.has("name") || formData.has("name_am") || formData.has("name_om");
 
-      if (name !== undefined) {
-        if (!name) {
-          return NextResponse.json({ error: "Name cannot be empty" }, { status: 400 });
+      if (hasNameField) {
+        const parsed = readNameTranslationsFromFormData(formData);
+        if (typeof parsed === "string") {
+          return NextResponse.json({ error: parsed }, { status: 400 });
         }
+        translations = parsed;
+        const name = parsed.en.name.trim();
         const slug = slugifyCategoryName(name);
         if (!slug) {
           return NextResponse.json(
@@ -55,10 +86,12 @@ export async function PATCH(request: Request, context: RouteContext) {
         updates.slug = slug;
       }
 
+      const careFocusRaw = readTextField(formData, "care_focus");
       if (careFocusRaw !== undefined && careFocusRaw !== "") {
         updates.care_focus = parseDoctorCategoryCareFocus(careFocusRaw);
       }
 
+      const isActive = formData.get("is_active");
       if (typeof isActive === "string") {
         updates.is_active = isActive === "true";
       }
@@ -75,6 +108,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         updates.sort_order = sortOrder;
       }
 
+      const removeImage = formData.get("remove_image") === "true";
       if (removeImage) {
         const { data: existing } = await client
           .from("doctor_categories")
@@ -85,6 +119,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         updates.image_url = null;
       }
 
+      const image = formData.get("image");
       if (image instanceof File && image.size > 0) {
         const imageUrl = await uploadSpecialityImage(client, id, image);
         updates.image_url = imageUrl;
@@ -132,27 +167,41 @@ export async function PATCH(request: Request, context: RouteContext) {
       }
     }
 
-    if (Object.keys(updates).length === 0) {
+    if (Object.keys(updates).length === 0 && !translations) {
       return NextResponse.json({ error: "No updates provided" }, { status: 400 });
     }
 
-    updates.updated_at = new Date().toISOString();
+    if (Object.keys(updates).length > 0) {
+      updates.updated_at = new Date().toISOString();
 
-    const { data: category, error } = await client
+      const { error } = await client
+        .from("doctor_categories")
+        .update(updates)
+        .eq("id", id);
+
+      if (error) {
+        if (error.code === "23505") {
+          return NextResponse.json(
+            { error: "A speciality with this name already exists" },
+            { status: 400 },
+          );
+        }
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+    }
+
+    if (translations) {
+      await replaceCategoryTranslations(client, id, translations);
+    }
+
+    const { data: category, error: fetchError } = await client
       .from("doctor_categories")
-      .update(updates)
+      .select(CATEGORY_SELECT)
       .eq("id", id)
-      .select("*")
       .single();
 
-    if (error) {
-      if (error.code === "23505") {
-        return NextResponse.json(
-          { error: "A speciality with this name already exists" },
-          { status: 400 },
-        );
-      }
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (fetchError) {
+      return NextResponse.json({ error: fetchError.message }, { status: 500 });
     }
 
     await logAdminActivityFromAuth(

@@ -35,6 +35,7 @@ import {
   gestationalAge,
   type GestationalAge,
 } from "@/lib/pregnancy";
+import { formatSymptomsList } from "@/lib/pregnancy/formatSymptoms";
 import type { Pregnancy, PregnancyLog, PregnancyStatus } from "@/lib/types/database";
 
 function statusBadge(status: PregnancyStatus) {
@@ -119,7 +120,7 @@ function VitalsTable({ logs }: { logs: PregnancyLog[] }) {
                   : "N/A"}
               </TableCell>
               <TableCell className="max-w-[180px]">
-                {log.symptoms.length ? log.symptoms.join(", ") : "N/A"}
+                {log.symptoms.length ? formatSymptomsList(log.symptoms) : "N/A"}
               </TableCell>
               <TableCell className="max-w-[200px] text-gray-600">
                 {log.notes ? truncate(log.notes, 64) : "N/A"}
@@ -156,7 +157,9 @@ function LatestVitalSummary({ log }: { log: PregnancyLog }) {
       {log.symptoms.length > 0 ? (
         <span>
           <span className="text-gray-500">Symptoms</span>{" "}
-          <span className="font-medium text-gray-900">{log.symptoms.join(", ")}</span>
+          <span className="font-medium text-gray-900">
+            {formatSymptomsList(log.symptoms)}
+          </span>
         </span>
       ) : null}
       <span className="text-xs text-gray-400">

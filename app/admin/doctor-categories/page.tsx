@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Pencil, Plus, Tags, Trash2, X } from "lucide-react";
+import NameLocaleTabs from "@/components/content/NameLocaleTabs";
 import PageHero from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,17 +30,24 @@ import {
   parseDoctorCategoryCareFocus,
   type DoctorCategoryCareFocus,
 } from "@/lib/doctors/careFocus";
+import {
+  appendNameTranslationsToFormData,
+  emptyNameTranslations,
+  nameTranslationsFromRows,
+  type NameTranslationsForm,
+} from "@/lib/i18n/nameTranslations";
 import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import { formatDateTime } from "@/lib/format";
+import type { Locale } from "@/lib/types/database";
 import type { DoctorCategory } from "@/lib/types/doctors";
 
 const emptyForm = {
-  name: "",
+  translations: emptyNameTranslations(),
   care_focus: "both" as DoctorCategoryCareFocus,
 };
 
 type EditFormState = {
-  name: string;
+  translations: NameTranslationsForm;
   sort_order: string;
   care_focus: DoctorCategoryCareFocus;
   remove_image: boolean;
@@ -106,11 +114,13 @@ export default function DoctorCategoriesPage() {
   const canManageDoctors = useAdminCanManage("manage_doctors");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [createLocale, setCreateLocale] = useState<Locale>("en");
+  const [editLocale, setEditLocale] = useState<Locale>("en");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<DoctorCategory | null>(null);
   const [editForm, setEditForm] = useState<EditFormState>({
-    name: "",
+    translations: emptyNameTranslations(),
     sort_order: "",
     care_focus: "both",
     remove_image: false,
@@ -141,6 +151,7 @@ export default function DoctorCategoriesPage() {
 
   const resetCreateForm = () => {
     setForm(emptyForm);
+    setCreateLocale("en");
     setImageFile(null);
     if (imagePreview) URL.revokeObjectURL(imagePreview);
     setImagePreview(null);
@@ -148,8 +159,9 @@ export default function DoctorCategoriesPage() {
 
   const resetEditForm = () => {
     setEditingCategory(null);
+    setEditLocale("en");
     setEditForm({
-      name: "",
+      translations: emptyNameTranslations(),
       sort_order: "",
       care_focus: "both",
       remove_image: false,
@@ -174,7 +186,7 @@ export default function DoctorCategoriesPage() {
 
   const buildCreateFormData = () => {
     const formData = new FormData();
-    formData.set("name", form.name.trim());
+    appendNameTranslationsToFormData(formData, form.translations);
     formData.set("care_focus", form.care_focus);
     if (imageFile) formData.set("image", imageFile);
     return formData;
@@ -183,13 +195,10 @@ export default function DoctorCategoriesPage() {
   const buildEditFormData = () => {
     if (!editingCategory) return null;
     const formData = new FormData();
-    formData.set("name", editForm.name.trim());
+    appendNameTranslationsToFormData(formData, editForm.translations);
     formData.set("care_focus", editForm.care_focus);
     const nextSort = editForm.sort_order.trim();
-    if (
-      nextSort &&
-      nextSort !== String(editingCategory.sort_order)
-    ) {
+    if (nextSort && nextSort !== String(editingCategory.sort_order)) {
       formData.set("sort_order", nextSort);
     }
     if (editForm.remove_image) formData.set("remove_image", "true");
@@ -199,6 +208,7 @@ export default function DoctorCategoriesPage() {
 
   const handleCreate = async (event: FormEvent) => {
     event.preventDefault();
+    if (!form.translations.en.name.trim()) return;
     dispatch(doctorCategoriesActions.clearDoctorCategoriesError());
 
     const result = await dispatch(createDoctorCategory(buildCreateFormData()));
@@ -212,8 +222,12 @@ export default function DoctorCategoriesPage() {
     setShowForm(false);
     resetCreateForm();
     setEditingCategory(category);
+    setEditLocale("en");
     setEditForm({
-      name: category.name,
+      translations: nameTranslationsFromRows(
+        category.doctor_category_translations,
+        category.name,
+      ),
       sort_order: String(category.sort_order),
       care_focus: parseDoctorCategoryCareFocus(category.care_focus),
       remove_image: false,
@@ -224,7 +238,7 @@ export default function DoctorCategoriesPage() {
 
   const handleUpdate = async (event: FormEvent) => {
     event.preventDefault();
-    if (!editingCategory) return;
+    if (!editingCategory || !editForm.translations.en.name.trim()) return;
 
     dispatch(doctorCategoriesActions.clearDoctorCategoriesError());
     const formData = buildEditFormData();
@@ -260,10 +274,7 @@ export default function DoctorCategoriesPage() {
     dispatch(deleteDoctorCategory(id));
   };
 
-  const editPreviewSrc =
-    editForm.remove_image
-      ? null
-      : editImagePreview;
+  const editPreviewSrc = editForm.remove_image ? null : editImagePreview;
 
   return (
     <>
@@ -275,21 +286,21 @@ export default function DoctorCategoriesPage() {
 
       <div className="admin-page">
         {canManageDoctors ? (
-        <div className="mb-6 flex justify-end">
-          <Button
-            type="button"
-            onClick={() => {
-              const next = !showForm;
-              setShowForm(next);
-              if (next) resetEditForm();
-              if (!next) resetCreateForm();
-            }}
-            className="gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            {showForm ? "Close form" : "Add speciality"}
-          </Button>
-        </div>
+          <div className="mb-6 flex justify-end">
+            <Button
+              type="button"
+              onClick={() => {
+                const next = !showForm;
+                setShowForm(next);
+                if (next) resetEditForm();
+                if (!next) resetCreateForm();
+              }}
+              className="gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              {showForm ? "Close form" : "Add speciality"}
+            </Button>
+          </div>
         ) : null}
 
         {error ? (
@@ -299,10 +310,7 @@ export default function DoctorCategoriesPage() {
         ) : null}
 
         {editingCategory ? (
-          <form
-            onSubmit={handleUpdate}
-            className="admin-panel mb-6 space-y-4"
-          >
+          <form onSubmit={handleUpdate} className="admin-panel mb-6 space-y-4">
             <div className="flex items-center justify-between gap-3">
               <h2 className="font-heading text-lg font-semibold text-gray-900">
                 Edit speciality
@@ -317,19 +325,39 @@ export default function DoctorCategoriesPage() {
               </button>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-3">
+              <NameLocaleTabs
+                active={editLocale}
+                translations={editForm.translations}
+                onChange={setEditLocale}
+              />
               <div>
-                <Label htmlFor="edit-speciality-name">Speciality name</Label>
+                <Label htmlFor="edit-speciality-name">
+                  Speciality name ({editLocale.toUpperCase()}
+                  {editLocale === "en" ? " required" : ""})
+                </Label>
                 <Input
                   id="edit-speciality-name"
-                  value={editForm.name}
+                  value={editForm.translations[editLocale].name}
                   onChange={(event) =>
-                    setEditForm((current) => ({ ...current, name: event.target.value }))
+                    setEditForm((current) => ({
+                      ...current,
+                      translations: {
+                        ...current.translations,
+                        [editLocale]: { name: event.target.value },
+                      },
+                    }))
                   }
                   className="mt-1"
-                  required
+                  required={editLocale === "en"}
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  English is required; Amharic and Oromo fall back to English when empty.
+                </p>
               </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <Label htmlFor="edit-speciality-sort">Sort order</Label>
                 <Input
@@ -438,19 +466,38 @@ export default function DoctorCategoriesPage() {
             onSubmit={handleCreate}
             className="admin-panel mb-6 grid gap-4 md:grid-cols-2"
           >
-            <div className="md:col-span-2">
-              <Label htmlFor="speciality-name">Speciality name</Label>
-              <Input
-                id="speciality-name"
-                value={form.name}
-                onChange={(event) => setForm({ ...form, name: event.target.value })}
-                placeholder="e.g. Obstetrics & Gynecology"
-                className="mt-1"
-                required
+            <div className="md:col-span-2 space-y-3">
+              <NameLocaleTabs
+                active={createLocale}
+                translations={form.translations}
+                onChange={setCreateLocale}
               />
-              <p className="mt-1 text-xs text-gray-500">
-                Sort order will be {nextAutoSortOrder} (auto). Edit later only if you need to reorder.
-              </p>
+              <div>
+                <Label htmlFor="speciality-name">
+                  Speciality name ({createLocale.toUpperCase()}
+                  {createLocale === "en" ? " required" : ""})
+                </Label>
+                <Input
+                  id="speciality-name"
+                  value={form.translations[createLocale].name}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      translations: {
+                        ...form.translations,
+                        [createLocale]: { name: event.target.value },
+                      },
+                    })
+                  }
+                  placeholder="e.g. Obstetrics & Gynecology"
+                  className="mt-1"
+                  required={createLocale === "en"}
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  English is required; Amharic and Oromo fall back to English when empty.
+                  Sort order will be {nextAutoSortOrder} (auto).
+                </p>
+              </div>
             </div>
             <div>
               <Label htmlFor="speciality-care-focus">Care type</Label>
@@ -547,7 +594,15 @@ export default function DoctorCategoriesPage() {
                           disabled={saving || !canManageDoctors}
                           onUpload={(file) => handleImageUpload(category.id, file)}
                         />
-                        <span className="font-medium text-gray-900">{category.name}</span>
+                        <div>
+                          <span className="font-medium text-gray-900">{category.name}</span>
+                          <p className="text-xs text-gray-500">
+                            {category.doctor_category_translations?.length ?? 0} language
+                            {(category.doctor_category_translations?.length ?? 0) === 1
+                              ? ""
+                              : "s"}
+                          </p>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -558,20 +613,20 @@ export default function DoctorCategoriesPage() {
                     <TableCell>{category.sort_order}</TableCell>
                     <TableCell>
                       {canManageDoctors ? (
-                      <button
-                        type="button"
-                        disabled={saving}
-                        onClick={() =>
-                          handleToggleActive(category.id, category.is_active)
-                        }
-                        className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          category.is_active
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {category.is_active ? "Active" : "Inactive"}
-                      </button>
+                        <button
+                          type="button"
+                          disabled={saving}
+                          onClick={() =>
+                            handleToggleActive(category.id, category.is_active)
+                          }
+                          className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            category.is_active
+                              ? "bg-emerald-100 text-emerald-800"
+                              : "bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          {category.is_active ? "Active" : "Inactive"}
+                        </button>
                       ) : (
                         <span
                           className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
@@ -588,28 +643,28 @@ export default function DoctorCategoriesPage() {
                       {formatDateTime(category.updated_at)}
                     </TableCell>
                     {canManageDoctors ? (
-                    <TableCell className="text-right">
-                      <div className="inline-flex items-center gap-2">
-                        <button
-                          type="button"
-                          disabled={saving}
-                          onClick={() => startEdit(category)}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-emerald-700 hover:text-emerald-900"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          disabled={saving}
-                          onClick={() => handleDelete(category.id, category.name)}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-800"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          Delete
-                        </button>
-                      </div>
-                    </TableCell>
+                      <TableCell className="text-right">
+                        <div className="inline-flex items-center gap-2">
+                          <button
+                            type="button"
+                            disabled={saving}
+                            onClick={() => startEdit(category)}
+                            className="inline-flex items-center gap-1 text-sm font-medium text-emerald-700 hover:text-emerald-900"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            disabled={saving}
+                            onClick={() => handleDelete(category.id, category.name)}
+                            className="inline-flex items-center gap-1 text-sm font-medium text-red-600 hover:text-red-800"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Delete
+                          </button>
+                        </div>
+                      </TableCell>
                     ) : null}
                   </TableRow>
                 ))

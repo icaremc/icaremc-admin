@@ -4,9 +4,17 @@ import { logAdminActivityFromAuth } from "@/lib/activity/logFromAuth";
 import { requireAdminManagePermission, requireAdminViewPermission } from "@/lib/adminAuth";
 import { slugifyCategoryName } from "@/lib/doctors/display";
 import { parseDoctorCategoryCareFocus } from "@/lib/doctors/careFocus";
+import {
+  nameTranslationRowsFromForm,
+  readNameTranslationsFromFormData,
+  type NameTranslationsForm,
+} from "@/lib/i18n/nameTranslations";
 import { uploadSpecialityImage } from "@/lib/specialities/storage";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
 import type { DoctorCategory } from "@/lib/types/doctors";
+
+const CATEGORY_SELECT =
+  "*, doctor_category_translations(id, category_id, language_code, name, created_at, updated_at)";
 
 function readTextField(formData: FormData, key: string): string {
   const value = formData.get(key);
@@ -27,6 +35,28 @@ async function nextSortOrder(
   return (data?.sort_order ?? 0) + 1;
 }
 
+async function replaceCategoryTranslations(
+  client: ReturnType<typeof createServiceSupabaseClient>,
+  categoryId: string,
+  form: NameTranslationsForm,
+) {
+  await client
+    .from("doctor_category_translations")
+    .delete()
+    .eq("category_id", categoryId);
+
+  const rows = nameTranslationRowsFromForm(form).map((row) => ({
+    category_id: categoryId,
+    language_code: row.language_code,
+    name: row.name,
+  }));
+
+  if (rows.length === 0) return;
+
+  const { error } = await client.from("doctor_category_translations").insert(rows);
+  if (error) throw new Error(error.message);
+}
+
 export async function GET() {
   const auth = await requireAdminViewPermission("manage_doctors");
   if ("error" in auth) {
@@ -37,7 +67,7 @@ export async function GET() {
     const client = createServiceSupabaseClient();
     const { data, error } = await client
       .from("doctor_categories")
-      .select("*")
+      .select(CATEGORY_SELECT)
       .order("sort_order", { ascending: true })
       .order("name", { ascending: true });
 
@@ -67,11 +97,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid form data" }, { status: 400 });
   }
 
-  const name = readTextField(formData, "name");
-  if (!name) {
-    return NextResponse.json({ error: "Name is required" }, { status: 400 });
+  const translations = readNameTranslationsFromFormData(formData);
+  if (typeof translations === "string") {
+    return NextResponse.json({ error: translations }, { status: 400 });
   }
 
+  const name = translations.en.name.trim();
   const slug = slugifyCategoryName(name);
   if (!slug) {
     return NextResponse.json(
@@ -108,7 +139,7 @@ export async function POST(request: Request) {
         sort_order: sortOrder,
         is_active: true,
       })
-      .select("*")
+      .select("id")
       .single();
 
     if (error) {
@@ -121,45 +152,38 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    await replaceCategoryTranslations(client, category.id, translations);
+
     if (image instanceof File && image.size > 0) {
       const imageUrl = await uploadSpecialityImage(client, category.id, image);
-      const { data: updated, error: updateError } = await client
+      await client
         .from("doctor_categories")
         .update({ image_url: imageUrl, updated_at: new Date().toISOString() })
-        .eq("id", category.id)
-        .select("*")
-        .single();
+        .eq("id", category.id);
+    }
 
-      if (updateError) {
-        return NextResponse.json({ error: updateError.message }, { status: 500 });
-      }
+    const { data: full, error: fetchError } = await client
+      .from("doctor_categories")
+      .select(CATEGORY_SELECT)
+      .eq("id", category.id)
+      .single();
 
-      await logAdminActivityFromAuth(
-        auth,
-        {
-          eventType: ADMIN_ACTIVITY_EVENTS.CATEGORY_UPDATED,
-          eventLabel: `Created speciality ${(updated as DoctorCategory).name}`,
-          resourceType: "doctor_category",
-          resourceId: category.id,
-        },
-        request,
-      );
-
-      return NextResponse.json({ category: updated as DoctorCategory }, { status: 201 });
+    if (fetchError) {
+      return NextResponse.json({ error: fetchError.message }, { status: 500 });
     }
 
     await logAdminActivityFromAuth(
       auth,
       {
         eventType: ADMIN_ACTIVITY_EVENTS.CATEGORY_UPDATED,
-        eventLabel: `Created speciality ${(category as DoctorCategory).name}`,
+        eventLabel: `Created speciality ${(full as DoctorCategory).name}`,
         resourceType: "doctor_category",
         resourceId: category.id,
       },
       request,
     );
 
-    return NextResponse.json({ category: category as DoctorCategory }, { status: 201 });
+    return NextResponse.json({ category: full as DoctorCategory }, { status: 201 });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Server error" },

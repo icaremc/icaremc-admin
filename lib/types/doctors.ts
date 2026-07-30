@@ -2,6 +2,15 @@ import type { DoctorCategoryCareFocus } from "@/lib/doctors/careFocus";
 
 export type { DoctorCategoryCareFocus };
 
+export type DoctorCategoryTranslation = {
+  id: string;
+  category_id: string;
+  language_code: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+};
+
 export type DoctorCategory = {
   id: string;
   name: string;
@@ -12,6 +21,7 @@ export type DoctorCategory = {
   sort_order: number;
   created_at: string;
   updated_at: string;
+  doctor_category_translations?: DoctorCategoryTranslation[];
 };
 
 export type DoctorAvailabilitySlot = {
