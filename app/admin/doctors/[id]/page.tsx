@@ -35,6 +35,7 @@ import DoctorDetailTabs, {
   type DoctorDetailTab,
 } from "@/components/doctors/DoctorDetailTabs";
 import DoctorProfileAvatar from "@/components/doctors/DoctorProfileAvatar";
+import DoctorProfileEditForm from "@/components/doctors/DoctorProfileEditForm";
 import DoctorWalletPanel from "@/components/doctors/DoctorWalletPanel";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import {
@@ -139,11 +140,36 @@ function DetailField({
   );
 }
 
-function DoctorPersonalDetails({ doctor }: { doctor: DoctorProfile }) {
+function DoctorPersonalDetails({
+  doctor,
+  canEdit,
+}: {
+  doctor: DoctorProfile;
+  canEdit: boolean;
+}) {
+  const [editing, setEditing] = useState(false);
+
+  if (editing && canEdit) {
+    return (
+      <DoctorProfileEditForm
+        doctor={doctor}
+        onCancel={() => setEditing(false)}
+        onSaved={() => setEditing(false)}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="admin-panel">
-        <h2 className="admin-section-title">Profile</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="admin-section-title">Profile</h2>
+          {canEdit ? (
+            <Button type="button" variant="outline" onClick={() => setEditing(true)}>
+              Edit profile
+            </Button>
+          ) : null}
+        </div>
         <div className="mt-4 flex flex-col gap-5 sm:flex-row sm:items-start">
           <DoctorProfileAvatar
             firstName={doctor.first_name}
@@ -177,7 +203,7 @@ function DoctorPersonalDetails({ doctor }: { doctor: DoctorProfile }) {
           </div>
         </div>
         {doctor.bio ? (
-          <div className="mt-5 rounded-[var(--radius)] border border-gray-100 bg-gray-50/80 p-4">
+          <div className="mt-5 rounded-(--radius) border border-gray-100 bg-gray-50/80 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Bio</p>
             <p className="mt-2 text-sm leading-relaxed text-gray-800">{doctor.bio}</p>
           </div>
@@ -385,7 +411,9 @@ export default function DoctorDetailPage() {
           <>
             <DoctorDetailTabs active={activeTab} onChange={handleTabChange} />
 
-            {activeTab === "personal" ? <DoctorPersonalDetails doctor={doctor} /> : null}
+            {activeTab === "personal" ? (
+              <DoctorPersonalDetails doctor={doctor} canEdit={canManageDoctors} />
+            ) : null}
 
             {activeTab === "documents" ? <DoctorCredentialDocuments doctor={doctor} /> : null}
 

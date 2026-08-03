@@ -99,6 +99,21 @@ export const revokeDoctorApproval = createAsyncThunk(
   },
 );
 
+export const updateDoctorProfile = createAsyncThunk(
+  "doctorDetail/updateProfile",
+  async (payload: { id: string; formData: FormData }, { rejectWithValue }) => {
+    const response = await fetch(`/api/admin/doctors/${payload.id}`, {
+      method: "PATCH",
+      body: payload.formData,
+    });
+    if (!response.ok) {
+      return rejectWithValue(await readApiError(response));
+    }
+    const body = (await response.json()) as { doctor: DoctorProfile };
+    return body.doctor;
+  },
+);
+
 const doctorDetailSlice = createSlice({
   name: "doctorDetail",
   initialState,
@@ -159,6 +174,18 @@ const doctorDetailSlice = createSlice({
         state.doctor = action.payload;
       })
       .addCase(revokeDoctorApproval.rejected, (state, action) => {
+        state.saving = false;
+        state.error = action.payload as string;
+      })
+      .addCase(updateDoctorProfile.pending, (state) => {
+        state.saving = true;
+        state.error = null;
+      })
+      .addCase(updateDoctorProfile.fulfilled, (state, action) => {
+        state.saving = false;
+        state.doctor = action.payload;
+      })
+      .addCase(updateDoctorProfile.rejected, (state, action) => {
         state.saving = false;
         state.error = action.payload as string;
       });
