@@ -10,6 +10,7 @@ export const RESOURCE_TYPE_LABELS: Record<string, string> = {
   doctor_category: "Speciality",
   pregnancy_week: "Pregnancy week",
   child_growth_period: "Child milestone period",
+  growth_clinical_advice: "Growth clinical advice",
   daily_tip: "Daily tip",
   content_translation: "Content item",
   admin_user: "Portal admin",
@@ -90,6 +91,8 @@ export function activityResourceHref(log: CombinedActivityLog): string | null {
       }
       return `/admin/child-growth`;
     }
+    case "growth_clinical_advice":
+      return `/admin/child-growth/clinical-advice/${log.resource_id}/edit`;
     case "daily_tip":
       return `/admin/content/daily_tip`;
     case "content_translation": {

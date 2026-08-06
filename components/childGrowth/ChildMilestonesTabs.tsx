@@ -12,9 +12,17 @@ const TABS = [
     isActive: (pathname: string) => {
       if (pathname === "/admin/child-growth") return true;
       if (pathname.startsWith("/admin/child-growth/follow-up")) return false;
+      if (pathname.startsWith("/admin/child-growth/clinical-advice")) return false;
       if (pathname.startsWith("/admin/followup-visits")) return false;
       return pathname.startsWith("/admin/child-growth/");
     },
+  },
+  {
+    href: "/admin/child-growth/clinical-advice",
+    label: "Growth interpretation",
+    description: "Z-score clinical advice",
+    isActive: (pathname: string) =>
+      pathname.startsWith("/admin/child-growth/clinical-advice"),
   },
   {
     href: "/admin/child-growth/follow-up",

@@ -186,6 +186,44 @@ export type ChildGrowthPeriodTranslation = {
   updated_at: string;
 };
 
+export type GrowthClinicalMetric =
+  | "weight"
+  | "height"
+  | "head"
+  | "bmi"
+  | "weight_for_height";
+
+export type GrowthClinicalCondition =
+  | "low"
+  | "high"
+  | "rapid"
+  | "falter"
+  | "over"
+  | "obese";
+
+export type GrowthClinicalAdviceTranslation = {
+  id: string;
+  advice_id: string;
+  language_code: Locale;
+  explain_text: string;
+  causes: string;
+  recommendations: string;
+};
+
+export type GrowthClinicalAdvice = {
+  id: string;
+  code: string;
+  metric: GrowthClinicalMetric | string;
+  condition: GrowthClinicalCondition | string;
+  min_age_months: number;
+  max_age_months: number;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  growth_clinical_advice_translations?: GrowthClinicalAdviceTranslation[];
+};
+
 export type FollowupVisitModules = {
   growth?: boolean;
   nutrition?: boolean;
