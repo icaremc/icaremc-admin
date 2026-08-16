@@ -6,6 +6,7 @@ import { requireAdminPermission } from "@/lib/adminAuth";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
 import {
   DEFAULT_LEGAL_SLUGS,
+  isLegalLocale,
   type LegalDocument,
   type LegalSection,
   normalizeLegalDocument,
@@ -21,8 +22,9 @@ export async function GET() {
     const client = createServiceSupabaseClient();
     const { data, error } = await client
       .from("legal_documents")
-      .select("slug, title, sections, updated_at")
-      .order("slug");
+      .select("slug, locale, title, sections, updated_at")
+      .order("slug")
+      .order("locale");
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
@@ -52,6 +54,7 @@ export async function PATCH(request: Request) {
 
   let body: {
     slug?: string;
+    locale?: string;
     title?: string;
     sections?: LegalSection[];
   };
@@ -63,9 +66,16 @@ export async function PATCH(request: Request) {
 
   const slug = body.slug?.trim();
   const title = body.title?.trim();
+  const locale = body.locale?.trim() || "en";
   if (!slug || !title) {
     return NextResponse.json(
       { error: "slug and title are required" },
+      { status: 400 },
+    );
+  }
+  if (!isLegalLocale(locale)) {
+    return NextResponse.json(
+      { error: "locale must be en, am, or om" },
       { status: 400 },
     );
   }
@@ -85,13 +95,14 @@ export async function PATCH(request: Request) {
       .upsert(
         {
           slug,
+          locale,
           title,
           sections: cleaned,
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "slug" },
+        { onConflict: "slug,locale" },
       )
-      .select("slug, title, sections, updated_at")
+      .select("slug, locale, title, sections, updated_at")
       .single();
 
     if (error) {
@@ -102,9 +113,12 @@ export async function PATCH(request: Request) {
       auth,
       {
         eventType: ADMIN_ACTIVITY_EVENTS.SETTINGS_UPDATED,
-        eventLabel: settingsUpdatedEventLabel("legal document", slug),
+        eventLabel: settingsUpdatedEventLabel(
+          "legal document",
+          `${slug} (${locale})`,
+        ),
         resourceType: "legal_documents",
-        resourceId: slug,
+        resourceId: `${slug}:${locale}`,
       },
       request,
     );

@@ -3,13 +3,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { Info, Plus, RefreshCw, Save, Trash2 } from "lucide-react";
 import PageHero from "@/components/PageHero";
+import { LegalLocaleTabs } from "@/components/legal/LegalLocaleTabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   ABOUT_APP_SLUG,
+  emptyLegalDocument,
+  findLegalDocument,
   type LegalDocument,
   type LegalSection,
 } from "@/lib/legal/legalDocuments";
+import type { Locale } from "@/lib/types/database";
 
 type LoadResponse = {
   documents?: LegalDocument[];
@@ -23,17 +27,33 @@ const DEFAULT_SECTIONS: LegalSection[] = [
   { title: "Disclaimer", body: "" },
 ];
 
-const emptyAbout = (): LegalDocument => ({
-  slug: ABOUT_APP_SLUG,
-  title: "About iCare MC",
-  sections: DEFAULT_SECTIONS.map((section) => ({ ...section })),
-  updated_at: null,
-});
+function emptyAbout(locale: Locale): LegalDocument {
+  return emptyLegalDocument(
+    ABOUT_APP_SLUG,
+    locale,
+    locale === "en" ? "About iCare MC" : "",
+    DEFAULT_SECTIONS.map((section) => ({ ...section })),
+  );
+}
+
+function draftFromDocs(documents: LegalDocument[], locale: Locale): LegalDocument {
+  const existing = findLegalDocument(documents, ABOUT_APP_SLUG, locale);
+  if (!existing) return emptyAbout(locale);
+  return {
+    ...existing,
+    sections:
+      existing.sections.length > 0
+        ? existing.sections
+        : DEFAULT_SECTIONS.map((section) => ({ ...section })),
+  };
+}
 
 export default function AboutAppPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [draft, setDraft] = useState<LegalDocument>(emptyAbout());
+  const [documents, setDocuments] = useState<LegalDocument[]>([]);
+  const [locale, setLocale] = useState<Locale>("en");
+  const [draft, setDraft] = useState<LegalDocument>(emptyAbout("en"));
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,20 +66,9 @@ export default function AboutAppPage() {
       if (!response.ok) {
         throw new Error(data.error ?? "Could not load About content");
       }
-      const existing = (data.documents ?? []).find(
-        (doc) => doc.slug === ABOUT_APP_SLUG,
-      );
-      if (existing) {
-        setDraft({
-          ...existing,
-          sections:
-            existing.sections.length > 0
-              ? existing.sections
-              : DEFAULT_SECTIONS.map((section) => ({ ...section })),
-        });
-      } else {
-        setDraft(emptyAbout());
-      }
+      const docs = data.documents ?? [];
+      setDocuments(docs);
+      setDraft((current) => draftFromDocs(docs, current.locale));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Load failed");
     } finally {
@@ -70,6 +79,13 @@ export default function AboutAppPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  function selectLocale(next: Locale) {
+    setLocale(next);
+    setDraft(draftFromDocs(documents, next));
+    setMessage(null);
+    setError(null);
+  }
 
   function updateSection(index: number, patch: Partial<LegalSection>) {
     setDraft((current) => ({
@@ -104,7 +120,8 @@ export default function AboutAppPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           slug: ABOUT_APP_SLUG,
-          title: draft.title.trim() || "About iCare MC",
+          locale,
+          title: draft.title.trim() || (locale === "en" ? "About iCare MC" : ""),
           sections: draft.sections,
         }),
       });
@@ -116,12 +133,20 @@ export default function AboutAppPage() {
         throw new Error(data.error ?? "Save failed");
       }
       if (data.document) {
+        const saved = data.document;
         setDraft({
-          ...data.document,
+          ...saved,
           sections:
-            data.document.sections.length > 0
-              ? data.document.sections
+            saved.sections.length > 0
+              ? saved.sections
               : DEFAULT_SECTIONS.map((section) => ({ ...section })),
+        });
+        setDocuments((current) => {
+          const without = current.filter(
+            (doc) =>
+              !(doc.slug === saved.slug && doc.locale === saved.locale),
+          );
+          return [...without, saved];
         });
       }
       setMessage("About saved. Parents see this under Settings → About in the MC app.");
@@ -136,31 +161,41 @@ export default function AboutAppPage() {
     <>
       <PageHero
         title="About the app"
-        description="Mission, vision, and disclaimer shown in iCare MC under Settings → About."
+        description="Mission, vision, and disclaimer shown in iCare MC under Settings → About. Edit English, Amharic, and Oromo separately."
         icon={Info}
       />
 
       <div className="admin-page admin-page-settings">
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => void load()}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <LegalLocaleTabs
+            active={locale}
             disabled={loading}
-          >
-            <RefreshCw
-              className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
-            />
-            Refresh
-          </Button>
-          <Button
-            type="button"
-            onClick={() => void handleSave()}
-            disabled={saving || loading}
-          >
-            <Save className="mr-2 h-4 w-4" />
-            {saving ? "Saving…" : "Save About"}
-          </Button>
+            hasLocale={(code) =>
+              Boolean(findLegalDocument(documents, ABOUT_APP_SLUG, code))
+            }
+            onChange={selectLocale}
+          />
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void load()}
+              disabled={loading}
+            >
+              <RefreshCw
+                className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
+              />
+              Refresh
+            </Button>
+            <Button
+              type="button"
+              onClick={() => void handleSave()}
+              disabled={saving || loading}
+            >
+              <Save className="mr-2 h-4 w-4" />
+              {saving ? "Saving…" : "Save About"}
+            </Button>
+          </div>
         </div>
 
         {error ? (

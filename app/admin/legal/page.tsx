@@ -3,15 +3,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { FileText, Plus, RefreshCw, Save, Trash2 } from "lucide-react";
 import PageHero from "@/components/PageHero";
+import { LegalLocaleTabs } from "@/components/legal/LegalLocaleTabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   ABOUT_APP_SLUG,
   DEFAULT_LEGAL_SLUGS,
+  emptyLegalDocument,
+  findLegalDocument,
   labelForLegalSlug,
   type LegalDocument,
   type LegalSection,
 } from "@/lib/legal/legalDocuments";
+import type { Locale } from "@/lib/types/database";
 
 type LoadResponse = {
   documents?: LegalDocument[];
@@ -19,22 +23,31 @@ type LoadResponse = {
   error?: string;
 };
 
-const emptyDoc = (slug: string): LegalDocument => ({
-  slug,
-  title: slug
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" "),
-  sections: [{ title: "", body: "" }],
-  updated_at: null,
-});
+function draftFor(
+  documents: LegalDocument[],
+  slug: string,
+  locale: Locale,
+): LegalDocument {
+  const existing = findLegalDocument(documents, slug, locale);
+  if (!existing) return emptyLegalDocument(slug, locale);
+  return {
+    ...existing,
+    sections:
+      existing.sections.length > 0
+        ? existing.sections
+        : [{ title: "", body: "" }],
+  };
+}
 
 export default function LegalDocumentsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [documents, setDocuments] = useState<LegalDocument[]>([]);
   const [selectedSlug, setSelectedSlug] = useState("cancellation-policy");
-  const [draft, setDraft] = useState<LegalDocument>(emptyDoc("cancellation-policy"));
+  const [locale, setLocale] = useState<Locale>("en");
+  const [draft, setDraft] = useState<LegalDocument>(
+    emptyLegalDocument("cancellation-policy", "en"),
+  );
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,29 +62,17 @@ export default function LegalDocumentsPage() {
       }
       const docs = data.documents ?? [];
       setDocuments(docs);
-      const current =
-        docs.find((doc) => doc.slug === selectedSlug) ??
-        docs[0] ??
-        emptyDoc(selectedSlug);
-      setSelectedSlug(current.slug);
-      setDraft({
-        ...current,
-        sections:
-          current.sections.length > 0
-            ? current.sections
-            : [{ title: "", body: "" }],
-      });
+      setDraft((current) => draftFor(docs, current.slug, current.locale));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Load failed");
     } finally {
       setLoading(false);
     }
-  }, [selectedSlug]);
+  }, []);
 
   useEffect(() => {
     void load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- load once on mount
-  }, []);
+  }, [load]);
 
   const slugOptions = useMemo(() => {
     const fromDb = documents.map((doc) => doc.slug);
@@ -81,19 +82,15 @@ export default function LegalDocumentsPage() {
   }, [documents]);
 
   function selectSlug(slug: string) {
-    const existing = documents.find((doc) => doc.slug === slug);
     setSelectedSlug(slug);
-    setDraft(
-      existing
-        ? {
-            ...existing,
-            sections:
-              existing.sections.length > 0
-                ? existing.sections
-                : [{ title: "", body: "" }],
-          }
-        : emptyDoc(slug),
-    );
+    setDraft(draftFor(documents, slug, locale));
+    setMessage(null);
+    setError(null);
+  }
+
+  function selectLocale(next: Locale) {
+    setLocale(next);
+    setDraft(draftFor(documents, selectedSlug, next));
     setMessage(null);
     setError(null);
   }
@@ -134,6 +131,7 @@ export default function LegalDocumentsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           slug: draft.slug,
+          locale,
           title: draft.title,
           sections: draft.sections,
         }),
@@ -146,17 +144,23 @@ export default function LegalDocumentsPage() {
         throw new Error(data.error ?? "Could not save document");
       }
       if (data.document) {
+        const saved = data.document;
         setDraft({
-          ...data.document,
+          ...saved,
           sections:
-            data.document.sections.length > 0
-              ? data.document.sections
+            saved.sections.length > 0
+              ? saved.sections
               : [{ title: "", body: "" }],
         });
         setDocuments((current) => {
-          const without = current.filter((doc) => doc.slug !== data.document!.slug);
-          return [...without, data.document!].sort((a, b) =>
-            a.slug.localeCompare(b.slug),
+          const without = current.filter(
+            (doc) =>
+              !(doc.slug === saved.slug && doc.locale === saved.locale),
+          );
+          return [...without, saved].sort((a, b) =>
+            a.slug === b.slug
+              ? a.locale.localeCompare(b.locale)
+              : a.slug.localeCompare(b.slug),
           );
         });
       }
@@ -172,7 +176,7 @@ export default function LegalDocumentsPage() {
     <>
       <PageHero
         title="Policies"
-        description="Terms, privacy (patient and doctors), cancellation, and medical disclaimer."
+        description="Terms, privacy (patient and doctors), cancellation, and medical disclaimer. Edit English, Amharic, and Oromo separately."
         icon={FileText}
       />
 
@@ -204,6 +208,15 @@ export default function LegalDocumentsPage() {
           </div>
         </div>
 
+        <LegalLocaleTabs
+          active={locale}
+          disabled={loading}
+          hasLocale={(code) =>
+            Boolean(findLegalDocument(documents, selectedSlug, code))
+          }
+          onChange={selectLocale}
+        />
+
         {error ? (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {error}
@@ -216,14 +229,16 @@ export default function LegalDocumentsPage() {
         ) : null}
 
         <section className="admin-panel space-y-4">
-          <p className="text-sm text-gray-600">
-            When a doctor cancels a paid booking, patients are refunded to their wallet
-            automatically. Enable the doctor fine under{" "}
-            <a className="font-medium text-emerald-700 underline" href="/admin/finance/settings">
-              Finance settings
-            </a>
-            .
-          </p>
+          {selectedSlug === "cancellation-policy" ? (
+            <p className="text-sm text-gray-600">
+              When a doctor cancels a paid booking, patients are refunded to their wallet
+              automatically. Enable the doctor fine under{" "}
+              <a className="font-medium text-emerald-700 underline" href="/admin/finance/settings">
+                Finance settings
+              </a>
+              .
+            </p>
+          ) : null}
           <label className="block text-sm">
             <span className="mb-1 block font-medium text-gray-700">Title</span>
             <Input
