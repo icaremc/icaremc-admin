@@ -84,7 +84,8 @@ export type PregnancyWeekTranslation = {
   language_code: Locale;
   title: string;
   subtitle: string | null;
-  baby_development: string | null;
+  baby: string | null;
+  stage: string | null;
   mother_changes: string | null;
   recommendations: string | null;
   warning_signs: string | null;

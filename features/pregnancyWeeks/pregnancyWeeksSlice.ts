@@ -3,11 +3,12 @@ import type { RootState } from "@/app/store/store";
 import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
 import { supabase } from "@/lib/supabaseClient";
 import { logContentDeleted, logContentSaved } from "@/lib/client/adminActivityEvents";
-import {
-  EMPTY_PREGNANCY_SECTION,
-  type PregnancySectionFields,
-} from "@/lib/content/formTypes";
+import type { PregnancySectionFields } from "@/lib/content/formTypes";
 import { syncLocaleTranslationRows } from "@/lib/content/syncLocaleRows";
+import {
+  ensureStandardPregnancySections,
+  standardPregnancySections,
+} from "@/lib/pregnancyWeeks/standardSections";
 import type {
   Locale,
   PregnancyWeek,
@@ -18,8 +19,8 @@ import type {
 export type PregnancyWeekFormTranslation = {
   title: string;
   subtitle: string;
-  baby_development: string;
-  mother_changes: string;
+  baby: string;
+  stage: string;
   recommendations: string;
   warning_signs: string;
   sections: PregnancySectionFields[];
@@ -43,21 +44,31 @@ type PregnancyWeeksState = {
   success: string | null;
 };
 
-const emptyTranslation = (): PregnancyWeekFormTranslation => ({
+const TRANSLATION_SELECT =
+  "id, pregnancy_week_id, language_code, title, subtitle, baby, stage, mother_changes, recommendations, warning_signs, sections, created_at, updated_at";
+
+const WEEK_SELECT = `*, pregnancy_week_translations(${TRANSLATION_SELECT})`;
+
+export const emptyTranslation = (
+  locale: Locale,
+): PregnancyWeekFormTranslation => ({
   title: "",
   subtitle: "",
-  baby_development: "",
-  mother_changes: "",
+  baby: "",
+  stage: "",
   recommendations: "",
   warning_signs: "",
-  sections: [{ ...EMPTY_PREGNANCY_SECTION }],
+  sections: standardPregnancySections(locale),
 });
 
-function parseSections(raw: unknown): PregnancySectionFields[] {
+function parseSections(
+  locale: Locale,
+  raw: unknown,
+): PregnancySectionFields[] {
   if (!Array.isArray(raw) || raw.length === 0) {
-    return [{ ...EMPTY_PREGNANCY_SECTION }];
+    return standardPregnancySections(locale);
   }
-  return raw
+  const parsed = raw
     .filter((item) => item && typeof item === "object")
     .map((item) => {
       const map = item as Record<string, unknown>;
@@ -71,13 +82,19 @@ function parseSections(raw: unknown): PregnancySectionFields[] {
         is_urgent: map.is_urgent === true,
       };
     });
+  return ensureStandardPregnancySections(locale, parsed);
 }
 
 function serializeSections(
   sections: PregnancySectionFields[],
 ): PregnancyWeekSection[] {
   return sections
-    .filter((section) => section.title.trim() || section.body.trim())
+    .filter(
+      (section) =>
+        section.title.trim() ||
+        section.body.trim() ||
+        section.bulletsText.trim(),
+    )
     .map((section) => ({
       title: section.title.trim(),
       body: section.body.trim(),
@@ -93,8 +110,8 @@ function translationHasContent(slice: PregnancyWeekFormTranslation): boolean {
   const scalarFields = [
     slice.title,
     slice.subtitle,
-    slice.baby_development,
-    slice.mother_changes,
+    slice.baby,
+    slice.stage,
     slice.recommendations,
     slice.warning_signs,
   ];
@@ -122,11 +139,11 @@ export function weekToForm(week: PregnancyWeek): PregnancyWeekFormState {
       acc[locale] = {
         title: row?.title ?? "",
         subtitle: row?.subtitle ?? "",
-        baby_development: row?.baby_development ?? "",
-        mother_changes: row?.mother_changes ?? "",
+        baby: row?.baby ?? "",
+        stage: row?.stage ?? "",
         recommendations: row?.recommendations ?? "",
         warning_signs: row?.warning_signs ?? "",
-        sections: parseSections(row?.sections),
+        sections: parseSections(locale, row?.sections),
       };
       return acc;
     },
@@ -157,11 +174,14 @@ export function formToTranslationRows(
         language_code: locale,
         title: slice.title.trim() || `Week ${form.week_number}`,
         subtitle: slice.subtitle.trim() || null,
-        baby_development: slice.baby_development.trim() || null,
-        mother_changes: slice.mother_changes.trim() || null,
+        baby: slice.baby.trim() || null,
+        stage: slice.stage.trim() || null,
+        mother_changes: null,
         recommendations: slice.recommendations.trim() || null,
         warning_signs: slice.warning_signs.trim() || null,
-        sections: serializeSections(slice.sections),
+        sections: serializeSections(
+          ensureStandardPregnancySections(locale, slice.sections),
+        ),
       };
     })
     .filter(Boolean) as Omit<
@@ -184,9 +204,7 @@ export const fetchPregnancyWeeks = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     const { data, error } = await supabase
       .from("pregnancy_weeks")
-      .select(
-        "*, pregnancy_week_translations(id, pregnancy_week_id, language_code, title, subtitle, baby_development, mother_changes, recommendations, warning_signs, sections, created_at, updated_at)",
-      )
+      .select(WEEK_SELECT)
       .order("week_number", { ascending: true });
 
     if (error) return rejectWithValue(error.message);
@@ -199,9 +217,7 @@ export const fetchPregnancyWeek = createAsyncThunk(
   async (weekNumber: number, { rejectWithValue }) => {
     const { data, error } = await supabase
       .from("pregnancy_weeks")
-      .select(
-        "*, pregnancy_week_translations(id, pregnancy_week_id, language_code, title, subtitle, baby_development, mother_changes, recommendations, warning_signs, sections, created_at, updated_at)",
-      )
+      .select(WEEK_SELECT)
       .eq("week_number", weekNumber)
       .maybeSingle();
 
@@ -267,9 +283,7 @@ export const savePregnancyWeek = createAsyncThunk(
 
     const { data, error } = await supabase
       .from("pregnancy_weeks")
-      .select(
-        "*, pregnancy_week_translations(id, pregnancy_week_id, language_code, title, subtitle, baby_development, mother_changes, recommendations, warning_signs, sections, created_at, updated_at)",
-      )
+      .select(WEEK_SELECT)
       .eq("id", weekId)
       .single();
 

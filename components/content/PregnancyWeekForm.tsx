@@ -198,25 +198,21 @@ export default function PregnancyWeekForm({
           />
         </div>
         <div>
-          <Label>Baby development</Label>
-          <Textarea
-            value={translation.baby_development}
-            onChange={(e) =>
-              setTranslationField("baby_development", e.target.value)
-            }
-            rows={3}
+          <Label>Baby</Label>
+          <Input
+            value={translation.baby}
+            onChange={(e) => setTranslationField("baby", e.target.value)}
             className="mt-1.5"
+            placeholder="One-line baby status"
           />
         </div>
         <div>
-          <Label>Parent changes</Label>
-          <Textarea
-            value={translation.mother_changes}
-            onChange={(e) =>
-              setTranslationField("mother_changes", e.target.value)
-            }
-            rows={3}
+          <Label>Stage</Label>
+          <Input
+            value={translation.stage}
+            onChange={(e) => setTranslationField("stage", e.target.value)}
             className="mt-1.5"
+            placeholder="One-line pregnancy stage"
           />
         </div>
         <div>
@@ -244,7 +240,13 @@ export default function PregnancyWeekForm({
 
         <div className="space-y-4 border-t border-gray-200 pt-4">
           <div className="flex items-center justify-between">
-            <Label>Sections</Label>
+            <div>
+              <Label>Sections</Label>
+              <p className="mt-0.5 text-xs text-gray-500">
+                First two are always Baby&apos;s Development and Pregnancy
+                changes.
+              </p>
+            </div>
             <Button
               type="button"
               variant="outline"
@@ -269,7 +271,7 @@ export default function PregnancyWeekForm({
                 <p className="text-sm font-medium text-gray-700">
                   Section {index + 1}
                 </p>
-                {sections.length > 1 ? (
+                {index >= 2 ? (
                   <button
                     type="button"
                     onClick={() =>
@@ -290,6 +292,7 @@ export default function PregnancyWeekForm({
                   onChange={(e) =>
                     updateSection(index, { title: e.target.value })
                   }
+                  disabled={index < 2}
                   className="mt-1.5"
                 />
               </div>

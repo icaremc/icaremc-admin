@@ -10,25 +10,15 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import {
+  emptyTranslation,
   pregnancyWeeksActions,
   savePregnancyWeek,
   trimesterForWeek,
   type PregnancyWeekFormState,
 } from "@/features/pregnancyWeeks/pregnancyWeeksSlice";
-import { EMPTY_PREGNANCY_SECTION } from "@/lib/content/formTypes";
 import { uploadPregnancyWeekImage } from "@/lib/pregnancyWeeks/imageApi";
 
 function createEmptyForm(weekNumber: number): PregnancyWeekFormState {
-  const emptyTranslation = {
-    title: "",
-    subtitle: "",
-    baby_development: "",
-    mother_changes: "",
-    recommendations: "",
-    warning_signs: "",
-    sections: [{ ...EMPTY_PREGNANCY_SECTION }],
-  };
-
   return {
     week_number: weekNumber,
     trimester: trimesterForWeek(weekNumber),
@@ -36,9 +26,9 @@ function createEmptyForm(weekNumber: number): PregnancyWeekFormState {
     image_url: "",
     is_published: true,
     translations: {
-      en: { ...emptyTranslation },
-      am: { ...emptyTranslation },
-      om: { ...emptyTranslation },
+      en: emptyTranslation("en"),
+      am: emptyTranslation("am"),
+      om: emptyTranslation("om"),
     },
   };
 }

@@ -55,8 +55,8 @@ function TranslationPanel({
     <div className="space-y-6">
       <DetailField label="Title" value={translation.title} />
       <DetailField label="Subtitle" value={translation.subtitle} />
-      <DetailField label="Baby development" value={translation.baby_development} />
-      <DetailField label="Parent changes" value={translation.mother_changes} />
+      <DetailField label="Baby" value={translation.baby} />
+      <DetailField label="Stage" value={translation.stage} />
       <DetailField label="Recommendations" value={translation.recommendations} />
       <DetailField label="Warning signs" value={translation.warning_signs} />
 
