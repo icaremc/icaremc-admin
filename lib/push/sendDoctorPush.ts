@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { fcmErrorMessage, isStaleFcmTokenError, sendFcmMessage } from "@/lib/firebase/fcm";
 import { buildFcmData, type PushDeliveryInput } from "@/lib/push/pushDelivery";
+import { saveNotification } from "@/lib/push/saveNotification";
 
 export type DoctorPushProfile = {
   fcm_token: string | null;
@@ -90,6 +91,8 @@ export async function sendDoctorPush({
       body: input.body,
       data: buildFcmData(input),
     });
+
+    await saveNotification(serviceClient, userId, input, messageId);
 
     return { ok: true as const, messageId };
   } catch (pushError) {
