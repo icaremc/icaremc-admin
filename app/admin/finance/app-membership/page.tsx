@@ -66,7 +66,13 @@ export default function FinanceAppMembershipPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [expiringOnly, setExpiringOnly] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
+  const [showHistory, setShowHistory] = useState(true);
+  const [listMeta, setListMeta] = useState<{
+    rowCount: number;
+    parentCount: number;
+    showingCount: number;
+    mode: "history" | "latest";
+  } | null>(null);
   const [query, setQuery] = useState("");
 
   const loadSettings = useCallback(async () => {
@@ -102,9 +108,16 @@ export default function FinanceAppMembershipPage() {
       const payload = (await res.json()) as {
         error?: string;
         members?: AppSubscriptionMember[];
+        meta?: {
+          rowCount: number;
+          parentCount: number;
+          showingCount: number;
+          mode: "history" | "latest";
+        };
       };
       if (!res.ok) throw new Error(payload.error ?? "Failed to load payments");
       setMembers(payload.members ?? []);
+      setListMeta(payload.meta ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load payments");
       setMembers([]);
@@ -348,7 +361,7 @@ export default function FinanceAppMembershipPage() {
                   size="sm"
                   onClick={() => setShowHistory((current) => !current)}
                 >
-                  All attempts
+                  {showHistory ? "All attempts" : "Latest only"}
                 </Button>
                 <Button
                   type="button"
@@ -364,8 +377,8 @@ export default function FinanceAppMembershipPage() {
 
             <p className="mb-3 text-sm text-gray-500">
               {showHistory
-                ? "Every Chapa attempt, including superseded cancelled payments."
-                : "Latest payment per parent. Turn on All attempts to see retries."}
+                ? `All payment rows (${listMeta?.rowCount ?? members.length} in database).`
+                : `Latest subscription per parent (${listMeta?.parentCount ?? members.length} parents). Turn on All attempts to see every Chapa retry.`}
             </p>
 
             <div className="admin-table-wrap">

@@ -48,6 +48,7 @@ async function fetchAllSubscriptionRows(
         "id, patient_id, plan, status, starts_at, ends_at, amount_paid, currency, payment_method, chapa_tx_ref, admin_receipt_url, created_at, updated_at",
       )
       .order("ends_at", { ascending: false })
+      .order("created_at", { ascending: false })
       .range(from, from + PAGE_SIZE - 1);
 
     if (error) throw new Error(error.message);
@@ -102,6 +103,7 @@ export async function GET(request: Request) {
     const scopedRows = showHistory ? rows : latestSubscriptionPerPatient(rows);
     const patientIds = [...new Set(scopedRows.map((row) => row.patient_id))];
     const profileMap = await fetchProfilesByIds(client, patientIds);
+    const allPatientIds = new Set(rows.map((row) => row.patient_id));
 
     const now = Date.now();
     const expiringCutoff =
@@ -155,6 +157,12 @@ export async function GET(request: Request) {
     return NextResponse.json({
       members: filteredMembers,
       total: filteredMembers.length,
+      meta: {
+        mode: showHistory ? "history" : "latest",
+        rowCount: rows.length,
+        parentCount: allPatientIds.size,
+        showingCount: scopedRows.length,
+      },
     });
   } catch (error) {
     return NextResponse.json(
