@@ -1,0 +1,114 @@
+{
+  "Child and Adolescent Psychiatrist": {
+    "am": "የህጻናትና የጉርምስና ዕድሜ ሥነ አእምሮ ሐኪም",
+    "om": "Ogeessa sammuu daa’immanii fi dargaggootaa"
+  },
+  "Neonatologists": {
+    "am": "የአራስ ሕጻናት ሐኪሞች",
+    "om": "Ogeessota daa’imman haarawaa"
+  },
+  "Pediatric Anesthesiologist": {
+    "am": "የህጻናት የማደንዘዣ ሐኪም",
+    "om": "Ogeessa qoricha irribaa daa’immanii"
+  },
+  "Pediatric cardiologists": {
+    "am": "የህጻናት የልብ ሐኪሞች",
+    "om": "Ogeessota onnee daa’immanii"
+  },
+  "Pediatric Emergency Medicine Specialist": {
+    "am": "የህጻናት የአደጋ ጊዜ ሕክምና ስፔሻሊስት",
+    "om": "Ogeessa qoricha hatattamaa daa’immanii"
+  },
+  "Pediatric endocrinologists": {
+    "am": "የህጻናት የሆርሞን ሐኪሞች",
+    "om": "Ogeessota hormonaa daa’immanii"
+  },
+  "Pediatric ENT (Otolaryngologist)": {
+    "am": "የህጻናት የጆሮ፣ አፍንጫና ጉሮሮ ሐኪም",
+    "om": "Ogeessa gurraa, funyaanii fi qoonqoo daa’immanii"
+  },
+  "Pediatric gastroenterologists": {
+    "am": "የህጻናት የጨጓራና አንጀት ሐኪሞች",
+    "om": "Ogeessota garaa fi mar’imaan daa’immanii"
+  },
+  "Pediatric hematologists/oncologists": {
+    "am": "የህጻናት የደም/ካንሰር ሐኪሞች",
+    "om": "Ogeessota dhiigaa/kaansaraa daa’immanii"
+  },
+  "Pediatric infectious disease specialists": {
+    "am": "የህጻናት የተላላፊ በሽታ ስፔሻሊስቶች",
+    "om": "Ogeessota dhukkuba daddarbuu daa’immanii"
+  },
+  "Pediatric Intensivist (PICU)": {
+    "am": "የህጻናት የከፍተኛ እንክብካቤ ሐኪም (PICU)",
+    "om": "Ogeessa kunuunsa cimaa daa’immanii (PICU)"
+  },
+  "Pediatric nephrologists": {
+    "am": "የህጻናት የኩላሊት ሐኪሞች",
+    "om": "Ogeessota kalee daa’immanii"
+  },
+  "Pediatric neurologists": {
+    "am": "የህጻናት የነርቭ ሐኪሞች",
+    "om": "Ogeessota narvii daa’immanii"
+  },
+  "Pediatric Orthopedic Surgeon": {
+    "am": "የህጻናት የአጥንት ቀዶ ሐኪም",
+    "om": "Ogeessa cirracha lafee daa’immanii"
+  },
+  "Pediatric palliative care specialists": {
+    "am": "የህጻናት የማስታገሻ እንክብካቤ ስፔሻሊስቶች",
+    "om": "Ogeessota kunuunsa tasgabbii daa’immanii"
+  },
+  "Pediatric pulmonologists": {
+    "am": "የህጻናት የሳንባ ሐኪሞች",
+    "om": "Ogeessota sombaa daa’immanii"
+  },
+  "Pediatric rheumatologists": {
+    "am": "የህጻናት የሩማቲዝም ሐኪሞች",
+    "om": "Ogeessota hidhii daa’immanii"
+  },
+  "Pediatric surgeons": {
+    "am": "የህጻናት ቀዶ ሐኪሞች",
+    "om": "Ogeessota cirracha daa’immanii"
+  },
+  "Pediatrician": {
+    "am": "የህጻናት ሐኪም",
+    "om": "Ogeessa daa’immanii"
+  },
+  "General Practitioner": {
+    "am": "አጠቃላይ ሐኪም",
+    "om": "Ogeessa waliigalaa"
+  },
+  "Pediatric Dentist": {
+    "am": "የህጻናት የጥርስ ሐኪም",
+    "om": "Ogeessa ilkaan daa’immanii"
+  },
+  "Pediatric Dermatologist": {
+    "am": "የህጻናት የቆዳ ሐኪም",
+    "om": "Ogeessa gogaa daa’immanii"
+  },
+  "Obstetrician & Gynecologist (OB/GYN)": {
+    "am": "የማህፀንና የወሊድ ሐኪም (OB/GYN)",
+    "om": "Ogeessa ulfaa fi dubartii (OB/GYN)"
+  },
+  "Pediatric and Adolescent Gynecologist": {
+    "am": "የህጻናትና የጉርምስና ዕድሜ የማህፀን ሐኪም",
+    "om": "Ogeessa dubartii daa’immanii fi dargaggootaa"
+  },
+  "Urogynecologist": {
+    "am": "የማህፀንና የሽንት ስርዓት ሐኪም",
+    "om": "Ogeessa finnyaa fi dubartii"
+  },
+  "Gynecologic Oncologist": {
+    "am": "የማህፀን ካንሰር ሐኪም",
+    "om": "Ogeessa kaansara dubartii"
+  },
+  "Reproductive Endocrinologist (Infertility Specialist)": {
+    "am": "የመራባት የሆርሞን ሐኪም (የመሃንነት ስፔሻሊስት)",
+    "om": "Ogeessa hormonaa dhalootaa (ogeessa dhabamuu dhalootaa)"
+  },
+  "Maternal–Fetal Medicine Specialist (Perinatologist)": {
+    "am": "የእናትና ፅንስ ሕክምና ስፔሻሊስት (ፔሪናቶሎጂስት)",
+    "om": "Ogeessa qoricha haadhaa fi daa’ima ulfaa (Perinatologist)"
+  }
+}

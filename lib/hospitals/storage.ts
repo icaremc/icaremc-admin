@@ -1,4 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { storagePathFromPublicUrl } from "@/lib/storage/storageImage";
+import { uploadStorageImage } from "@/lib/storage/uploadImage";
 
 export function slugifyHospitalName(name: string): string {
   return name
@@ -33,23 +35,13 @@ export async function uploadHospitalImage(
     throw new Error("Use a JPG, PNG, or WebP image.");
   }
 
-  const path = `${hospitalId}/cover.${normalizedExt}`;
-  const bytes = Buffer.from(await file.arrayBuffer());
-  const contentType =
-    normalizedExt === "png"
-      ? "image/png"
-      : normalizedExt === "webp"
-        ? "image/webp"
-        : "image/jpeg";
-
-  const { error } = await client.storage.from(HOSPITAL_IMAGE_BUCKET).upload(path, bytes, {
-    contentType,
-    upsert: true,
-  });
-
-  if (error) throw new Error(error.message);
-
-  return client.storage.from(HOSPITAL_IMAGE_BUCKET).getPublicUrl(path).data.publicUrl;
+  return uploadStorageImage(
+    client,
+    HOSPITAL_IMAGE_BUCKET,
+    `${hospitalId}/cover.${normalizedExt}`,
+    file,
+    { preset: "cover" },
+  );
 }
 
 export async function removeHospitalImage(
@@ -58,10 +50,8 @@ export async function removeHospitalImage(
 ) {
   if (!imageUrl?.trim()) return;
 
-  const marker = `/${HOSPITAL_IMAGE_BUCKET}/`;
-  const index = imageUrl.indexOf(marker);
-  if (index < 0) return;
+  const storagePath = storagePathFromPublicUrl(imageUrl, HOSPITAL_IMAGE_BUCKET);
+  if (!storagePath) return;
 
-  const storagePath = imageUrl.substring(index + marker.length);
   await client.storage.from(HOSPITAL_IMAGE_BUCKET).remove([storagePath]);
 }

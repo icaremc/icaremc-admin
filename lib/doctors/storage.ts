@@ -1,4 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { storagePathFromPublicUrl } from "@/lib/storage/storageImage";
+import { uploadStorageImage } from "@/lib/storage/uploadImage";
 
 const DOCTOR_PROFILE_BUCKET = "drprofile";
 const PROFILE_PHOTO_PATH = "profile.jpg";
@@ -14,26 +16,13 @@ export async function uploadDoctorProfilePhoto(
     throw new Error("Use a JPG, PNG, or WebP image.");
   }
 
-  const path = `${doctorUserId}/${PROFILE_PHOTO_PATH}`;
-  const bytes = Buffer.from(await file.arrayBuffer());
-  const contentType =
-    normalizedExt === "png"
-      ? "image/png"
-      : normalizedExt === "webp"
-        ? "image/webp"
-        : "image/jpeg";
-
-  const { error } = await client.storage.from(DOCTOR_PROFILE_BUCKET).upload(path, bytes, {
-    contentType,
-    upsert: true,
-  });
-
-  if (error) throw new Error(error.message);
-
-  const publicUrl = client.storage
-    .from(DOCTOR_PROFILE_BUCKET)
-    .getPublicUrl(path).data.publicUrl;
-  return `${publicUrl}?t=${Date.now()}`;
+  return uploadStorageImage(
+    client,
+    DOCTOR_PROFILE_BUCKET,
+    `${doctorUserId}/${PROFILE_PHOTO_PATH}`,
+    file,
+    { preset: "photo" },
+  );
 }
 
 export async function removeDoctorProfilePhoto(
@@ -42,14 +31,7 @@ export async function removeDoctorProfilePhoto(
 ) {
   if (!imageUrl?.trim()) return;
 
-  const marker = `/${DOCTOR_PROFILE_BUCKET}/`;
-  const index = imageUrl.indexOf(marker);
-  if (index < 0) return;
-
-  const storagePath = imageUrl
-    .substring(index + marker.length)
-    .split("?")[0]
-    .split("#")[0];
+  const storagePath = storagePathFromPublicUrl(imageUrl, DOCTOR_PROFILE_BUCKET);
   if (!storagePath) return;
 
   await client.storage.from(DOCTOR_PROFILE_BUCKET).remove([storagePath]);

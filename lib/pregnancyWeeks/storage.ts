@@ -1,4 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { storagePathFromPublicUrl } from "@/lib/storage/storageImage";
+import { uploadStorageImage } from "@/lib/storage/uploadImage";
 
 const PREGNANCY_WEEK_IMAGE_BUCKET = "pregnancy-weeks";
 
@@ -20,27 +22,13 @@ export async function uploadPregnancyWeekImage(
     throw new Error("Use a JPG, PNG, or WebP image.");
   }
 
-  const path = `${weekId}/week-${weekNumber}.${normalizedExt}`;
-  const bytes = Buffer.from(await file.arrayBuffer());
-  const contentType =
-    normalizedExt === "png"
-      ? "image/png"
-      : normalizedExt === "webp"
-        ? "image/webp"
-        : "image/jpeg";
-
-  const { error } = await client.storage
-    .from(PREGNANCY_WEEK_IMAGE_BUCKET)
-    .upload(path, bytes, {
-      contentType,
-      upsert: true,
-    });
-
-  if (error) throw new Error(error.message);
-
-  return client.storage
-    .from(PREGNANCY_WEEK_IMAGE_BUCKET)
-    .getPublicUrl(path).data.publicUrl;
+  return uploadStorageImage(
+    client,
+    PREGNANCY_WEEK_IMAGE_BUCKET,
+    `${weekId}/week-${weekNumber}.${normalizedExt}`,
+    file,
+    { preset: "photo" },
+  );
 }
 
 export async function removePregnancyWeekImage(
@@ -49,10 +37,8 @@ export async function removePregnancyWeekImage(
 ) {
   if (!imageUrl?.trim()) return;
 
-  const marker = `/${PREGNANCY_WEEK_IMAGE_BUCKET}/`;
-  const index = imageUrl.indexOf(marker);
-  if (index < 0) return;
+  const storagePath = storagePathFromPublicUrl(imageUrl, PREGNANCY_WEEK_IMAGE_BUCKET);
+  if (!storagePath) return;
 
-  const storagePath = imageUrl.substring(index + marker.length);
   await client.storage.from(PREGNANCY_WEEK_IMAGE_BUCKET).remove([storagePath]);
 }

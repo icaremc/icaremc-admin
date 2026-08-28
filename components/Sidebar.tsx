@@ -4,8 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  Baby,
   Activity,
+  Baby,
+  BadgeCheck,
   BookOpen,
   Building2,
   ChevronDown,
@@ -83,6 +84,7 @@ const appSettingsItems: NavItem[] = [
 const financeItems: NavItem[] = [
   { href: "/admin/finance/payout-request", label: "Payout request", icon: DollarSign },
   { href: "/admin/finance/payment", label: "Payment", icon: CreditCard },
+  { href: "/admin/finance/app-membership", label: "App membership", icon: BadgeCheck },
   { href: "/admin/finance/payment-settings", label: "Payment settings", icon: CreditCard },
   { href: "/admin/finance/wallet-transactions", label: "Wallet transactions", icon: Wallet },
   { href: "/admin/finance/settings", label: "Finance settings", icon: Settings2 },

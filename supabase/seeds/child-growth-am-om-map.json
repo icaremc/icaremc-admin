@@ -1,0 +1,1622 @@
+{
+  "15 months": {
+    "am": "15 ወር",
+    "om": "Ji’a 15"
+  },
+  "Copies other children while playing": {
+    "am": "ሌሎች ልጆች ሲጫወቱ ያዩትን ደግመው ይጫወታሉ",
+    "om": "Daa’imman biroo yoo taphatan, waan argan irra deebi’anii taphatu"
+  },
+  "Shows you an object they like": {
+    "am": "የወደዱትን ነገር ያሳያሉ",
+    "om": "Wanta jaallatan ni agarsiisu"
+  },
+  "Shows you affection (hugs, cuddles or kisses you)": {
+    "am": "ፍቅር ያሳያሉ (እቅፍ፣ ሙቀቅ ወይም ይስሙዎታል)",
+    "om": "Jaalala ni agarsiisu (hammachiisu, harka walqabuu ykn dhungachuu)"
+  },
+  "Social / emotional": {
+    "am": "ማህበራዊ-ስሜታዊ",
+    "om": "Hirmaata hawaasummaa fi sammuu"
+  },
+  "Tries to say one or two words besides \"mama\" or \"dada\"": {
+    "am": "ከ \"mama\" ወይም \"dada\" በስተቀር አንድ ወይም ሁለት ቃላት ለመናገር ይሞክራሉ",
+    "om": "\"mama\" ykn \"dada\" malee jecha tokko ykn lama dubbachuuf yaalu"
+  },
+  "Points to ask for something or to get help": {
+    "am": "ነገር ለመጠየቅ ወይም እርዳታ ለማግኘት በጣት ያመለክታሉ",
+    "om": "Wanta gaafachuuf ykn gargaarsa argachuuf qubaan agarsiisu"
+  },
+  "Language / communication": {
+    "am": "ቋንቋ",
+    "om": "Amala afaanii"
+  },
+  "Takes a few steps on their own": {
+    "am": "በራሳቸው ጥቂት እርምጃዎች ይራመዳሉ",
+    "om": "Ofumaan tarkaanfii muraasa ni fudhatu"
+  },
+  "Uses fingers to feed themselves some food": {
+    "am": "አንዳንድ ምግብን በጣታቸው ይመገባሉ",
+    "om": "Nyaata tokko tokko qubaan of nyaachisu"
+  },
+  "Movement / physical": {
+    "am": "አካላዊ እድገት",
+    "om": "Amala qaamaa"
+  },
+  "Contact pediatrician if any of these red flags are observed.": {
+    "am": "የሚከተሉትን ካስተዋሉ ልጆን ለህጻናት ሃኪም በፍጥነት ያሳዩ",
+    "om": "Kan armaan gadi yoo argitan daa’ima keessan gara ogeessa daa’immanitti saffisaan geessaa"
+  },
+  "No meaningful words (should have at least 3–5 words).": {
+    "am": "ትርጉም ያላቸው ቃላት የሉም (ቢያንስ 3–5 ቃላት ሊኖራቸው ይገባል)።",
+    "om": "Jechoota hiika qaban hin qaban (yoo xiqqaate jechoota 3–5 qabaachuu qabu)."
+  },
+  "No response to simple commands (like “give me the toy”).": {
+    "am": "ለቀላል ትእዛዝ ምላሽ የለም (እንደ “መጫወቻውን ስጠኝ”)።",
+    "om": "Ajaja salphaa irratti deebii hin kennan (akka “tapha naa kenni”)."
+  },
+  "No pointing or gesture communication.": {
+    "am": "በጣት ማመልከት ወይም በምልክት መግባባት የለም።",
+    "om": "Qubaan agarsiisuu ykn mallattoo waliin quunnamuu hin jiru."
+  },
+  "No social interaction (indifference to caregivers, no stranger anxiety).": {
+    "am": "ማህበራዊ ግንኙነት የለም (ለአሳዳጊዎች ግድ የለሽነት፣ የባዕድ ፍርሃት የለም)።",
+    "om": "Hirmaannaa hawaasummaa hin qaban (kunuunsa irratti dhimma hin qaban, soda nama hin beekne hin qaban)."
+  },
+  "Not feeding self with fingers or spoon.": {
+    "am": "በጣት ወይም በማንኪያ ራሳቸውን አይመገቡም።",
+    "om": "Quba ykn fannoo fayyadamuun of hin nyaachisan."
+  },
+  "Offer regular meals and snacks. Appetite can vary day to day.": {
+    "am": "መደበኛ ምግብ እና መክሰስ ያቅርቡ። ፍላጎት ከቀን ወደ ቀን ሊለያይ ይችላል።",
+    "om": "Nyaata fi nyaata giddugaleessaa yeroo beekamu dhiyeessaa. Fedhiin nyaataa guyyaa guyyaatti jijjiiramuu danda’a."
+  },
+  "Toddler meals": {
+    "am": "የሕፃን ምግቦች",
+    "om": "Nyaata daa’imaa"
+  },
+  "3 meals + 2 snacks on a predictable schedule": {
+    "am": "3 ምግቦች + 2 መክሰስ በታወቀ መርሐ ግብር",
+    "om": "Nyaata 3 + nyaata giddugaleessaa 2 yeroo beekamu irratti"
+  },
+  "Let the child self-feed with fingers and a spoon": {
+    "am": "ልጁ በጣት እና በማንኪያ ራሱን እንዲመገብ ይፍቀዱ",
+    "om": "Daa’imni qubaa fi fannoo fayyadamuun of haa nyaatu"
+  },
+  "Offer new foods many times — refusal is normal at first": {
+    "am": "አዲስ ምግቦችን ብዙ ጊዜ ያቅርቡ — መጀመሪያ መቃወም የተለመደ ነው",
+    "om": "Nyaata haaraa yeroo baayyee dhiyeessaa — jalqaba diduun waanuma baramaa dha"
+  },
+  "Avoid using food as a reward or punishment": {
+    "am": "ምግብን እንደ ሽልማት ወይም ቅጣት ከመጠቀም ይቆጠቡ",
+    "om": "Nyaata badhaasa ykn adabbii akka ta’etti fayyadamuu irraa of qusadhaa"
+  },
+  "Continue breastfeeding if still desired": {
+    "am": "አሁንም ከተፈለገ ጡት ማጥባትን ይቀጥሉ",
+    "om": "Yoo ammas barbaadame harma hoosisuu itti fufaa"
+  },
+  "Protect teeth and growth with fewer sugary and ultra-processed foods.": {
+    "am": "ጣፋጭ እና በጣም የተቀነባበሩ ምግቦችን በመቀነስ ጥርስን እና እድገትን ይጠብቁ።",
+    "om": "Nyaata sukkaaraa fi baayyee qopheeffame hir’isuun ilkaan fi guddina eegaa."
+  },
+  "Foods to limit": {
+    "am": "ሊገደቡ የሚገባቸው ምግቦች",
+    "om": "Nyaata daangeffamuu qabu"
+  },
+  "Limit sweets, biscuits, and soft drinks": {
+    "am": "ጣፋጭ፣ ብስኩት እና ለስላሳ መጠጦችን ይገድቡ",
+    "om": "Nyaata mi’aawaa, biskuti, fi dhugaatii lashee daangeessaa"
+  },
+  "Avoid tea/coffee for young children": {
+    "am": "ለትንንሽ ልጆች ሻይ/ቡና አይስጡ",
+    "om": "Daa’imman xiqqoo shaayii/buna hin kenninaa"
+  },
+  "Cut grapes, hot dogs, and hard foods into safe small pieces": {
+    "am": "ወይን፣ ሆት ዶግ እና ጠንካራ ምግቦችን በደህንነት ወደ ትናንሽ ቁርጥራጮች ይቁረጡ",
+    "om": "Wayinii, hot dog, fi nyaata jabaa kutaalee xiqqoo nageenya qabuun muraa"
+  },
+  "18 months": {
+    "am": "18 ወር",
+    "om": "Ji’a 18"
+  },
+  "Developmental screening is recommended at this visit.": {
+    "am": "በዚህ ጉብኝት የእድገት ምርመራ ይመከራል።",
+    "om": "Qorannoon guddinaa daawwannaa kana irratti ni gorfama."
+  },
+  "Points to show you something interesting": {
+    "am": "አስደሳች ነገር ሲያዩ በጣት ያሳዩዎታል",
+    "om": "Wanta nama ajaa’ibu yoo argan qubaan isin agarsiisu"
+  },
+  "Looks at a few pages in a book with you": {
+    "am": "ከእርስዎ ጋር ጥቂት ገጾችን በመጽሐፍ ይመለከታሉ",
+    "om": "Kitaaba keessatti fuula muraasa isin waliin ilalu"
+  },
+  "Helps you dress them by pushing arm through a sleeve": {
+    "am": "እጃቸውን ወደ እጅጌ በመግፋት ልብስ ሲለብሱ ይረዳሉ",
+    "om": "Harka isaanii huccuu keessa dhiibuun uffachuu isin gargaaru"
+  },
+  "Tries to say three or more words besides \"mama\" or \"dada\"": {
+    "am": "ከ \"mama\" ወይም \"dada\" በስተቀር ሶስት ወይም ከዚያ በላይ ቃላት ለመናገር ይሞክራሉ",
+    "om": "\"mama\" ykn \"dada\" malee jechoota sadii ykn isaa ol dubbachuuf yaalu"
+  },
+  "Follows one-step directions without gestures": {
+    "am": "ያለ ምልክት አንድ-ደረጃ መመሪያዎችን ይከተላሉ",
+    "om": "Osoo mallattoo hin fayyadamne ajaja tarkaanfii tokkoo hordofu"
+  },
+  "Walks without holding on": {
+    "am": "ያለ መያዝ ይራመዳሉ",
+    "om": "Osoo hin qabanne ni deemu"
+  },
+  "Scribbles": {
+    "am": "ያሻሽላሉ",
+    "om": "Ni barraa’u"
+  },
+  "Climbs on and off a couch or chair without help": {
+    "am": "ያለ እርዳታ ወንበር ወይም ሶፋ ላይ ይወጣሉ እና ይወርዳሉ",
+    "om": "Osoo gargaarsa hin qabaatin siree ykn teessuma irratti ol fi gadi bahu"
+  },
+  "No walking by 18 months": {
+    "am": "በ18 ወር መራመድ አለመቻል",
+    "om": "Ji’a 18tti deemuu dadhabuu"
+  },
+  "No words (should have at least 6–10 meaningful words).": {
+    "am": "ቃላት የሉም (ቢያንስ 6–10 ትርጉም ያላቸው ቃላት ሊኖራቸው ይገባል)።",
+    "om": "Jechoota hin qaban (yoo xiqqaate jechoota hiika qaban 6–10 qabaachuu qabu)."
+  },
+  "No pointing or gesture communication (no pointing to request or share).": {
+    "am": "በጣት ማመልከት ወይም በምልክት መግባባት የለም (ለመጠየቅ ወይም ለማጋራት ማመልከት የለም)።",
+    "om": "Qubaan agarsiisuu ykn mallattoo waliin quunnamuu hin jiru (gaafachuuf ykn qooduuf qubaan agarsiisuu hin jiru)."
+  },
+  "No response to simple commands (like “come here,” “give me the ball”).": {
+    "am": "ለቀላል ትእዛዝ ምላሽ የለም (እንደ “ወደዚህ ና፣” “ኳሱን ስጠኝ”)።",
+    "om": "Ajaja salphaa irratti deebii hin kennan (akka “as kottu,” “kubbaa naa kenni”)."
+  },
+  "No imitation of actions (clapping, waving, pretend play).": {
+    "am": "ድርጊቶችን አይደግሙም (ማጨብጨብ፣ ማውለብለብ፣ የመምሰል ጨዋታ)።",
+    "om": "Gocha hin waraabbatan (harka rukuchu, harka sochoosuu, tapha fakkeessuu)."
+  },
+  "No social interaction (does not engage with caregivers).": {
+    "am": "ማህበራዊ ግንኙነት የለም (ከአሳዳጊዎች ጋር አይሳተፉም)።",
+    "om": "Hirmaannaa hawaasummaa hin qaban (kunuunsa waliin hin hirmaatan)."
+  },
+  "Persistent squint or poor eye contact.": {
+    "am": "ዘላቂ የዓይን መጣመም ወይም ደካማ የዓይን ግንኙነት።",
+    "om": "Ija walitti qabamaa ykn quunnamtii ijaa dadhabaa kan itti fufu."
+  },
+  "Offer a mix of energy, protein, and micronutrient-rich foods each day.": {
+    "am": "በየቀኑ የኃይል፣ የፕሮቲን እና የማይክሮኒውትሪየንት የበለጸጉ ምግቦችን ያቅርቡ።",
+    "om": "Guyyaa guyyaan nyaata anniisaa, pirootiinii, fi micronutrient qabu walitti makaa dhiyeessaa."
+  },
+  "Balanced toddler diet": {
+    "am": "የተመጣጠነ የሕፃን ምግብ",
+    "om": "Nyaata daa’imaa madaalawaa"
+  },
+  "Include vegetables/fruit, staples (injera, rice, potato), legumes, and animal foods when possible": {
+    "am": "አትክልት/ፍራፍሬ፣ ዋና ምግቦች (እንጀራ፣ ሩዝ፣ ድንች)፣ ጥራጥሬ እና ከተቻለ የእንስሳት ምግቦችን ያካትቱ",
+    "om": "Kuduraa/fudura, nyaata ijoo (injera, ruuzii, dinnicha), atara, fi yoo danda’ame nyaata bineensaa hammachisiisaa"
+  },
+  "Offer iron-rich foods regularly": {
+    "am": "በብረት የበለጸጉ ምግቦችን በመደበኛነት ያቅርቡ",
+    "om": "Nyaata sibiila (iron) qabu yeroo beekamu dhiyeessaa"
+  },
+  "Serve small portions; allow second helpings if hungry": {
+    "am": "ትንሽ ክፍል ያቅርቡ፤ ከተራቡ ሁለተኛ እርዳታ ይፍቀዱ",
+    "om": "Hanga xiqqaa kennaa; yoo beela’an irra deebi’anii nyaachuu hayyamaa"
+  },
+  "Eat together as a family when you can": {
+    "am": "ሲችሉ እንደ ቤተሰብ አብረው ይብሉ",
+    "om": "Yeroo dandeessan maatii taatanii waliin nyaadhaa"
+  },
+  "Keep breastfeeding if mother and child wish": {
+    "am": "እናት እና ልጅ ከፈለጉ ጡት ማጥባትን ይቀጥሉ",
+    "om": "Yoo haati fi daa’imni barbaadan harma hoosisuu itti fufaa"
+  },
+  "Many toddlers become selective. Stay calm and keep offering variety.": {
+    "am": "ብዙ ሕፃናት መራጭ ይሆናሉ። ጸጥ ብለው ይቆዩ እና ልዩነት ማቅረብን ይቀጥሉ።",
+    "om": "Daa’imman baayyeen filatamaa ta’u. Tasgabbii qabaadhaa, gosa adda addaa dhiyeessuu itti fufaa."
+  },
+  "Picky eating": {
+    "am": "መራጭ አመጋገብ",
+    "om": "Nyaata filatamaa"
+  },
+  "Do not force or bribe": {
+    "am": "አያስገድዱ ወይም አይግዙ",
+    "om": "Hin dirqisiisinaa, hin bitamsiisinaa"
+  },
+  "Offer one familiar food with one new food": {
+    "am": "አንድ የሚታወቅ ምግብ ከአንድ አዲስ ምግብ ጋር ያቅርቡ",
+    "om": "Nyaata beekamaa tokko nyaata haaraa tokko waliin dhiyeessaa"
+  },
+  "Keep meal times short and pleasant": {
+    "am": "የምግብ ጊዜያትን አጭር እና ደስ የሚል ያድርጉ",
+    "om": "Yeroo nyaataa gabaabaa fi gammachiisaa taasisaa"
+  },
+  "2 years": {
+    "am": "2 ዓመት",
+    "om": "Waggaa 2"
+  },
+  "Autism screening is recommended at this visit.": {
+    "am": "በዚህ ጉብኝት የኦቲዝም ምርመራ ይመከራል።",
+    "om": "Qorannoon autism daawwannaa kana irratti ni gorfama."
+  },
+  "Notices when others are hurt or upset": {
+    "am": "ሌሎች ሲጎዱ ወይም ሲበሳጩ ያስተውላሉ",
+    "om": "Namoonni biroo yoo madahan ykn yoo aaran ni hubatu"
+  },
+  "Looks at your face to see how to react in a new situation": {
+    "am": "በአዲስ ሁኔታ እንዴት እንደሚገለገሉ ለማየት ፊትዎን ይመለከታሉ",
+    "om": "Haala haaraa keessatti akkamitti akka deebii kennan fuula keessan ilalu"
+  },
+  "Points to things in a book when you ask": {
+    "am": "ሲጠይቁ በመጽሐፍ ውስጥ ያሉትን ነገሮች በጣት ያመለክታሉ",
+    "om": "Yoo gaafattan wantoota kitaaba keessa jiran qubaan agarsiisu"
+  },
+  "Says at least two words together, like \"More milk\"": {
+    "am": "ቢያንስ ሁለት ቃላት አንድ ላይ ይናገራሉ፣ እንደ \"More milk\"",
+    "om": "Yoo xiqqaate jechoota lama waliin dubbatu, akka \"More milk\""
+  },
+  "Points to at least two body parts when you ask": {
+    "am": "ሲጠይቁ ቢያንስ ሁለት የሰውነት ክፍሎችን በጣት ያመለክታሉ",
+    "om": "Yoo gaafattan yoo xiqqaate qaama lama qubaan agarsiisu"
+  },
+  "Kicks a ball": {
+    "am": "ኳስ ይረግጣሉ",
+    "om": "Kubbaa ni dhiitu"
+  },
+  "Runs": {
+    "am": "ይሮጣሉ",
+    "om": "Ni figu"
+  },
+  "Eats with a spoon": {
+    "am": "በማንኪያ ይበላሉ",
+    "om": "Fannoon ni nyaatu"
+  },
+  "Contact pediatrician urgently if any of these red flags are observed.": {
+    "am": "የሚከተሉትን ካስተዋሉ ልጆን ለህጻናት ሃኪም በአስቸኳይ ያሳዩ",
+    "om": "Kan armaan gadi yoo argitan daa’ima keessan gara ogeessa daa’immanitti hatattamaan geessaa"
+  },
+  "Not walking independently or frequent falls without progress.": {
+    "am": "በራሳቸው አለመራመድ ወይም ያለ እድገት ተደጋጋሚ መውደቅ።",
+    "om": "Ofumaan deemuu dadhabuu ykn osoo guddinni hin jirre kufaatii yeroo baayyee."
+  },
+  "No two‑word phrases (e.g., “want milk”).": {
+    "am": "ሁለት‑ቃል ሐረጎች የሉም (ለምሳሌ “want milk”)።",
+    "om": "Jechoota lama qabate hin dubbatan (fkn, “want milk”)."
+  },
+  "Vocabulary <50 words.": {
+    "am": "ቃላት <50።",
+    "om": "Jechoota <50."
+  },
+  "No imitation or pretend play.": {
+    "am": "መድገም ወይም የመምሰል ጨዋታ የለም።",
+    "om": "Waraabbii ykn tapha fakkeessuu hin jiru."
+  },
+  "No response to name or commands.": {
+    "am": "ለስም ወይም ለትእዛዝ ምላሽ የለም።",
+    "om": "Maqaa ykn ajaja irratti deebii hin kennan."
+  },
+  "No social interest (does not engage with caregivers or peers).": {
+    "am": "ማህበራዊ ፍላጎት የለም (ከአሳዳጊዎች ወይም እኩዮች ጋር አይሳተፉም)።",
+    "om": "Fedhii hawaasummaa hin qaban (kunuunsa ykn hiriyyaa waliin hin hirmaatan)."
+  },
+  "Most 2-year-olds can eat soft family foods cut into safe pieces.": {
+    "am": "አብዛኛዎቹ የ2 ዓመት ልጆች ለስላሳ የቤተሰብ ምግቦችን በደህንነት ተቆርጠው መብላት ይችላሉ።",
+    "om": "Daa’imman waggaa 2 baayyeen nyaata maatii lashee kutaalee nageenya qabuun nyaachuu danda’u."
+  },
+  "Family table": {
+    "am": "የቤተሰብ ጠረጴዛ",
+    "om": "Minjaala maatii"
+  },
+  "3 meals + 1–2 snacks": {
+    "am": "3 ምግቦች + 1–2 መክሰስ",
+    "om": "Nyaata 3 + nyaata giddugaleessaa 1–2"
+  },
+  "Offer water as the main drink between meals": {
+    "am": "በምግቦች መካከል ዋና መጠጥ እንደ ውሃ ያቅርቡ",
+    "om": "Nyaata gidduutti dhugaatii ijoo akka bishaanitti dhiyeessaa"
+  },
+  "Limit juice; if given, keep to a small amount with meals": {
+    "am": "ጭማቂ ይገድቡ፤ ከተሰጠ ከምግብ ጋር ትንሽ መጠን ያድርጉ",
+    "om": "Cuunfaa daangeessaa; yoo kenname hanga xiqqaa nyaata waliin qofa"
+  },
+  "Include dairy or calcium-rich alternatives as available": {
+    "am": "የወተት ወይም በካልሲየም የበለጸጉ አማራጮችን እንደሚገኙ ያካትቱ",
+    "om": "Aannan ykn filannoo kaalisiyeemii qabu akka argametti hammachisiisaa"
+  },
+  "Breastfeeding may continue; stop when mother and child are ready": {
+    "am": "ጡት ማጥባት ሊቀጥል ይችላል፤ እናት እና ልጅ ሲዘጋጁ ያቁሙ",
+    "om": "Harma hoosisuun itti fufuu danda’a; haati fi daa’imni yeroo qophaa’an dhaabaa"
+  },
+  "Build lifelong habits now.": {
+    "am": "የዕድሜ ልክ ልማዶችን አሁን ይገንቡ።",
+    "om": "Amala jireenya dheeraa amma ijaaraa."
+  },
+  "Healthy habits": {
+    "am": "ጤናማ ልማዶች",
+    "om": "Amala fayyaa"
+  },
+  "Sit for meals without screens when possible": {
+    "am": "ሲቻል ምግብ ሲበሉ ያለ ስክሪን ይቀመጡ",
+    "om": "Yeroo danda’ame nyaata irratti al-sireenii taa’aa"
+  },
+  "Avoid constant grazing — keep snack times planned": {
+    "am": "ያለማቋረጥ ከመንከስ ይቆጠቡ — የመክሰስ ጊዜያትን ያቅዱ",
+    "om": "Yeroo hunda nyaachuu irraa of qusadhaa — yeroo nyaata giddugaleessaa karoorsaa"
+  },
+  "Model eating vegetables and fruits yourself": {
+    "am": "አትክልት እና ፍራፍሬ መብላትን እራስዎ ያሳዩ",
+    "om": "Kuduraa fi fudura nyaachuu ofiin agarsiisaa"
+  },
+  "30 months": {
+    "am": "30 ወር",
+    "om": "Ji’a 30"
+  },
+  "Plays next to other children and sometimes with them": {
+    "am": "ከሌሎች ልጆች ጎን ይጫወታሉ እና አንዳንድ ጊዜ ከእነሱ ጋር",
+    "om": "Daa’imman biroo bira taphatu, yeroo tokko tokko isaan waliinis"
+  },
+  "Shows you what they can do, saying \"Look at me!\"": {
+    "am": "መስራት የሚችሉትን ያሳዩዎታል፣ \"Look at me!\" እያሉ",
+    "om": "Waan hojjechuu danda’an isin agarsiisu, \"Look at me!\" jedhanii"
+  },
+  "Says about 50 words": {
+    "am": "ወደ 50 ቃላት ይናገራሉ",
+    "om": "Jechoota 50 nannoo dubbatu"
+  },
+  "Says two or more words together with an action word": {
+    "am": "ከድርጊት ቃል ጋር ሁለት ወይም ከዚያ በላይ ቃላት አንድ ላይ ይናገራሉ",
+    "om": "Jecha gochaa waliin jechoota lama ykn isaa ol waliin dubbatu"
+  },
+  "Says words like \"I\", \"me\", or \"we\"": {
+    "am": "እንደ \"I\"፣ \"me\" ወይም \"we\" ያሉ ቃላትን ይናገራሉ",
+    "om": "Jechoota akka \"I\", \"me\", ykn \"we\" dubbatu"
+  },
+  "Jumps off the ground with both feet": {
+    "am": "በሁለት እግሮች ከመሬት ይዘላሉ",
+    "om": "Miila lamaan lafa irraa utaalu"
+  },
+  "Turns book pages one at a time": {
+    "am": "የመጽሐፍ ገጾችን አንድ በአንድ ይገለብጣሉ",
+    "om": "Fuula kitaabaa tokkoon tokkoon jijjiiru"
+  },
+  "Not walking or running well, frequent falls, or poor coordination.": {
+    "am": "በደንብ አለመራመድ ወይም አለመሮጥ፣ ተደጋጋሚ መውደቅ፣ ወይም ደካማ ቅንጅት።",
+    "om": "Sirriitti deemuu ykn figuu dadhabuu, kufaatii yeroo baayyee, ykn wal-simsiisaa dadhabaa."
+  },
+  "No two‑word sentences (e.g., “want juice”).": {
+    "am": "ሁለት‑ቃል ዓረፍተ ነገሮች የሉም (ለምሳሌ “want juice”)።",
+    "om": "Himoota jecha lama qaban hin dubbatan (fkn, “want juice”)."
+  },
+  "No pretend play or imitation of adult actions.": {
+    "am": "የመምሰል ጨዋታ ወይም የአዋቂዎችን ድርጊት መድገም የለም።",
+    "om": "Tapha fakkeessuu ykn gocha ga’eessotaa waraabuu hin jiru."
+  },
+  "Persistent poor eye contact.": {
+    "am": "ዘላቂ ደካማ የዓይን ግንኙነት።",
+    "om": "Quunnamtii ijaa dadhabaa kan itti fufu."
+  },
+  "Extreme floppiness or stiffness.": {
+    "am": "እጅግ መላላት ወይም ጥንካሬ።",
+    "om": "Laafina guddaa ykn jabaachuu guddaa."
+  },
+  "Regression of skills (loss of words, motor abilities).": {
+    "am": "ክህሎቶች መመለስ (ቃላት፣ የእንቅስቃሴ ችሎታዎች መጥፋት)።",
+    "om": "Dandeettii deebi’ee hir’achuu (jechoota, dandeettii sochii dhabuu)."
+  },
+  "Active toddlers need regular, nutrient-dense meals.": {
+    "am": "ንቁ ሕፃናት መደበኛ፣ በንጥረ ነገር የበለጸጉ ምግቦችን ይፈልጋሉ።",
+    "om": "Daa’imman sochii qaban nyaata yeroo beekamu, soorata qabeessa barbaadu."
+  },
+  "Growing appetite and energy": {
+    "am": "እየጨመረ ያለ ፍላጎት እና ኃይል",
+    "om": "Fedhii nyaataa fi anniisaa guddataa"
+  },
+  "Keep a regular meal and snack routine": {
+    "am": "መደበኛ የምግብ እና መክሰስ ልማድ ይጠብቁ",
+    "om": "Amala nyaataa fi nyaata giddugaleessaa yeroo beekamu eegaa"
+  },
+  "Offer protein at least once or twice daily (egg, beans, meat, dairy)": {
+    "am": "ፕሮቲን ቢያንስ በቀን አንድ ወይም ሁለት ጊዜ ያቅርቡ (እንቁላል፣ ባቄላ፣ ሥጋ፣ ወተት)",
+    "om": "Pirootiinii yoo xiqqaate guyyaatti al tokko ykn lama dhiyeessaa (hanqaaquu, atara, foon, aannan)"
+  },
+  "Include colorful vegetables and fruits": {
+    "am": "ብዙ ቀለም ያላቸው አትክልቶች እና ፍራፍሬዎችን ያካትቱ",
+    "om": "Kuduraa fi fudura halluu qaban hammachisiisaa"
+  },
+  "Limit fried and sugary street snacks": {
+    "am": "የተጠበሱ እና ጣፋጭ የመንገድ መክሰሶችን ይገድቡ",
+    "om": "Nyaata giddugaleessaa daandii irratti qilleensaan bilchaatee fi sukkaara qabu daangeessaa"
+  },
+  "3 years": {
+    "am": "3 ዓመት",
+    "om": "Waggaa 3"
+  },
+  "Calms down within 10 minutes after you leave": {
+    "am": "እርስዎ ከሄዱ በኋላ በ10 ደቂቃ ውስጥ ይረጋጋሉ",
+    "om": "Erga isin deemtanii daqiiqaa 10 keessatti tasgabba’u"
+  },
+  "Notices other children and joins them to play": {
+    "am": "ሌሎች ልጆችን ያስተውላሉ እና ለመጫወት ይቀላቀላሉ",
+    "om": "Daa’imman biroo hubatu, taphachuuf isaan waliin makamu"
+  },
+  "Talks with you using at least two back-and-forth exchanges": {
+    "am": "ቢያንስ ሁለት የመመለስ ውይይቶችን በመጠቀም ከእርስዎ ጋር ይነጋገራሉ",
+    "om": "Yoo xiqqaate walitti deebii lama isin waliin dubbatu"
+  },
+  "Asks \"who\", \"what\", \"where\", or \"why\" questions": {
+    "am": "የ \"who\"፣ \"what\"፣ \"where\" ወይም \"why\" ጥያቄዎችን ይጠይቃሉ",
+    "om": "Gaaffii \"who\", \"what\", \"where\", ykn \"why\" gaafatu"
+  },
+  "Says their first name when asked": {
+    "am": "ሲጠየቁ የመጀመሪያ ስማቸውን ይናገራሉ",
+    "om": "Yoo gaafataman maqaa jalqabaa isaanii dubbatu"
+  },
+  "Strings items together, like large beads": {
+    "am": "እንደ ትላልቅ ዶቃዎች ያሉ ነገሮችን አንድ ላይ ያስሩ",
+    "om": "Wantoota akka jinfuu guddaa waliin hidhu"
+  },
+  "Puts on some clothes by themselves": {
+    "am": "አንዳንድ ልብሶችን በራሳቸው ይለብሳሉ",
+    "om": "Uffata tokko tokko ofumaan uffatu"
+  },
+  "Uses a fork": {
+    "am": "ሹካ ይጠቀማሉ",
+    "om": "Fokkoraan ni fayyadamu"
+  },
+  "No 2–3 word sentences (should combine words into short phrases).": {
+    "am": "የ 2–3 ቃል ዓረፍተ ነገሮች የሉም (ቃላትን ወደ አጭር ሐረጎች ማዋሃድ አለባቸው)።",
+    "om": "Himoota jecha 2–3 hin dubbatan (jechoota gabaaboo waliin makuu qabu)."
+  },
+  "Vocabulary <200 words.": {
+    "am": "ቃላት <200።",
+    "om": "Jechoota <200."
+  },
+  "Children need enough energy for play and learning, without excess sugar.": {
+    "am": "ልጆች ለጨዋታ እና ለመማር በቂ ኃይል ያስፈልጋቸዋል፣ ያለ ከመጠን ያለፈ ስኳር።",
+    "om": "Daa’imman taphachuu fi barachuuf anniisaa gahaa barbaadu, sukkaara dabalaa malee."
+  },
+  "Preschool nutrition": {
+    "am": "የቅድመ ትምህርት ቤት አመጋገብ",
+    "om": "Soorata mana barumsaa dura"
+  },
+  "3 balanced meals + 1–2 snacks": {
+    "am": "3 የተመጣጠኑ ምግቦች + 1–2 መክሰስ",
+    "om": "Nyaata madaalawaa 3 + nyaata giddugaleessaa 1–2"
+  },
+  "Involve the child in simple food prep (washing fruit, stirring)": {
+    "am": "ልጁን በቀላል የምግብ ዝግጅት ያሳትፉ (ፍራፍሬ ማጠብ፣ ማነሳሳት)",
+    "om": "Daa’ima qophii nyaataa salphaa keessatti hirmaachisiisaa (fudura dhiqsuu, naanna’uu)"
+  },
+  "Offer water instead of soft drinks": {
+    "am": "ከለስላሳ መጠጦች ይልቅ ውሃ ያቅርቡ",
+    "om": "Dhugaatii lashee irra bishaan dhiyeessaa"
+  },
+  "Continue a variety of local staples and vegetables": {
+    "am": "የአካባቢ ዋና ምግቦችን እና አትክልቶችን በልዩነት ይቀጥሉ",
+    "om": "Nyaata ijoo naannoo fi kuduraa gosa adda addaa itti fufaa"
+  },
+  "Watch portion sizes — child-sized plates help": {
+    "am": "የክፍል መጠኖችን ይከታተሉ — ለልጅ የሚመጥኑ ሳህኖች ይረዳሉ",
+    "om": "Hanga nyaataa hordofaa — saanii daa’imaaf mijatu ni gargaara"
+  },
+  "Protect teeth while supporting growth.": {
+    "am": "እድገትን እየደገፉ ጥርስን ይጠብቁ።",
+    "om": "Guddina deeggaruun ilkaan eegaa."
+  },
+  "Dental-friendly eating": {
+    "am": "ለጥርስ ተስማሚ አመጋገብ",
+    "om": "Nyaata ilkaan mijatu"
+  },
+  "Limit sticky sweets between meals": {
+    "am": "በምግቦች መካከል የሚጣበቁ ጣፋጮችን ይገድቡ",
+    "om": "Nyaata mi’aawaa itituu nyaata gidduutti daangeessaa"
+  },
+  "Brush teeth twice daily with a smear of fluoride toothpaste (as advised locally)": {
+    "am": "በቀን ሁለት ጊዜ በፍሎራይድ የጥርስ ሳሙና ቅባት ጥርስን ይቦርሹ (በአካባቢ ምክር መሰረት)",
+    "om": "Guyyaatti al lama ilkaan dhiqsaa, siimii fluoride xiqqoo (akka gorsa naannoo)"
+  },
+  "Avoid putting a child to bed with a bottle of milk or juice": {
+    "am": "ልጅን ወተት ወይም ጭማቂ ባለ ጠርሙስ ወደ አልጋ ከመሄድ ይቆጠቡ",
+    "om": "Daa’ima bootilii aannan ykn cuunfaa qabuun siree irratti hin ciifinaa"
+  },
+  "4 years": {
+    "am": "4 ዓመት",
+    "om": "Waggaa 4"
+  },
+  "Pretends to be something else during play": {
+    "am": "በጨዋታ ወቅት ሌላ ነገር መሆንን ይመስላሉ",
+    "om": "Yeroo taphatan waan biraa ta’uu fakkeessu"
+  },
+  "Comforts others who are hurt or sad": {
+    "am": "የተጎዱ ወይም የተከዙ ሌሎችን ያጽናናሉ",
+    "om": "Namoota madahan ykn gadda qaban jajjabeessu"
+  },
+  "Likes to be a \"helper\"": {
+    "am": "\"helper\" መሆን ይወዳሉ",
+    "om": "\"helper\" ta’uu jaallatu"
+  },
+  "Says sentences with four or more words": {
+    "am": "አራት ወይም ከዚያ በላይ ቃላት ያሉት ዓረፍተ ነገሮችን ይናገራሉ",
+    "om": "Himoota jechoota afur ykn isaa ol qaban dubbatu"
+  },
+  "Talks about at least one thing that happened during their day": {
+    "am": "በቀናቸው ስለተከሰተ ቢያንስ አንድ ነገር ይናገራሉ",
+    "om": "Waan guyyaa isaanii keessa ta’e yoo xiqqaate tokko dubbatu"
+  },
+  "Names a few colors of items": {
+    "am": "የጥቂት ነገሮችን ቀለሞች ይሰይማሉ",
+    "om": "Halluu wantoota muraasaa moggaasu"
+  },
+  "Draws a person with three or more body parts": {
+    "am": "ሶስት ወይም ከዚያ በላይ የሰውነት ክፍሎች ያለው ሰው ይስላሉ",
+    "om": "Nama qaama sadii ykn isaa ol qabu ni fakkessu"
+  },
+  "Cognitive": {
+    "am": "አስተሳሰብ",
+    "om": "Hirmaata sammuu"
+  },
+  "Catches a large ball most of the time": {
+    "am": "አብዛኛውን ጊዜ ትልቅ ኳስ ይይዛሉ",
+    "om": "Yeroo baayyee kubbaa guddaa qabatu"
+  },
+  "Holds a crayon between fingers and thumb (not a fist)": {
+    "am": "ክሬዮን በጣቶች እና አውራ ጣት መካከል ይይዛሉ (እጅጌ አይደለም)",
+    "om": "Kiraayoonii qubaa fi quba guddaa gidduutti qabatu (harka cufaa miti)"
+  },
+  "No clear sentences (should use 4–5 word sentences).": {
+    "am": "ግልጽ ዓረፍተ ነገሮች የሉም (የ 4–5 ቃል ዓረፍተ ነገሮች መጠቀም አለባቸው)።",
+    "om": "Himoota ifaa hin dubbatan (himoota jecha 4–5 fayyadamuu qabu)."
+  },
+  "Unintelligible speech to strangers.": {
+    "am": "ለባዕዳን የማይገባ ንግግር።",
+    "om": "Dubbii namoota hin beekneef hin galu."
+  },
+  "No pretend or imaginative play.": {
+    "am": "የመምሰል ወይም የምናብ ጨዋታ የለም።",
+    "om": "Tapha fakkeessuu ykn yaada uumuu hin jiru."
+  },
+  "No cooperative play with peers.": {
+    "am": "ከእኩዮች ጋር የትብብር ጨዋታ የለም።",
+    "om": "Hiriyyaa waliin tapha wal-tumsa hin jiru."
+  },
+  "Support steady growth with regular, varied meals.": {
+    "am": "መደበኛ፣ የተለያዩ ምግቦችን በማቅረብ የተረጋጋ እድገትን ይደግፉ።",
+    "om": "Nyaata yeroo beekamu, gosa adda addaa dhiyeessuun guddina tasgabbii deeggaraa."
+  },
+  "Active child meals": {
+    "am": "የንቁ ልጅ ምግቦች",
+    "om": "Nyaata daa’ima sochii qabu"
+  },
+  "Eat breakfast every day when possible": {
+    "am": "ሲቻል በየቀኑ ቁርስ ይብሉ",
+    "om": "Yeroo danda’ame guyyaa guyyaan ciree nyaadhaa"
+  },
+  "Pack healthy snacks for outings (fruit, boiled egg, plain yogurt)": {
+    "am": "ለውጪ ጉዞዎች ጤናማ መክሰስ ይያዙ (ፍራፍሬ፣ የተቀቀለ እንቁላል፣ ቀላል እርጎ)",
+    "om": "Imalaaf nyaata giddugaleessaa fayyaa qopheessaa (fudura, hanqaaquu danfine, yogurt qulqulluu)"
+  },
+  "Limit chips, sweets, and sugary drinks": {
+    "am": "ቺፕስ፣ ጣፋጭ እና ስኳር ያላቸው መጠጦችን ይገድቡ",
+    "om": "Chipsi, nyaata mi’aawaa, fi dhugaatii sukkaara qabu daangeessaa"
+  },
+  "Encourage helping set the table or choose a fruit": {
+    "am": "ጠረጴዛ ማዘጋጀት ወይም ፍራፍሬ መምረጥን ያበረታቱ",
+    "om": "Minjaala qopheessuu ykn fudura filachuu jajjabeessaa"
+  },
+  "5 years": {
+    "am": "5 ዓመት",
+    "om": "Waggaa 5"
+  },
+  "Follows rules or takes turns when playing games": {
+    "am": "ጨዋታ ሲጫወቱ ህጎችን ይከተላሉ ወይም ተራ ይወስዳሉ",
+    "om": "Yeroo taphatan seera hordofu ykn tartiiba fudhatu"
+  },
+  "Sings, dances, or acts for you": {
+    "am": "ለእርስዎ ይዘምራሉ፣ ይጨፍራሉ ወይም ይዋሰናሉ",
+    "om": "Isiniif ni sirbu, ni shubbisu, ykn ni taphatu"
+  },
+  "Does simple chores at home": {
+    "am": "በቤት ቀላል ሥራዎችን ያከናውናሉ",
+    "om": "Mana keessatti hojii salphaa raawwatu"
+  },
+  "Tells a story with at least two events": {
+    "am": "ቢያንስ ሁለት ክስተቶች ያለው ታሪክ ይነግራሉ",
+    "om": "Seenaa taatee lama yoo xiqqaate qabu himu"
+  },
+  "Keeps a conversation going with more than three back-and-forth exchanges": {
+    "am": "ከሶስት በላይ የመመለስ ውይይቶች ያለው ውይይት ይቀጥላሉ",
+    "om": "Walitti deebii sadii ol qabuun haasawaa itti fufu"
+  },
+  "Counts to 10": {
+    "am": "እስከ 10 ይቆጥራሉ",
+    "om": "Hanga 10tti ni lakkaa’u"
+  },
+  "Writes some letters in their name": {
+    "am": "በስማቸው ውስጥ ያሉ አንዳንድ ፊደላትን ይጽፋሉ",
+    "om": "Qubee maqaa isaanii keessaa tokko tokko ni barreessu"
+  },
+  "Buttons some buttons": {
+    "am": "አንዳንድ ቁልፎችን ይዘጋሉ",
+    "om": "Qufni tokko tokko ni hidhu"
+  },
+  "Hops on one foot": {
+    "am": "በአንድ እግር ይዘላሉ",
+    "om": "Miila tokkoon ni utaalu"
+  },
+  "Not running or hopping, poor coordination, or frequent falls.": {
+    "am": "አለመሮጥ ወይም አለመዝለል፣ ደካማ ቅንጅት፣ ወይም ተደጋጋሚ መውደቅ።",
+    "om": "Figuu ykn utaaluu dadhabuu, wal-simsiisaa dadhabaa, ykn kufaatii yeroo baayyee."
+  },
+  "Unintelligible speech to strangers (should be mostly clear).": {
+    "am": "ለባዕዳን የማይገባ ንግግር (አብዛኛውን ጊዜ ግልጽ መሆን አለበት)።",
+    "om": "Dubbii namoota hin beekneef hin galu (caalaatti ifaa ta’uu qaba)."
+  },
+  "No full sentences or inability to tell simple stories.": {
+    "am": "ሙሉ ዓረፍተ ነገሮች የሉም ወይም ቀላል ታሪኮችን መናገር አለመቻል።",
+    "om": "Himoota guutuu hin dubbatan ykn seenaa salphaa himuu hin danda’an."
+  },
+  "No cooperative play with peers. No pretend or imaginative play.": {
+    "am": "ከእኩዮች ጋር የትብብር ጨዋታ የለም። የመምሰል ወይም የምናብ ጨዋታ የለም።",
+    "om": "Hiriyyaa waliin tapha wal-tumsa hin jiru. Tapha fakkeessuu ykn yaada uumuu hin jiru."
+  },
+  "Regression of skills (loss of language, motor abilities).": {
+    "am": "ክህሎቶች መመለስ (ቋንቋ፣ የእንቅስቃሴ ችሎታዎች መጥፋት)።",
+    "om": "Dandeettii deebi’ee hir’achuu (afaan, dandeettii sochii dhabuu)."
+  },
+  "problems with basic self‑care- not toilet-trained, cannot wash hand independently": {
+    "am": "በመሰረታዊ ራስ‑እንክብካቤ ችግሮች- ሽንት ቤት ያልተማሩ፣ እጅን በራሳቸው ማጠብ አይችሉም",
+    "om": "Rakkoo of-kunuunsa bu’uuraa- mana fincaanii hin baranne, harka ofumaan dhiqachuu hin danda’an"
+  },
+  "A good breakfast and balanced lunch support attention and energy.": {
+    "am": "ጥሩ ቁርስ እና የተመጣጠነ ምሳ ትኩረትን እና ኃይልን ይደግፋሉ።",
+    "om": "Cireen gaarii fi irbaata madaalawaan xiyyeeffannaa fi anniisaa deeggara."
+  },
+  "Fuel for School Readiness": {
+    "am": "ለትምህርት ቤት ዝግጁነት ነዳጅ",
+    "om": "Anniisaa qophii mana barumsaa"
+  },
+  "Prioritize breakfast before school or play": {
+    "am": "ከትምህርት ቤት ወይም ከጨዋታ በፊት ቁርስን ቅድሚያ ይስጡ",
+    "om": "Mana barumsaa ykn taphannaa dura ciree dursa kennaa"
+  },
+  "Include protein + staple + fruit/vegetable across the day": {
+    "am": "በቀኑ ውስጥ ፕሮቲን + ዋና ምግብ + ፍራፍሬ/አትክልት ያካትቱ",
+    "om": "Guyyaa keessatti pirootiinii + nyaata ijoo + fudura/kuduraa hammachisiisaa"
+  },
+  "Keep sugary drinks rare": {
+    "am": "ስኳር ያላቸው መጠጦችን አልፎ አልፎ ያድርጉ",
+    "om": "Dhugaatii sukkaara qabu yeroo muraasa qofa taasisaa"
+  },
+  "Teach handwashing before meals": {
+    "am": "ከምግብ በፊት እጅ መታጠብን ያስተምሩ",
+    "om": "Nyaata dura harka dhiqachuu barsiisaa"
+  },
+  "6 years": {
+    "am": "6 ዓመት",
+    "om": "Waggaa 6"
+  },
+  "Wants to please friends and be like them": {
+    "am": "ጓደኞችን ደስ ማሰኘት እና እንደነሱ መሆን ይፈልጋሉ",
+    "om": "Hiriyyaa gammachiisuu fi akka isaanitti ta’uu barbaadu"
+  },
+  "Shows more independence": {
+    "am": "ተጨማሪ ነጻነት ያሳያሉ",
+    "om": "Walabummaa dabalataa agarsiisu"
+  },
+  "Is aware of gender": {
+    "am": "ጾታን ይገነዘባሉ",
+    "om": "Saala hubatu"
+  },
+  "Speaks in full sentences": {
+    "am": "በሙሉ ዓረፍተ ነገሮች ይናገራሉ",
+    "om": "Himoota guutuu dubbatu"
+  },
+  "Can tell a simple story with a beginning, middle, and end": {
+    "am": "መጀመሪያ፣ መሃል እና መጨረሻ ያለው ቀላል ታሪክ መናገር ይችላሉ",
+    "om": "Seenaa salphaa jalqaba, gidduu, fi xumura qabu himuu danda’u"
+  },
+  "Follows multi-step directions": {
+    "am": "ብዙ-ደረጃ መመሪያዎችን ይከተላሉ",
+    "om": "Ajaja tarkaanfii hedduu hordofu"
+  },
+  "Can count to 20 and beyond": {
+    "am": "እስከ 20 እና ከዚያ በላይ መቁጠር ይችላሉ",
+    "om": "Hanga 20tti fi isaa ol lakkaa’uu danda’u"
+  },
+  "Knows about left and right": {
+    "am": "ግራ እና ቀኝ ያውቃሉ",
+    "om": "Bitaa fi mirga beeku"
+  },
+  "Can print some letters and numbers": {
+    "am": "አንዳንድ ፊደላት እና ቁጥሮች መጻፍ ይችላሉ",
+    "om": "Qubee fi lakkoofsa tokko tokko maxxansuu danda’u"
+  },
+  "Can hop and skip": {
+    "am": "መዝለል እና መዝለል (ስኪፕ) ይችላሉ",
+    "om": "Utaaluu fi skip gochuu danda’u"
+  },
+  "Catches a ball with hands": {
+    "am": "ኳስ በእጆች ይይዛሉ",
+    "om": "Kubbaa harkaan qabatu"
+  },
+  "Can ride a bicycle with training wheels": {
+    "am": "የስልጠና ጎማ ያለው ብስክሌት መንዳት ይችላሉ",
+    "om": "Biskileetii gooma leenjii qabu deemsisuu danda’u"
+  },
+  "Unintelligible speech to strangers (should be clear and fluent).": {
+    "am": "ለባዕዳን የማይገባ ንግግር (ግልጽ እና የሚፈስ መሆን አለበት)።",
+    "om": "Dubbii namoota hin beekneef hin galu (ifaa fi dhangala’aa ta’uu qaba)."
+  },
+  "No full sentences or storytelling.": {
+    "am": "ሙሉ ዓረፍተ ነገሮች ወይም ታሪክ መንገር የለም።",
+    "om": "Himoota guutuu ykn seenaa himuu hin jiru."
+  },
+  "No cooperative play or difficulty making friends.": {
+    "am": "የትብብር ጨዋታ የለም ወይም ጓደኛ ማፍራት ይከብዳል።",
+    "om": "Tapha wal-tumsa hin jiru ykn hiriyyaa uumuu rakkisa."
+  },
+  "No social interest (does not engage with peers or caregivers).": {
+    "am": "ማህበራዊ ፍላጎት የለም (ከእኩዮች ወይም አሳዳጊዎች ጋር አይሳተፉም)።",
+    "om": "Fedhii hawaasummaa hin qaban (hiriyyaa ykn kunuunsa waliin hin hirmaatan)."
+  },
+  "Regression of skills (loss of language, motor, or social abilities).": {
+    "am": "ክህሎቶች መመለስ (ቋንቋ፣ እንቅስቃሴ ወይም ማህበራዊ ችሎታዎች መጥፋት)።",
+    "om": "Dandeettii deebi’ee hir’achuu (afaan, sochii, ykn dandeettii hawaasummaa dhabuu)."
+  },
+  "Cannot read simple words,": {
+    "am": "ቀላል ቃላት ማንበብ አይችሉም፣",
+    "om": "Jechoota salphaa dubbisuu hin danda’an,"
+  },
+  "difficulty following classroom instructions,": {
+    "am": "የክፍል መመሪያዎችን መከተል ይከብዳል፣",
+    "om": "Ajaja kutaa hordofuu ni rakkisa,"
+  },
+  "poor pencil grip,": {
+    "am": "ደካማ የእርሳስ መያዣ፣",
+    "om": "Qabannaa qalamaa dadhabaa,"
+  },
+  "struggles with dressing independently": {
+    "am": "በራሳቸው መልበስ ይቸገራሉ",
+    "om": "Ofumaan uffachuu ni rakkatu"
+  },
+  "Children need enough food for growth, learning, and activity.": {
+    "am": "ልጆች ለእድገት፣ ለመማር እና ለእንቅስቃሴ በቂ ምግብ ያስፈልጋቸዋል።",
+    "om": "Daa’imman guddina, barumsa, fi sochii tiif nyaata gahaa barbaadu."
+  },
+  "School-age nutrition": {
+    "am": "የትምህርት ቤት ዕድሜ አመጋገብ",
+    "om": "Soorata umurii mana barumsaa"
+  },
+  "3 meals + optional healthy snack": {
+    "am": "3 ምግቦች + አማራጭ ጤናማ መክሰስ",
+    "om": "Nyaata 3 + nyaata giddugaleessaa fayyaa filannoo"
+  },
+  "Include iron-rich foods (meat, legumes, fortified grains)": {
+    "am": "በብረት የበለጸጉ ምግቦችን ያካትቱ (ሥጋ፣ ጥራጥሬ፣ የተጠናከሩ እህሎች)",
+    "om": "Nyaata sibiila (iron) qabu hammachisiisaa (foon, atara, midhaan cimame)"
+  },
+  "Limit ultra-processed snacks sold near schools": {
+    "am": "ከትምህርት ቤቶች አጠገብ የሚሸጡ በጣም የተቀነባበሩ መክሰሶችን ይገድቡ",
+    "om": "Nyaata giddugaleessaa baayyee qopheeffame mana barumsaa dhihootti gurguramu daangeessaa"
+  },
+  "Ensure clean drinking water is available": {
+    "am": "ንጹህ የመጠጥ ውሃ መኖሩን ያረጋግጡ",
+    "om": "Bishaan dhugaatii qulqulluun akka argamu mirkaneessaa"
+  },
+  "7 years": {
+    "am": "7 ዓመት",
+    "om": "Waggaa 7"
+  },
+  "Cooperates with other children": {
+    "am": "ከሌሎች ልጆች ጋር ይተባበራሉ",
+    "om": "Daa’imman biroo waliin ni tumsu"
+  },
+  "May have a best friend": {
+    "am": "ምርጥ ጓደኛ ሊኖራቸው ይችላል",
+    "om": "Hiriyyaa gaarii qabaachuu danda’u"
+  },
+  "Shows concern for others": {
+    "am": "ለሌሎች እንክብካቤ ያሳያሉ",
+    "om": "Namoota biroof yaaddoo agarsiisu"
+  },
+  "Reads simple books": {
+    "am": "ቀላል መጽሐፍትን ያነባሉ",
+    "om": "Kitaabota salphaa dubbisu"
+  },
+  "Spells simple words": {
+    "am": "ቀላል ቃላትን ይፈትሻሉ",
+    "om": "Jechoota salphaa qubee-sirreessu"
+  },
+  "Uses complete sentences in conversation": {
+    "am": "በውይይት ሙሉ ዓረፍተ ነገሮችን ይጠቀማሉ",
+    "om": "Haasaa keessatti himoota guutuu fayyadamu"
+  },
+  "Understands time concepts (today, tomorrow, yesterday)": {
+    "am": "የጊዜ ጽንሰ-ሐሳቦችን ይረዳሉ (ዛሬ፣ ነገ፣ ትናንት)",
+    "om": "Yaada yeroo hubatu (har’a, boru, kalaaf)"
+  },
+  "Can add and subtract simple numbers": {
+    "am": "ቀላል ቁጥሮችን መደመር እና መቀነስ ይችላሉ",
+    "om": "Lakkoofsa salphaa ida’uu fi hir’isuu danda’u"
+  },
+  "Can copy complex shapes like a diamond": {
+    "am": "እንደ አልማዝ ያሉ ውስብስብ ቅርጾችን መቅዳት ይችላሉ",
+    "om": "Boca walxaxaa akka daayamondii waraabuu danda’u"
+  },
+  "Rides a bicycle": {
+    "am": "ብስክሌት ይነዳሉ",
+    "om": "Biskileetii deemsisu"
+  },
+  "Ties shoelaces (may need help)": {
+    "am": "የጫማ ማሰሪያ ያስራሉ (እርዳታ ሊያስፈልግ ይችላል)",
+    "om": "Hidhaa kophee hidhu (gargaarsa barbaachuu danda’a)"
+  },
+  "Good balance when running and turning": {
+    "am": "ሲሮጡ እና ሲዞሩ ጥሩ ሚዛን",
+    "om": "Yeroo figan fi naanna’an madaallii gaarii"
+  },
+  "Not running, jumping, or skipping well;": {
+    "am": "በደንብ አለመሮጥ፣ አለመዝለል ወይም ስኪፕ አለማድረግ፤",
+    "om": "Sirriitti figuu, utaaluu, ykn skip gochuu dadhabuu;"
+  },
+  "poor coordination or frequent falls.": {
+    "am": "ደካማ ቅንጅት ወይም ተደጋጋሚ መውደቅ።",
+    "om": "Wal-simsiisaa dadhabaa ykn kufaatii yeroo baayyee."
+  },
+  "Unclear speech or not understood by strangers.": {
+    "am": "ያልጠራ ንግግር ወይም በባዕዳን አለመረዳት።",
+    "om": "Dubbii hin qulqulleeffamne ykn namoota hin beekneen hin hubatamne."
+  },
+  "No reading ability of simple words or letters.": {
+    "am": "ቀላል ቃላት ወይም ፊደላት የማንበብ ችሎታ የለም።",
+    "om": "Jechoota ykn qubee salphaa dubbisuu hin danda’an."
+  },
+  "No ability to follow multi‑step commands.": {
+    "am": "ብዙ‑ደረጃ ትእዛዞችን የመከተል ችሎታ የለም።",
+    "om": "Ajaja tarkaanfii hedduu hordofuu hin danda’an."
+  },
+  "-Keep meals regular and balanced as activity increases.\n-Focus on brain health; fish, eggs, beans.": {
+    "am": "-ምግቦች እንቅስቃሴ ሲጨምር መደበኛ እና የተመጣጠኑ ይሁኑ።\n-በአእምሮ ጤና ላይ ያተኩሩ፤ ዓሳ፣ እንቁላል፣ ባቄላ።",
+    "om": "-Nyaanni sochiin yoo dabale yeroo beekamu fi madaalawaa haa ta’u.\n-Fayyaa sammuu irratti xiyyeeffadhaa; qurxummii, hanqaaquu, atara."
+  },
+  "Steady growth - Balanced Energy for Learning": {
+    "am": "የተረጋጋ እድገት - ለመማር የተመጣጠነ ኃይል",
+    "om": "Guddina tasgabbii - Anniisaa madaalawaa barumsaaf"
+  },
+  "Do not skip meals": {
+    "am": "ምግብ አትዝለሉ",
+    "om": "Nyaata hin darbiinaa"
+  },
+  "Offer fruits and vegetables daily": {
+    "am": "ፍራፍሬ እና አትክልት በየቀኑ ያቅርቡ",
+    "om": "Fudura fi kuduraa guyyaa guyyaan dhiyeessaa"
+  },
+  "Limit soft drinks and energy drinks": {
+    "am": "ለስላሳ መጠጦችን እና የኃይል መጠጦችን ይገድቡ",
+    "om": "Dhugaatii lashee fi dhugaatii anniisaa daangeessaa"
+  },
+  "Involve the child in planning simple meals": {
+    "am": "ልጁን ቀላል ምግቦችን በማቀድ ያሳትፉ",
+    "om": "Daa’ima karoora nyaataa salphaa keessatti hirmaachisiisaa"
+  },
+  "8 years": {
+    "am": "8 ዓመት",
+    "om": "Waggaa 8"
+  },
+  "Enjoys group activities and team games": {
+    "am": "የቡድን እንቅስቃሴዎችን እና የቡድን ጨዋታዎችን ይወዳሉ",
+    "om": "Sochii garee fi tapha garee jaallatu"
+  },
+  "Follows rules in games with peers": {
+    "am": "ከእኩዮች ጋር በጨዋታዎች ህጎችን ይከተላሉ",
+    "om": "Hiriyyaa waliin taphannaa keessatti seera hordofu"
+  },
+  "Shows pride in achievements": {
+    "am": "በስኬቶቻቸው ኩራት ያሳያሉ",
+    "om": "Milkaa’ina isaanii irratti boonuu agarsiisu"
+  },
+  "Reads chapter books": {
+    "am": "ምዕራፍ መጽሐፍትን ያነባሉ",
+    "om": "Kitaabota cutaa qaban dubbisu"
+  },
+  "Writes simple stories or journal entries": {
+    "am": "ቀላል ታሪኮች ወይም የማስታወሻ ጽሑፎች ይጽፋሉ",
+    "om": "Seenaa salphaa ykn galmee guyyaa barreessu"
+  },
+  "Uses correct grammar most of the time": {
+    "am": "አብዛኛውን ጊዜ ትክክለኛ ሰዋሰው ይጠቀማሉ",
+    "om": "Yeroo baayyee seera afaanii sirrii fayyadamu"
+  },
+  "Understands cause and effect": {
+    "am": "ምክንያት እና ውጤት ይረዳሉ",
+    "om": "Sababaa fi bu’aa hubatu"
+  },
+  "Solves simple math word problems": {
+    "am": "ቀላል የሂሳብ የቃል ችግሮችን ይፈታሉ",
+    "om": "Rakkoo herregaa jecha qabu salphaa furu"
+  },
+  "Can tell time on a clock": {
+    "am": "በሰዓት ላይ ሰዓት መናገር ይችላሉ",
+    "om": "Sa’aatii irratti yeroo himuu danda’u"
+  },
+  "Good coordination for sports": {
+    "am": "ለስፖርት ጥሩ ቅንጅት",
+    "om": "Tapha qaamaaf wal-simsiisaa gaarii"
+  },
+  "Fine motor skills for writing and drawing": {
+    "am": "ለመጻፍ እና ለመሳል ትክክለኛ የእጅ ክህሎቶች",
+    "om": "Dandeettii harka xiqqaa barreessuu fi fakkessuuf"
+  },
+  "Can swim or ride a bike without training wheels": {
+    "am": "መዋኘት ወይም ያለ የስልጠና ጎማ ብስክሌት መንዳት ይችላሉ",
+    "om": "Dakuu ykn biskileetii gooma leenjii malee deemsisuu danda’u"
+  },
+  "-Precocious puberty- puberty comes early before 8 in girls, 9 in boys": {
+    "am": "-ቀደምት ጉርምስና- ጉርምስና በሴቶች ከ8 በፊት፣ በወንዶች ከ9 በፊት ይመጣል",
+    "om": "-Garaagarummaa yeroo dura- garaagarummaan durbii keessatti 8 dura, dhiira keessatti 9 dura dhufa"
+  },
+  "Cannot read short stories, poor comprehension,": {
+    "am": "አጭር ታሪኮችን ማንበብ አይችሉም፣ ደካማ ግንዛቤ፣",
+    "om": "Seenaa gabaabaa dubbisuu hin danda’an, hubannoo dadhabaa,"
+  },
+  "difficulty riding a bike or tying shoelaces,": {
+    "am": "ብስክሌት መንዳት ወይም የጫማ ማሰሪያ ማሰር ይከብዳል፣",
+    "om": "Biskileetii deemsisuu ykn hidhaa kophee hidhuu ni rakkisa,"
+  },
+  "social withdrawal": {
+    "am": "ከማህበራዊ መውጣት",
+    "om": "Hawaasa irraa of qusachuu"
+  },
+  "No reading ability of simple sentences.": {
+    "am": "ቀላል ዓረፍተ ነገሮች የማንበብ ችሎታ የለም።",
+    "om": "Himoota salphaa dubbisuu hin danda’an."
+  },
+  "No basic math skills (unable to count or add small numbers).": {
+    "am": "መሰረታዊ የሂሳብ ክህሎቶች የሉም (መቁጠር ወይም ትናንሽ ቁጥሮችን መደመር አይችሉም)።",
+    "om": "Dandeettii herregaa bu’uuraa hin qaban (lakkaa’uu ykn lakkoofsa xiqqaa ida’uu hin danda’an)."
+  },
+  "-Encourage healthy snacks; fruits -Calcium, vitamin C, fiber daily": {
+    "am": "-ጤናማ መክሰስ ያበረታቱ፤ ፍራፍሬ -ካልሲየም፣ ቫይታሚን C፣ ፋይበር በየቀኑ",
+    "om": "-Nyaata giddugaleessaa fayyaa jajjabeessaa; fudura -kaalisiyeemii, vitamin C, fiber guyyaa guyyaan"
+  },
+  "Building Independence in Eating": {
+    "am": "በአመጋገብ ነጻነት መገንባት",
+    "om": "Nyaata keessatti walabummaa ijaaruu"
+  },
+  "Keep shared family meals when possible": {
+    "am": "ሲቻል የጋራ የቤተሰብ ምግቦችን ይጠብቁ",
+    "om": "Yeroo danda’ame nyaata maatii waliin eegaa"
+  },
+  "Balance staples with vegetables, legumes, and protein": {
+    "am": "ዋና ምግቦችን ከአትክልት፣ ጥራጥሬ እና ፕሮቲን ጋር ያመጣጥኑ",
+    "om": "Nyaata ijoo kuduraa, atara, fi pirootiinii waliin madaalsisaa"
+  },
+  "Limit sweets to special occasions": {
+    "am": "ጣፋጮችን ለልዩ አጋጣሚዎች ይገድቡ",
+    "om": "Nyaata mi’aawaa guyyaa addaa qofaatti daangeessaa"
+  },
+  "Encourage water as the everyday drink": {
+    "am": "ውሃን እንደ የዕለት መጠጥ ያበረታቱ",
+    "om": "Bishaan akka dhugaatii guyyaa guyyaatti jajjabeessaa"
+  },
+  "Seek care if weight gain is very rapid or the child is losing weight": {
+    "am": "ክብደት በጣም በፍጥነት የሚጨምር ወይም ልጁ ክብደት የሚቀንስ ከሆነ እንክብካቤ ይፈልጉ",
+    "om": "Ulfaatini baayyee saffisaan yoo dabale ykn daa’imni ulfaatina yoo dhabu kunuunsa barbaadaa"
+  },
+  "9years": {
+    "am": "9 ዓመት",
+    "om": "Waggaa 9"
+  },
+  "Has a strong sense of right and wrong and fairness": {
+    "am": "ጠንካራ የትክክል እና ስህተት እና ፍትሃዊነት ስሜት አላቸው",
+    "om": "Hubannoo cimaa sirrii fi dogoggoraa fi qajeelummaa qabu"
+  },
+  "Shows empathy and understands others' feelings, responding with kindness and concern": {
+    "am": "ርህራሄ ያሳያሉ እና የሌሎችን ስሜት ይረዳሉ፣ በደግነት እና በእንክብካቤ ይመልሳሉ",
+    "om": "Gara-laafina agarsiisu, miira namoota biroo hubatu, gaarummaa fi yaaddoon deebisu"
+  },
+  "Social/emotional": {
+    "am": "ማህበራዊ-ስሜታዊ",
+    "om": "Hirmaata hawaasummaa fi sammuu"
+  },
+  "Communicates clearly and effectively": {
+    "am": "በግልጽ እና በውጤታማነት ይግባባሉ",
+    "om": "Ifaafi bu’a qabeessa ta’een quunnamu"
+  },
+  "Understands and follows complex verbal instructions": {
+    "am": "ውስብስብ የቃል መመሪያዎችን ይረዳሉ እና ይከተላሉ",
+    "om": "Ajaja afaanii walxaxaa hubatu fi hordofu"
+  },
+  "Expresses ideas, opinions, and feelings confidently": {
+    "am": "ሐሳቦችን፣ አስተያየቶችን እና ስሜቶችን በእምነት ይገልጻሉ",
+    "om": "Yaada, ilaalcha, fi miira ofitti amanamuun ibsu"
+  },
+  "Language/communication": {
+    "am": "ቋንቋ",
+    "om": "Amala afaanii"
+  },
+  "Uses logical reasoning to solve problems": {
+    "am": "ችግሮችን ለመፍታት ምክንያታዊ አስተሳሰብ ይጠቀማሉ",
+    "om": "Rakkoo furuuf yaada sirrii fayyadamu"
+  },
+  "Thinks critically and understands cause and effect": {
+    "am": "በጥልቀት ያስባሉ እና ምክንያትና ውጤት ይረዳሉ",
+    "om": "Yaada qeeqaa qabu, sababaa fi bu’aa hubatu"
+  },
+  "Plans, organizes, and completes tasks independently": {
+    "am": "ተግባራትን በራሳቸው ያቅዳሉ፣ ያደራጃሉ እና ያጠናቅቃሉ",
+    "om": "Hojii ofumaan karoorsu, qindeessu, fi xumuru"
+  },
+  "cognitive (thinking and learning)": {
+    "am": "አስተሳሰብ",
+    "om": "Hirmaata sammuu"
+  },
+  "Demonstrates good balance, coordination": {
+    "am": "ጥሩ ሚዛን እና ቅንጅት ያሳያሉ",
+    "om": "Madaallii fi wal-simsiisaa gaarii agarsiisu"
+  },
+  "Performs complex gross motor skills confidently": {
+    "am": "ውስብስብ የትልቅ እንቅስቃሴ ክህሎቶችን በእምነት ያከናውናሉ",
+    "om": "Dandeettii sochii guddaa walxaxaa ofitti amanamuun raawwatu"
+  },
+  "Shows well-developed fine motor skills": {
+    "am": "በደንብ የዳበሩ ትክክለኛ የእጅ ክህሎቶች ያሳያሉ",
+    "om": "Dandeettii harka xiqqaa gaarii guddate agarsiisu"
+  },
+  "physical/movement": {
+    "am": "አካላዊ እድገት",
+    "om": "Amala qaamaa"
+  },
+  "No reading ability of age‑appropriate books.": {
+    "am": "ለዕድሜ‑ተስማሚ መጽሐፍት የማንበብ ችሎታ የለም።",
+    "om": "Kitaabota umuriidhaan mijatan dubbisuu hin danda’an."
+  },
+  "No basic math skills (unable to add or subtract small numbers).": {
+    "am": "መሰረታዊ የሂሳብ ክህሎቶች የሉም (ትናንሽ ቁጥሮችን መደመር ወይም መቀነስ አይችሉም)።",
+    "om": "Dandeettii herregaa bu’uuraa hin qaban (lakkoofsa xiqqaa ida’uu ykn hir’isuu hin danda’an)."
+  },
+  "Poor handwriting, inability to follow multi‑step instructions, extreme behavioral issues": {
+    "am": "ደካማ የእጅ ጽሑፍ፣ ብዙ‑ደረጃ መመሪያዎችን መከተል አለመቻል፣ እጅግ የባህሪ ችግሮች",
+    "om": "Barreeffama harkaa dadhabaa, ajaja tarkaanfii hedduu hordofuu dadhabuu, rakkoo amalaa guddaa"
+  },
+  "-nutrition should focus on balanced meals, adequate calories for growth, and key nutrients like protein, calcium, iron, and vitamins": {
+    "am": "-አመጋገብ በተመጣጠኑ ምግቦች፣ ለእድገት በቂ ካሎሪዎች እና እንደ ፕሮቲን፣ ካልሲየም፣ ብረት እና ቫይታሚኖች ባሉ ቁልፍ ንጥረ ነገሮች ላይ ማተኮር አለበት",
+    "om": "-sooranni nyaata madaalawaa, kaalorii guddinaaf gahaa, fi soorata ijoo akka pirootiinii, kaalisiyeemii, sibiila (iron), fi vitaaminii irratti xiyyeeffachuu qaba"
+  },
+  "Preparing for Puberty Growth": {
+    "am": "ለጉርምስና እድገት መዘጋጀት",
+    "om": "Guddina garaagarummaaf qophaa’uu"
+  },
+  "Appetite increases; ensure balanced meals, avoid junk food.": {
+    "am": "ፍላጎት ይጨምራል፤ የተመጣጠኑ ምግቦችን ያረጋግጡ፣ ጀንክ ምግብን ያስወግዱ።",
+    "om": "Fedhiin nyaataa ni dabala; nyaata madaalawaa mirkaneessaa, nyaata faayidaa hin qabne irraa of qusadhaa."
+  },
+  "Calcium 1,300 mg, vitamin D 600 IU, iron": {
+    "am": "ካልሲየም 1,300 mg፣ ቫይታሚን D 600 IU፣ ብረት",
+    "om": "Kaalisiyeemii 1,300 mg, vitamin D 600 IU, sibiila (iron)"
+  },
+  "Foods: Dairy (milk, yogurt, cheese), lean meats, beans, leafy greens, whole grains, fruits.": {
+    "am": "ምግቦች፦ ወተት (ወተት፣ እርጎ፣ አይብ)፣ ቀጭን ሥጋ፣ ባቄላ፣ ቅጠላ ቅጠል፣ ሙሉ እህል፣ ፍራፍሬ።",
+    "om": "Nyaata: Aannan (aannan, yogurt, cheese), foon qallaa, atara, baala magariisa, midhaan guutuu, fudura."
+  },
+  "Focus: Calcium and vitamin D for bone growth; iron for energy.": {
+    "am": "ትኩረት፦ ለአጥንት እድገት ካልሲየም እና ቫይታሚን D፤ ለኃይል ብረት።",
+    "om": "Xiyyeeffannaa: Kaalisiyeemii fi vitamin D guddina lafee tiif; sibiila (iron) anniisaaf."
+  },
+  "10 years": {
+    "am": "10 ዓመት",
+    "om": "Waggaa 10"
+  },
+  "Stage 1- Prepubertal (Childhood stage)-Flat chest in girls, no testicular growth in boys": {
+    "am": "ደረጃ 1- ከጉርምስና በፊት (የልጅነት ደረጃ)-በሴቶች ጠፍጣፋ ደረት፣ በወንዶች የዘር እጢ እድገት የለም",
+    "om": "Sadarkaa 1- Garaagarummaa dura (sadarkaa daa’imummaa)-Durbii keessatti harma diriiraa, dhiira keessatti guddinni dhagaa kormaa hin jiru"
+  },
+  "-concrete thinking; -dependent on parents": {
+    "am": "-ተጨባጭ አስተሳሰብ፤ -በወላጆች ላይ ጥገኛ",
+    "om": "-yaada qabatamaa; -maatii irratti hirkataa"
+  },
+  "Stage 2 (Early Puberty- Early adolescence)-Puberty begins, breast budding in girls, testicular enlargement in boys.": {
+    "am": "ደረጃ 2 (የመጀመሪያ ጉርምስና- የመጀመሪያ ጎረምሳነት)-ጉርምስና ይጀምራል፣ በሴቶች የጡት ቡቃያ፣ በወንዶች የዘር እጢ መጨመር።",
+    "om": "Sadarkaa 2 (Garaagarummaa jalqabaa- dargaggummaa jalqabaa)-Garaagarummaan jalqaba, durbii keessatti harma biqiluu, dhiira keessatti guddina dhagaa kormaa."
+  },
+  "-self‑awareness begins, -peer influence increases": {
+    "am": "-የራስ‑ግንዛቤ ይጀምራል፣ -የእኩዮች ተጽዕኖ ይጨምራል",
+    "om": "-of-hubannoon jalqaba, -dhiibbaan hiriyyaa dabala"
+  },
+  "Stage 3 (Growth Spurt-Mid-puberty, Middle adolescence)-Rapid height growth(6-7cm/year) and body hair begins to spread, -no voice change in boys, -no menstrual cycle in girls": {
+    "am": "ደረጃ 3 (ፈጣን እድገት-መካከለኛ ጉርምስና፣ መካከለኛ ጎረምሳነት)-ፈጣን የቁመት እድገት (6-7cm/ዓመት) እና የሰውነት ጸጉር መስፋፋት ይጀምራል፣ -በወንዶች የድምጽ ለውጥ የለም፣ -በሴቶች የወር አበባ የለም",
+    "om": "Sadarkaa 3 (Guddina saffisaa-garaagarummaa giddu-galeessaa, dargaggummaa giddu-galeessaa)-Guddinni dheerinaa saffisaa (6-7cm/waggaatti) fi rifeensi qaamaa babal’achuu jalqaba, -dhiira keessatti jijjiirama sagalee hin jiru, -durbii keessatti laguun hin jiru"
+  },
+  "-mood swings, -identity exploration": {
+    "am": "-የስሜት መዋዠቅ፣ -የማንነት ፍለጋ",
+    "om": "-jijjiirama miiraa, -qorannoo eenyummaa"
+  },
+  "Stage 4 (Late Puberty-Mid-adolescence)-Continued development, voice changes in boys, menstrual cycles begin in girls.": {
+    "am": "ደረጃ 4 (የኋለኛ ጉርምስና-መካከለኛ ጎረምሳነት)-እድገት ይቀጥላል፣ በወንዶች የድምጽ ለውጥ፣ በሴቶች የወር አበባ ይጀምራል።",
+    "om": "Sadarkaa 4 (Garaagarummaa dhuma-dargaggummaa giddu-galeessaa)-Guddinni itti fufa, dhiira keessatti sagaleen jijjiirama, durbii keessatti laguun jalqaba."
+  },
+  "-abstract thinking, -stronger peer ties, -risk‑taking behaviors": {
+    "am": "-ልቦለዳዊ አስተሳሰብ፣ -ጠንካራ የእኩዮች ትስስር፣ -አደጋ‑የመውሰድ ባህሪዎች",
+    "om": "-yaada abstract, -hidhata hiriyyaa cimaa, -amala balaa fudhachuu"
+  },
+  "Stage 5 (Full Maturity-Late adolescence)": {
+    "am": "ደረጃ 5 (ሙሉ ብስለት-የኋለኛ ጎረምሳነት)",
+    "om": "Sadarkaa 5 (Ga’umsa guutuu-dargaggummaa dhuma)"
+  },
+  "Full physical maturity\n-Emotional maturity, -independence, -stable identity, -long‑term planning": {
+    "am": "ሙሉ አካላዊ ብስለት\n-ስሜታዊ ብስለት፣ -ነጻነት፣ -የተረጋጋ ማንነት፣ -የረጅም‑ጊዜ እቅድ",
+    "om": "Ga’umsa qaamaa guutuu\n-Ga’umsa miiraa, -walabummaa, -eenyummaa tasgabbaa’e, -karoora yeroo dheeraa"
+  },
+  "Tanner Stage Tracker for Boys and Girls. check your child’s puberty development stage": {
+    "am": "የ Tanner ደረጃ መከታተያ ለወንዶች እና ሴቶች። የልጅዎን የጉርምስና እድገት ደረጃ ይመልከቱ",
+    "om": "Sadarkaa Tanner dhiiraa fi durbiif. sadarkaa guddina saalaa daa’ima keessanii ilaalaa"
+  },
+  "Wide variation is normal: Some children may still be prepubertal (Stage 1), while others may advance faster,Girls: Puberty typically starts between 8–13 years, so by age 10 many are already in Stage 2 or 3.  Boys: Puberty usually begins later, between 9–14 years. At age 10, most boys are in Stage 2": {
+    "am": "ሰፊ ልዩነት የተለመደ ነው፦ አንዳንድ ልጆች አሁንም ከጉርምስና በፊት (ደረጃ 1) ሊሆኑ ይችላሉ፣ ሌሎች ደግሞ በፍጥነት ሊራመዱ ይችላሉ፣ሴቶች፦ ጉርምስና በተለምዶ በ8–13 ዓመት ይጀምራል፣ ስለዚህ በ10 ዓመት ብዙዎች ቀድሞውኑ ደረጃ 2 ወይም 3 ላይ ናቸው።  ወንዶች፦ ጉርምስና ብዙውን ጊዜ በኋላ፣ በ9–14 ዓመት ይጀምራል። በ10 ዓመት፣ አብዛኛዎቹ ወንዶች ደረጃ 2 ላይ ናቸው",
+    "om": "Garaagarummaan bal’aan waanuma baramaa dha: Daa’imman tokko tokko ammas garaagarummaa dura (Sadarkaa 1) ta’uu danda’u, kaan immoo saffisaan guddatuu danda’u,Durbii: Garaagarummaan yeroo baayyee waggaa 8–13 gidduutti jalqaba, kanaaf waggaa 10tti baayyeen duraanuu Sadarkaa 2 ykn 3 irratti jiru.  Dhiira: Garaagarummaan yeroo baayyee booda, waggaa 9–14 gidduutti jalqaba. Waggaa 10tti, dhiironni baayyeen Sadarkaa 2 irratti jiru"
+  },
+  "By age 10": {
+    "am": "በ10 ዓመት",
+    "om": "Waggaa 10tti"
+  },
+  "if the child Cannot read fluently,": {
+    "am": "ልጁ በፈሳሽ ማንበብ ካልቻለ፣",
+    "om": "yoo daa’imni saffisaan dubbisuu hin dandeenye,"
+  },
+  "difficulty with problem‑solving,": {
+    "am": "ችግር‑መፍታት ይከብዳል፣",
+    "om": "rakkoo furuu ni rakkisa,"
+  },
+  "poor coordination in sports,": {
+    "am": "በስፖርት ደካማ ቅንጅት፣",
+    "om": "tapha qaamaa keessatti wal-simsiisaa dadhabaa,"
+  },
+  "inability to form friendships,": {
+    "am": "ጓደኝነት መመስረት አለመቻል፣",
+    "om": "hiriyyummaa uumuu dadhabuu,"
+  },
+  "regression of skills": {
+    "am": "ክህሎቶች መመለስ",
+    "om": "dandeettii deebi’ee hir’achuu"
+  },
+  "Building Strong Foundations": {
+    "am": "ጠንካራ መሰረቶች መገንባት",
+    "om": "Bu’uura cimaa ijaaruu"
+  },
+  "Foods: Whole grains, eggs, fish, nuts, colorful vegetables.": {
+    "am": "ምግቦች፦ ሙሉ እህል፣ እንቁላል፣ ዓሳ፣ ለውዝ፣ ብዙ ቀለም ያላቸው አትክልቶች።",
+    "om": "Nyaata: Midhaan guutuu, hanqaaquu, qurxummii, loonzuu, kuduraa halluu qaban."
+  },
+  "Focus: Balanced meals to support school performance and steady growth.": {
+    "am": "ትኩረት፦ የትምህርት ቤት አፈጻጸምን እና የተረጋጋ እድገትን ለመደገፍ የተመጣጠኑ ምግቦች።",
+    "om": "Xiyyeeffannaa: Nyaata madaalawaa raawwii mana barumsaa fi guddina tasgabbii deeggaru."
+  },
+  "11 years": {
+    "am": "11 ዓመት",
+    "om": "Waggaa 11"
+  },
+  "-Concrete thinking; -dependent on parents": {
+    "am": "-ተጨባጭ አስተሳሰብ፤ -በወላጆች ላይ ጥገኛ",
+    "om": "-Yaada qabatamaa; -maatii irratti hirkataa"
+  },
+  "-Self-awareness begins, -peer influence increases": {
+    "am": "-የራስ ግንዛቤ ይጀምራል፣ -የእኩዮች ተጽዕኖ ይጨምራል",
+    "om": "-Of-hubannoon jalqaba, -dhiibbaan hiriyyaa dabala"
+  },
+  "Stage 3 (Growth Spurt-Mid-puberty, Mid-adolescence)-Rapid height growth (6-7cm/year) and body hair begins to spread-no voice change in boys, -no menstrual cycle in girls": {
+    "am": "ደረጃ 3 (ፈጣን እድገት-መካከለኛ ጉርምስና፣ መካከለኛ ጎረምሳነት)-ፈጣን የቁመት እድገት (6-7cm/ዓመት) እና የሰውነት ጸጉር መስፋፋት ይጀምራል-በወንዶች የድምጽ ለውጥ የለም፣ -በሴቶች የወር አበባ የለም",
+    "om": "Sadarkaa 3 (Guddina saffisaa-garaagarummaa giddu-galeessaa, dargaggummaa giddu-galeessaa)-Guddinni dheerinaa saffisaa (6-7cm/waggaatti) fi rifeensi qaamaa babal’achuu jalqaba-dhiira keessatti jijjiirama sagalee hin jiru, -durbii keessatti laguun hin jiru"
+  },
+  "-Mood swings, -identity exploration": {
+    "am": "-የስሜት መዋዠቅ፣ -የማንነት ፍለጋ",
+    "om": "-Jijjiirama miiraa, -qorannoo eenyummaa"
+  },
+  "Stage 4 (late Puberty-Mid-adolescence)- Continued development, voice changes in boys, menstrual cycles begin in girls.": {
+    "am": "ደረጃ 4 (የኋለኛ ጉርምስና-መካከለኛ ጎረምሳነት)- እድገት ይቀጥላል፣ በወንዶች የድምጽ ለውጥ፣ በሴቶች የወር አበባ ይጀምራል።",
+    "om": "Sadarkaa 4 (garaagarummaa dhuma-dargaggummaa giddu-galeessaa)- Guddinni itti fufa, dhiira keessatti sagaleen jijjiirama, durbii keessatti laguun jalqaba."
+  },
+  "-Abstract thinking, -stronger peer ties, -risk‑taking behaviors": {
+    "am": "-ልቦለዳዊ አስተሳሰብ፣ -ጠንካራ የእኩዮች ትስስር፣ -አደጋ‑የመውሰድ ባህሪዎች",
+    "om": "-Yaada abstract, -hidhata hiriyyaa cimaa, -amala balaa fudhachuu"
+  },
+  "Wide variation is normal: Some children may still be prepubertal (Stage 1), while others may advance faster--Girls: Puberty typically starts between 8–13 years, so by age 11 many are already in Stage 2 or 3.  Boys: Puberty usually begins later, between 9–14 years. At age 11, most boys are in Stage 2": {
+    "am": "ሰፊ ልዩነት የተለመደ ነው፦ አንዳንድ ልጆች አሁንም ከጉርምስና በፊት (ደረጃ 1) ሊሆኑ ይችላሉ፣ ሌሎች ደግሞ በፍጥነት ሊራመዱ ይችላሉ--ሴቶች፦ ጉርምስና በተለምዶ በ8–13 ዓመት ይጀምራል፣ ስለዚህ በ11 ዓመት ብዙዎች ቀድሞውኑ ደረጃ 2 ወይም 3 ላይ ናቸው።  ወንዶች፦ ጉርምስና ብዙውን ጊዜ በኋላ፣ በ9–14 ዓመት ይጀምራል። በ11 ዓመት፣ አብዛኛዎቹ ወንዶች ደረጃ 2 ላይ ናቸው",
+    "om": "Garaagarummaan bal’aan waanuma baramaa dha: Daa’imman tokko tokko ammas garaagarummaa dura (Sadarkaa 1) ta’uu danda’u, kaan immoo saffisaan guddatuu danda’u--Durbii: Garaagarummaan yeroo baayyee waggaa 8–13 gidduutti jalqaba, kanaaf waggaa 11tti baayyeen duraanuu Sadarkaa 2 ykn 3 irratti jiru.  Dhiira: Garaagarummaan yeroo baayyee booda, waggaa 9–14 gidduutti jalqaba. Waggaa 11tti, dhiironni baayyeen Sadarkaa 2 irratti jiru"
+  },
+  "improved abstract thinking, stronger peer bonds": {
+    "am": "የተሻሻለ ልቦለዳዊ አስተሳሰብ፣ ጠንካራ የእኩዮች ትስስር",
+    "om": "yaada abstract fooyya’e, hidhata hiriyyaa cimaa"
+  },
+  "By age 11": {
+    "am": "በ11 ዓመት",
+    "om": "Waggaa 11tti"
+  },
+  "-Precocious puberty- puberty comes early before 8 in girls, 9 in boys\n-Delayed puberty (if no signs of puberty by age 13 in girls, 14 in boys)": {
+    "am": "-ቀደምት ጉርምስና- ጉርምስና በሴቶች ከ8 በፊት፣ በወንዶች ከ9 በፊት ይመጣል\n-የዘገየ ጉርምስና (በሴቶች በ13 ዓመት፣ በወንዶች በ14 ዓመት የጉርምስና ምልክት ከሌለ)",
+    "om": "-Garaagarummaa yeroo dura- garaagarummaan durbii keessatti 8 dura, dhiira keessatti 9 dura dhufa\n-Garaagarummaa harkifate (yoo mallattoon garaagarummaa durbii keessatti waggaa 13tti, dhiira keessatti waggaa 14tti hin jiraanne)"
+  },
+  "See a doctor urgently if": {
+    "am": "ሐኪም በአስቸኳይ ያማክሩ ከሚከተሉት ካሉ",
+    "om": "Yoo kan armaan gadi jiraate ogeessa daa’imman hatattamaan mari’adhaa"
+  },
+  "persistent academic struggles": {
+    "am": "ዘላቂ የትምህርት ችግሮች",
+    "om": "rakkina barumsaa kan itti fufu"
+  },
+  "poor peer relationships": {
+    "am": "ደካማ የእኩዮች ግንኙነቶች",
+    "om": "hariiroo hiriyyaa dadhabaa"
+  },
+  "extreme shyness/aggression": {
+    "am": "እጅግ ዓይናፋርነት/ጥቃት",
+    "om": "qaannoo/haleellaa guddaa"
+  },
+  "Early Puberty Fuel": {
+    "am": "የመጀመሪያ ጉርምስና ነዳጅ",
+    "om": "Anniisaa garaagarummaa jalqabaa"
+  },
+  "Ensure protein and vitamin D intake as puberty begins.": {
+    "am": "ጉርምስና ሲጀምር የፕሮቲን እና የቫይታሚን D አወሳሰድን ያረጋግጡ።",
+    "om": "Garaagarummaan yeroo jalqabu fudhannaa pirootiinii fi vitamin D mirkaneessaa."
+  },
+  "dairy or fortified alternatives important.": {
+    "am": "የወተት ወይም የተጠናከሩ አማራጮች አስፈላጊ ናቸው።",
+    "om": "aannan ykn filannoo cimame barbaachisaa dha."
+  },
+  "12 years": {
+    "am": "12 ዓመት",
+    "om": "Waggaa 12"
+  },
+  "Wide variation is normal-Girls: Most are in Tanner Stage 3–4. Breast development is more advanced, pubic hair is coarser and darker, and many are in the midst of their growth spurt. Menstruation often begins toward the end of Stage 3 or in Stage 4.  Boys: Many are in Stage 2–3. Testicular growth continues, pubic hair becomes more noticeable, and some boys begin their growth spurt. By 12, fewer boys remain in Stage 1": {
+    "am": "ሰፊ ልዩነት የተለመደ ነው-ሴቶች፦ አብዛኛዎቹ በ Tanner ደረጃ 3–4 ላይ ናቸው። የጡት እድገት የበለጠ የዳበረ ነው፣ የብልት ጸጉር የበለጠ ጠንካራ እና ጥቁር ነው፣ እና ብዙዎች በፈጣን የቁመት እድገት መካከል ናቸው። የወር አበባ ብዙውን ጊዜ በደረጃ 3 መጨረሻ ወይም በደረጃ 4 ይጀምራል።  ወንዶች፦ ብዙዎች በደረጃ 2–3 ላይ ናቸው። የዘር እጢ እድገት ይቀጥላል፣ የብልት ጸጉር የበለጠ ይታያል፣ እና አንዳንድ ወንዶች ፈጣን የቁመት እድገት ይጀምራሉ። በ12፣ ጥቂት ወንዶች በደረጃ 1 ይቀራሉ",
+    "om": "Garaagarummaan bal’aan waanuma baramaa dha-Durbii: Baayyeen Tanner Sadarkaa 3–4 irratti jiru. Guddinni harmaa caalaatti guddateera, rifeensi nannoo saalaa jabaa fi gurraacha ta’a, baayyeenis guddina dheerinaa saffisaa keessa jiru. Laguun yeroo baayyee dhuma Sadarkaa 3 ykn Sadarkaa 4 keessatti jalqaba.  Dhiira: Baayyeen Sadarkaa 2–3 irratti jiru. Guddinni dhagaa kormaa itti fufa, rifeensi nannoo saalaa caalaatti mul’ata, dhiironni tokko tokko guddina dheerinaa saffisaa jalqabu. Waggaa 12tti, dhiironni muraasatu Sadarkaa 1 irratti hafu"
+  },
+  "- ability to handle complex school tasks, growing independence": {
+    "am": "- ውስብስብ የትምህርት ቤት ተግባራትን የመቋቋም ችሎታ፣ እየጨመረ ያለ ነጻነት",
+    "om": "- dandeettii hojii mana barumsaa walxaxaa raawwachuu, walabummaa guddataa"
+  },
+  "By age 12": {
+    "am": "በ12 ዓመት",
+    "om": "Waggaa 12tti"
+  },
+  "-persistent learning difficulties": {
+    "am": "-ዘላቂ የመማር ችግሮች",
+    "om": "-rakkina barumsaa kan itti fufu"
+  },
+  "-poor emotional regulation": {
+    "am": "-ደካማ የስሜት መቆጣጠር",
+    "om": "-to’annaa miiraa dadhabaa"
+  },
+  "Growth Acceleration Support": {
+    "am": "የእድገት ማፋጠን ድጋፍ",
+    "om": "Deeggarsa guddina saffisaa"
+  },
+  "Higher calorie needs; emphasize calcium vitamin and iron for rapid development": {
+    "am": "ከፍ ያለ የካሎሪ ፍላጎት፤ ለፈጣን እድገት ካልሲየም ቫይታሚን እና ብረትን አጽንኦት ይስጡ",
+    "om": "Fedhiin kaalorii ol aanaa; guddina saffisaaf kaalisiyeemii, vitaaminii, fi sibiila (iron) jajjabeessaa"
+  },
+  "Calcium 1,300 mg, vitamin D 600 IU per day": {
+    "am": "ካልሲየም 1,300 mg፣ ቫይታሚን D 600 IU በቀን",
+    "om": "Kaalisiyeemii 1,300 mg, vitamin D 600 IU guyyaatti"
+  },
+  "legumes, eggs, fortified cereals.": {
+    "am": "ጥራጥሬ፣ እንቁላል፣ የተጠናከሩ እህሎች።",
+    "om": "atara, hanqaaquu, midhaan cimame."
+  },
+  "leafy greens, fish, nuts.": {
+    "am": "ቅጠላ ቅጠል፣ ዓሳ፣ ለውዝ።",
+    "om": "baala magariisa, qurxummii, loonzuu."
+  },
+  "red meat, beans, spinach.": {
+    "am": "ቀይ ሥጋ፣ ባቄላ፣ ስፒናች።",
+    "om": "foon diimaa, atara, ispinachii."
+  },
+  "13 years": {
+    "am": "13 ዓመት",
+    "om": "Waggaa 13"
+  },
+  "Stage 2 (Early Puberty- Early adolescence)-Puberty begins, breast budding in girls, testicular enlargement in boys": {
+    "am": "ደረጃ 2 (የመጀመሪያ ጉርምስና- የመጀመሪያ ጎረምሳነት)-ጉርምስና ይጀምራል፣ በሴቶች የጡት ቡቃያ፣ በወንዶች የዘር እጢ መጨመር",
+    "om": "Sadarkaa 2 (Garaagarummaa jalqabaa- dargaggummaa jalqabaa)-Garaagarummaan jalqaba, durbii keessatti harma biqiluu, dhiira keessatti guddina dhagaa kormaa"
+  },
+  "Stage 3 (Growth Spurt-Mid-puberty, Mid-adolescence)-Rapid height growth (6-7cm/year) and body hair begins to spread, -no voice change in boys, -no menstrual cycle in girls": {
+    "am": "ደረጃ 3 (ፈጣን እድገት-መካከለኛ ጉርምስና፣ መካከለኛ ጎረምሳነት)-ፈጣን የቁመት እድገት (6-7cm/ዓመት) እና የሰውነት ጸጉር መስፋፋት ይጀምራል፣ -በወንዶች የድምጽ ለውጥ የለም፣ -በሴቶች የወር አበባ የለም",
+    "om": "Sadarkaa 3 (Guddina saffisaa-garaagarummaa giddu-galeessaa, dargaggummaa giddu-galeessaa)-Guddinni dheerinaa saffisaa (6-7cm/waggaatti) fi rifeensi qaamaa babal’achuu jalqaba, -dhiira keessatti jijjiirama sagalee hin jiru, -durbii keessatti laguun hin jiru"
+  },
+  "Wide variation is normal- Girls: Most are in Stage 3–4. Breast development is more advanced, pubic hair is darker and coarser, and many have already started menstruation. Growth spurt is usually near its peak or just past it. Boys: Most are in Stage 3. Testicular volume increases further, pubic hair becomes thicker, and many boys are entering their growth spurt.": {
+    "am": "ሰፊ ልዩነት የተለመደ ነው- ሴቶች፦ አብዛኛዎቹ በደረጃ 3–4 ላይ ናቸው። የጡት እድገት የበለጠ የዳበረ ነው፣ የብልት ጸጉር ጥቁር እና ጠንካራ ነው፣ እና ብዙዎች ቀድሞውኑ የወር አበባ ጀምረዋል። ፈጣን የቁመት እድገት ብዙውን ጊዜ ከፍተኛው አጠገብ ወይም ከእሱ በኋላ ነው። ወንዶች፦ አብዛኛዎቹ በደረጃ 3 ላይ ናቸው። የዘር እጢ መጠን ይጨምራል፣ የብልት ጸጉር ይወፍራል፣ እና ብዙ ወንዶች ፈጣን የቁመት እድገት እየገቡ ነው።",
+    "om": "Garaagarummaan bal’aan waanuma baramaa dha- Durbii: Baayyeen Sadarkaa 3–4 irratti jiru. Guddinni harmaa caalaatti guddateera, rifeensi nannoo saalaa gurraacha fi jabaa ta’a, baayyeenis duraanuu laguu jalqabaniiru. Guddinni dheerinaa saffisaan yeroo baayyee ol-guddaa isaa ykn sana booda dha. Dhiira: Baayyeen Sadarkaa 3 irratti jiru. Hangamni dhagaa kormaa dabalata, rifeensi nannoo saalaa dambal’ata, dhiironni baayyeen guddina dheerinaa saffisaa seenaa jiru."
+  },
+  "-deeper friendships, emerging identity": {
+    "am": "-ጥልቅ ጓደኝነት፣ እየታየ ያለ ማንነት",
+    "om": "-hiriyyummaa gadi fageenya qabu, eenyummaa mul’achaa"
+  },
+  "By age 13": {
+    "am": "በ13 ዓመት",
+    "om": "Waggaa 13tti"
+  },
+  "-Delayed puberty (no signs of puberty by age 13 in girls, 14 in boys) or still on tanner stage 1- Flat chest in girls, no testicular growth in boys": {
+    "am": "-የዘገየ ጉርምስና (በሴቶች በ13 ዓመት፣ በወንዶች በ14 ዓመት የጉርምስና ምልክት የለም) ወይም አሁንም Tanner ደረጃ 1 ላይ- በሴቶች ጠፍጣፋ ደረት፣ በወንዶች የዘር እጢ እድገት የለም",
+    "om": "-Garaagarummaa harkifate (mallattoon garaagarummaa durbii keessatti waggaa 13tti, dhiira keessatti waggaa 14tti hin jiru) ykn ammas Tanner sadarkaa 1 irratti- Durbii keessatti harma diriiraa, dhiira keessatti guddinni dhagaa kormaa hin jiru"
+  },
+  "Abnormal growth patterns: Height or weight far below expected percentiles, or sudden unexplained weight loss.": {
+    "am": "ያልተለመዱ የእድገት ሁኔታዎች፦ ቁመት ወይም ክብደት ከሚጠበቀው መቶኛ በጣም በታች፣ ወይም ድንገተኛ ያልተገለጸ ክብደት መቀነስ።",
+    "om": "Guddina hin baramne: Dheerina ykn ulfaatina hangaa eegamu irraa baayyee gadi, ykn ulfaatina tasaa hin ibsamne dhabuu."
+  },
+  "severe withdrawal, poor school performance": {
+    "am": "ከባድ መውጣት፣ ደካማ የትምህርት ቤት አፈጻጸም",
+    "om": "of qusachuu cimaa, raawwii mana barumsaa dadhabaa"
+  },
+  "Peak Appetite & Iron Needs": {
+    "am": "ከፍተኛ ፍላጎት እና የብረት ፍላጎቶች",
+    "om": "Fedhii nyaataa fi sibiila (iron) ol aanaa"
+  },
+  "Girls need extra iron with menstruation; boys require more protein for muscle growth": {
+    "am": "ሴቶች ከወር አበባ ጋር ተጨማሪ ብረት ያስፈልጋቸዋል፤ ወንዶች ለጡንቻ እድገት ተጨማሪ ፕሮቲን ያስፈልጋቸዋል",
+    "om": "Durbii laguu waliin sibiila (iron) dabalataa barbaadu; dhiironni guddina maashaa tiif pirootiinii dabalataa barbaadu"
+  },
+  "Menstruation increases iron needs; red meat, beans, spinach.": {
+    "am": "የወር አበባ የብረት ፍላጎትን ይጨምራል፤ ቀይ ሥጋ፣ ባቄላ፣ ስፒናች።",
+    "om": "Laguun fedhii sibiila (iron) dabala; foon diimaa, atara, ispinachii."
+  },
+  "14 years": {
+    "am": "14 ዓመት",
+    "om": "Waggaa 14"
+  },
+  "Stage 1- Prepubertal (Childhood stage)- Flat chest in girls, no testicular growth in boys": {
+    "am": "ደረጃ 1- ከጉርምስና በፊት (የልጅነት ደረጃ)- በሴቶች ጠፍጣፋ ደረት፣ በወንዶች የዘር እጢ እድገት የለም",
+    "om": "Sadarkaa 1- Garaagarummaa dura (sadarkaa daa’imummaa)- Durbii keessatti harma diriiraa, dhiira keessatti guddinni dhagaa kormaa hin jiru"
+  },
+  "Stage 2 (Early Puberty- Early adolescence)- Puberty begins, breast budding in girls, testicular enlargement in boys.": {
+    "am": "ደረጃ 2 (የመጀመሪያ ጉርምስና- የመጀመሪያ ጎረምሳነት)- ጉርምስና ይጀምራል፣ በሴቶች የጡት ቡቃያ፣ በወንዶች የዘር እጢ መጨመር።",
+    "om": "Sadarkaa 2 (Garaagarummaa jalqabaa- dargaggummaa jalqabaa)- Garaagarummaan jalqaba, durbii keessatti harma biqiluu, dhiira keessatti guddina dhagaa kormaa."
+  },
+  "Wide variation is normal- Girls: Most are in Tanner Stage 4, with mature breast development, adult‑type pubic hair, and many already menstruating regularly. Growth spurt is typically complete or nearing completion. Boys: Most are in Tanner Stage 3–4. Testicular and penile growth are more advanced, pubic hair is thicker and darker, and many boys are in the middle of their growth spurt": {
+    "am": "ሰፊ ልዩነት የተለመደ ነው- ሴቶች፦ አብዛኛዎቹ በ Tanner ደረጃ 4 ላይ ናቸው፣ የበሰለ የጡት እድገት፣ የአዋቂ‑አይነት የብልት ጸጉር፣ እና ብዙዎች ቀድሞውኑ በመደበኛነት የወር አበባ አላቸው። ፈጣን የቁመት እድገት ብዙውን ጊዜ ተጠናቋል ወይም እየተጠናቀቀ ነው። ወንዶች፦ አብዛኛዎቹ በ Tanner ደረጃ 3–4 ላይ ናቸው። የዘር እጢ እና የብልት እድገት የበለጠ የዳበረ ነው፣ የብልት ጸጉር የበለጠ ወፍራም እና ጥቁር ነው፣ እና ብዙ ወንዶች በፈጣን የቁመት እድገት መካከል ናቸው",
+    "om": "Garaagarummaan bal’aan waanuma baramaa dha- Durbii: Baayyeen Tanner Sadarkaa 4 irratti jiru, guddina harmaa ga’eessa, rifeensa nannoo saalaa gosa ga’eessaa, baayyeenis duraanuu laguu yeroo beekamu qabu. Guddinni dheerinaa saffisaan yeroo baayyee xumurameera ykn xumuramaa jira. Dhiira: Baayyeen Tanner Sadarkaa 3–4 irratti jiru. Guddinni dhagaa kormaa fi quufaa caalaatti guddateera, rifeensi nannoo saalaa dambal’ataa fi gurraacha ta’a, dhiironni baayyeen guddina dheerinaa saffisaa gidduu jiru"
+  },
+  "By age 14": {
+    "am": "በ14 ዓመት",
+    "om": "Waggaa 14tti"
+  },
+  "-Delayed puberty (no signs of puberty by 13 in girls, 14 in boys)- still on Tanner stage 1, Flat chest in girls, no testicular growth in boys": {
+    "am": "-የዘገየ ጉርምስና (በሴቶች በ13፣ በወንዶች በ14 ምልክት የለም)- አሁንም Tanner ደረጃ 1 ላይ፣ በሴቶች ጠፍጣፋ ደረት፣ በወንዶች የዘር እጢ እድገት የለም",
+    "om": "-Garaagarummaa harkifate (mallattoon durbii keessatti 13tti, dhiira keessatti 14tti hin jiru)- ammas Tanner sadarkaa 1 irratti, durbii keessatti harma diriiraa, dhiira keessatti guddinni dhagaa kormaa hin jiru"
+  },
+  "No menstruation in girls": {
+    "am": "በሴቶች የወር አበባ የለም",
+    "om": "Durbii keessatti laguun hin jiru"
+  },
+  "No genital growth in boys": {
+    "am": "በወንዶች የብልት እድገት የለም",
+    "om": "Dhiira keessatti guddinni qaama saalaa hin jiru"
+  },
+  "ongoing learning difficulties": {
+    "am": "የሚቀጥሉ የመማር ችግሮች",
+    "om": "rakkina barumsaa kan itti fufu"
+  },
+  "risky behaviors": {
+    "am": "አደገኛ ባህሪዎች",
+    "om": "amala balaa qabu"
+  },
+  "-nutrition should focus on balanced meals, adequate calories for growth, and key nutrients like protein, calcium, iron, and vitamins, omega‑3": {
+    "am": "-አመጋገብ በተመጣጠኑ ምግቦች፣ ለእድገት በቂ ካሎሪዎች እና እንደ ፕሮቲን፣ ካልሲየም፣ ብረት እና ቫይታሚኖች፣ omega‑3 ባሉ ቁልፍ ንጥረ ነገሮች ላይ ማተኮር አለበት",
+    "om": "-sooranni nyaata madaalawaa, kaalorii guddinaaf gahaa, fi soorata ijoo akka pirootiinii, kaalisiyeemii, sibiila (iron), vitaaminii, omega‑3 irratti xiyyeeffachuu qaba"
+  },
+  "Bone Mass Building Stage": {
+    "am": "የአጥንት ብዛት የመገንባት ደረጃ",
+    "om": "Sadarkaa ijaarsa baay’ina lafee"
+  },
+  "Calcium and vitamin D are critical; encourage leafy greens and dairy.": {
+    "am": "ካልሲየም እና ቫይታሚን D ወሳኝ ናቸው፤ ቅጠላ ቅጠል እና ወተት ያበረታቱ።",
+    "om": "Kaalisiyeemii fi vitamin D murteessaa dha; baala magariisa fi aannan jajjabeessaa."
+  },
+  "Peak bone mass building; leafy greens, fish, nuts.": {
+    "am": "ከፍተኛ የአጥንት ብዛት መገንባት፤ ቅጠላ ቅጠል፣ ዓሳ፣ ለውዝ።",
+    "om": "Ijaarsa baay’ina lafee ol aanaa; baala magariisa, qurxummii, loonzuu."
+  },
+  "15 years": {
+    "am": "15 ዓመት",
+    "om": "Waggaa 15"
+  },
+  "Stage 3 (Growth Spurt-Mid-Puberty, Mid-adolescence)-Rapid height growth (6-7cm/year) and body hair begins to spread, -no voice change in boys, -no menstrual cycle in girls": {
+    "am": "ደረጃ 3 (ፈጣን እድገት-መካከለኛ ጉርምስና፣ መካከለኛ ጎረምሳነት)-ፈጣን የቁመት እድገት (6-7cm/ዓመት) እና የሰውነት ጸጉር መስፋፋት ይጀምራል፣ -በወንዶች የድምጽ ለውጥ የለም፣ -በሴቶች የወር አበባ የለም",
+    "om": "Sadarkaa 3 (Guddina saffisaa-Garaagarummaa giddu-galeessaa, dargaggummaa giddu-galeessaa)-Guddinni dheerinaa saffisaa (6-7cm/waggaatti) fi rifeensi qaamaa babal’achuu jalqaba, -dhiira keessatti jijjiirama sagalee hin jiru, -durbii keessatti laguun hin jiru"
+  },
+  "Stage 4 (late Puberty-Mid-adolescence)-Continued development, voice changes in boys, menstrual cycles begin in girls.": {
+    "am": "ደረጃ 4 (የኋለኛ ጉርምስና-መካከለኛ ጎረምሳነት)-እድገት ይቀጥላል፣ በወንዶች የድምጽ ለውጥ፣ በሴቶች የወር አበባ ይጀምራል።",
+    "om": "Sadarkaa 4 (garaagarummaa dhuma-dargaggummaa giddu-galeessaa)-Guddinni itti fufa, dhiira keessatti sagaleen jijjiirama, durbii keessatti laguun jalqaba."
+  },
+  "Wide variation is normal-  Girls: Most are in Tanner Stage 4–5. Breast development is complete or nearly complete, pubic hair has adult distribution, and menstruation is established. Growth has typically slowed. Boys: Most are in Tanner Stage 4, with continued testicular and penile growth, adult‑type pubic hair, and peak growth velocity either ongoing or just past.": {
+    "am": "ሰፊ ልዩነት የተለመደ ነው-  ሴቶች፦ አብዛኛዎቹ በ Tanner ደረጃ 4–5 ላይ ናቸው። የጡት እድገት ተጠናቋል ወይም ሊጠናቀቅ ቀርቧል፣ የብልት ጸጉር የአዋቂ ስርጭት አለው፣ እና የወር አበባ ተረጋግጧል። እድገት ብዙውን ጊዜ ቀርፋፋ ሆኗል። ወንዶች፦ አብዛኛዎቹ በ Tanner ደረጃ 4 ላይ ናቸው፣ የዘር እጢ እና የብልት እድገት ይቀጥላል፣ የአዋቂ‑አይነት የብልት ጸጉር፣ እና ከፍተኛ የእድገት ፍጥነት እየቀጠለ ወይም ገና ያለፈ ነው።",
+    "om": "Garaagarummaan bal’aan waanuma baramaa dha-  Durbii: Baayyeen Tanner Sadarkaa 4–5 irratti jiru. Guddinni harmaa xumurameera ykn xumuramuuf dhihaateera, rifeensi nannoo saalaa raabsama ga’eessaa qaba, laguunis mirkanaa’eera. Guddinni yeroo baayyee suuta ta’eera. Dhiira: Baayyeen Tanner Sadarkaa 4 irratti jiru, guddinni dhagaa kormaa fi quufaa itti fufa, rifeensa nannoo saalaa gosa ga’eessaa, fi saffisni guddinaa ol aanaan itti fufa ykn amma darbeera."
+  },
+  "Ability to manage hygiene, stronger independence, interest in future goals": {
+    "am": "ንጽህናን የመጠበቅ ችሎታ፣ ጠንካራ ነጻነት፣ በወደፊት ግቦች ፍላጎት",
+    "om": "Dandeettii qulqullina ofii to’achuu, walabummaa cimaa, fedhii galma fuulduraa"
+  },
+  "By age 15": {
+    "am": "በ15 ዓመት",
+    "om": "Waggaa 15tti"
+  },
+  "Contact pediatrician urgently if any of these red flags are observed": {
+    "am": "የሚከተሉትን ካስተዋሉ ልጆን ለህጻናት ሃኪም በአስቸኳይ ያሳዩ",
+    "om": "Kan armaan gadi yoo argitan daa’ima keessan gara ogeessa daa’immanitti hatattamaan geessaa"
+  },
+  "inability to manage hygiene": {
+    "am": "ንጽህናን መጠበቅ አለመቻል",
+    "om": "qulqullina ofii to’achuu dadhabuu"
+  },
+  "extreme mood swings,": {
+    "am": "እጅግ የስሜት መዋዠቅ፣",
+    "om": "jijjiirama miiraa guddaa,"
+  },
+  "substance use": {
+    "am": "የአደንዛዥ ዕጽ አጠቃቀም",
+    "om": "itti fayyadama dhugaatii ykn qoricha balaa"
+  },
+  "Energy for Rapid Growth": {
+    "am": "ለፈጣን እድገት ኃይል",
+    "om": "Anniisaa guddina saffisaa"
+  },
+  "Folate, iron, and protein support academic and physical demands.": {
+    "am": "ፎሌት፣ ብረት እና ፕሮቲን የትምህርት እና አካላዊ ፍላጎቶችን ይደግፋሉ።",
+    "om": "Folate, sibiila (iron), fi pirootiinii fedhii barumsaa fi qaamaa deeggaru."
+  },
+  "Support rapid growth; legumes, eggs, fortified cereals.": {
+    "am": "ፈጣን እድገትን ይደግፉ፤ ጥራጥሬ፣ እንቁላል፣ የተጠናከሩ እህሎች።",
+    "om": "Guddina saffisaa deeggaraa; atara, hanqaaquu, midhaan cimame."
+  },
+  "16 years": {
+    "am": "16 ዓመት",
+    "om": "Waggaa 16"
+  },
+  "Wide variation is normal- Girls: Most are in Tanner Stage 5. Breast development and pubic hair are adult in form, menstruation is established, and growth has typically ended.   Boys: Most are in Tanner Stage 4–5. Testicular and penile growth are complete or nearly complete, pubic hair has adult distribution, and growth spurt is finishing. Some boys may still be catching up in late Stage 4, but most are approaching adult maturity.": {
+    "am": "ሰፊ ልዩነት የተለመደ ነው- ሴቶች፦ አብዛኛዎቹ በ Tanner ደረጃ 5 ላይ ናቸው። የጡት እድገት እና የብልት ጸጉር የአዋቂ ቅርጽ አላቸው፣ የወር አበባ ተረጋግጧል፣ እና እድገት ብዙውን ጊዜ አብቅቷል።   ወንዶች፦ አብዛኛዎቹ በ Tanner ደረጃ 4–5 ላይ ናቸው። የዘር እጢ እና የብልት እድገት ተጠናቋል ወይም ሊጠናቀቅ ቀርቧል፣ የብልት ጸጉር የአዋቂ ስርጭት አለው፣ እና ፈጣን የቁመት እድገት እየጨረሰ ነው። አንዳንድ ወንዶች አሁንም በኋለኛ ደረጃ 4 ሊያዙ ይችላሉ፣ ግን አብዛኛዎቹ ወደ አዋቂ ብስለት እየቀረቡ ናቸው።",
+    "om": "Garaagarummaan bal’aan waanuma baramaa dha- Durbii: Baayyeen Tanner Sadarkaa 5 irratti jiru. Guddinni harmaa fi rifeensi nannoo saalaa bifa ga’eessaa qabu, laguun mirkanaa’eera, guddinniis yeroo baayyee dhaabbateera.   Dhiira: Baayyeen Tanner Sadarkaa 4–5 irratti jiru. Guddinni dhagaa kormaa fi quufaa xumurameera ykn xumuramuuf dhihaateera, rifeensi nannoo saalaa raabsama ga’eessaa qaba, guddinni dheerinaa saffisaanis xumuramaa jira. Dhiironni tokko tokko ammas Sadarkaa 4 dhuma keessa qaqqabuu danda’u, garuu baayyeen ga’umsa ga’eessaa dhihaataa jiru."
+  },
+  "By age 16": {
+    "am": "በ16 ዓመት",
+    "om": "Waggaa 16tti"
+  },
+  "-Delayed puberty (no signs of puberty by 13 in girls, 14 in boys)- still on Tanner stage 1, Flat chest in girls, no testicular growth in boys\n-No pubertal signs by 14, no menstruation by 16,\n-slowed height gain": {
+    "am": "-የዘገየ ጉርምስና (በሴቶች በ13፣ በወንዶች በ14 ምልክት የለም)- አሁንም Tanner ደረጃ 1 ላይ፣ በሴቶች ጠፍጣፋ ደረት፣ በወንዶች የዘር እጢ እድገት የለም\n-በ14 የጉርምስና ምልክት የለም፣ በ16 የወር አበባ የለም፣\n-የቁመት እድገት መቀዛቀዝ",
+    "om": "-Garaagarummaa harkifate (mallattoon durbii keessatti 13tti, dhiira keessatti 14tti hin jiru)- ammas Tanner sadarkaa 1 irratti, durbii keessatti harma diriiraa, dhiira keessatti guddinni dhagaa kormaa hin jiru\n-Mallattoon garaagarummaa 14tti hin jiru, laguun 16tti hin jiru,\n-guddinni dheerinaa suuta ta’e"
+  },
+  "-inability to form identity,": {
+    "am": "-ማንነት መመስረት አለመቻል፣",
+    "om": "-eenyummaa ijaaruu dadhabuu,"
+  },
+  "-persistent academic failure,": {
+    "am": "-ዘላቂ የትምህርት ውድቀት፣",
+    "om": "-kufaatii barumsaa kan itti fufu,"
+  },
+  "-severe anxiety/depression": {
+    "am": "-ከባድ ጭንቀት/ድብርት",
+    "om": "-yaaddoo/gadda sammuu cimaa"
+  },
+  "Balanced Diet for Maturity": {
+    "am": "ለብስለት የተመጣጠነ ምግብ",
+    "om": "Nyaata madaalawaa ga’umsaaf"
+  },
+  "Maintain healthy eating habits; avoid excess fast food and sugary drinks.": {
+    "am": "ጤናማ የአመጋገብ ልማዶችን ይጠብቁ፤ ከመጠን ያለፈ ፈጣን ምግብ እና ስኳር ያላቸው መጠጦችን ያስወግዱ።",
+    "om": "Amala nyaataa fayyaa eegaa; nyaata saffisaa dabalaa fi dhugaatii sukkaara qabu irraa of qusadhaa."
+  },
+  "Foods: Whole grains, lean meats, dairy, fruits, vegetables.": {
+    "am": "ምግቦች፦ ሙሉ እህል፣ ቀጭን ሥጋ፣ ወተት፣ ፍራፍሬ፣ አትክልት።",
+    "om": "Nyaata: Midhaan guutuu, foon qallaa, aannan, fudura, kuduraa."
+  },
+  "17 years": {
+    "am": "17 ዓመት",
+    "om": "Waggaa 17"
+  },
+  "Stage 3 (Growth Spurt-Mid-puberty, Mid-adolescence)-Rapid height growth (6-7cm/year) and body hair appear,-no voice change in boys, -no menstrual cycle in girls": {
+    "am": "ደረጃ 3 (ፈጣን እድገት-መካከለኛ ጉርምስና፣ መካከለኛ ጎረምሳነት)-ፈጣን የቁመት እድገት (6-7cm/ዓመት) እና የሰውነት ጸጉር ይታያል፣-በወንዶች የድምጽ ለውጥ የለም፣ -በሴቶች የወር አበባ የለም",
+    "om": "Sadarkaa 3 (Guddina saffisaa-garaagarummaa giddu-galeessaa, dargaggummaa giddu-galeessaa)-Guddinni dheerinaa saffisaa (6-7cm/waggaatti) fi rifeensi qaamaa mul’ata,-dhiira keessatti jijjiirama sagalee hin jiru, -durbii keessatti laguun hin jiru"
+  },
+  "-Mood swings, -identity exploration,": {
+    "am": "-የስሜት መዋዠቅ፣ -የማንነት ፍለጋ፣",
+    "om": "-Jijjiirama miiraa, -qorannoo eenyummaa,"
+  },
+  "Stage 4 (late Puberty-Mid-adolescence)-continued development, voice changes in boys, menstrual cycles begin in girls": {
+    "am": "ደረጃ 4 (የኋለኛ ጉርምስና-መካከለኛ ጎረምሳነት)-እድገት ይቀጥላል፣ በወንዶች የድምጽ ለውጥ፣ በሴቶች የወር አበባ ይጀምራል",
+    "om": "Sadarkaa 4 (garaagarummaa dhuma-dargaggummaa giddu-galeessaa)-guddinni itti fufa, dhiira keessatti sagaleen jijjiirama, durbii keessatti laguun jalqaba"
+  },
+  "Wide variation is normal-   Girls: Nearly all are in Tanner Stage 5. Breast and pubic hair development are adult in form, menstruation is established and regular, and growth has ended.      Boys: Most are in Tanner Stage 4–5. Testicular and penile growth are complete or nearly complete, pubic hair has adult distribution, and growth spurt is finishing or complete. By 17, most boys are approaching full adult maturity": {
+    "am": "ሰፊ ልዩነት የተለመደ ነው-   ሴቶች፦ ሁሉ ማለት ይቻላል በ Tanner ደረጃ 5 ላይ ናቸው። የጡት እና የብልት ጸጉር እድገት የአዋቂ ቅርጽ አለው፣ የወር አበባ ተረጋግጧል እና መደበኛ ነው፣ እና እድገት አብቅቷል።      ወንዶች፦ አብዛኛዎቹ በ Tanner ደረጃ 4–5 ላይ ናቸው። የዘር እጢ እና የብልት እድገት ተጠናቋል ወይም ሊጠናቀቅ ቀርቧል፣ የብልት ጸጉር የአዋቂ ስርጭት አለው፣ እና ፈጣን የቁመት እድገት እየጨረሰ ወይም ተጠናቋል። በ17፣ አብዛኛዎቹ ወንዶች ወደ ሙሉ አዋቂ ብስለት እየቀረቡ ናቸው",
+    "om": "Garaagarummaan bal’aan waanuma baramaa dha-   Durbii: Guutummaatti Tanner Sadarkaa 5 irratti jiru. Guddinni harmaa fi rifeensa nannoo saalaa bifa ga’eessaa qaba, laguun mirkanaa’ee yeroo beekamu dha, guddinniis dhaabbateera.      Dhiira: Baayyeen Tanner Sadarkaa 4–5 irratti jiru. Guddinni dhagaa kormaa fi quufaa xumurameera ykn xumuramuuf dhihaateera, rifeensi nannoo saalaa raabsama ga’eessaa qaba, guddinni dheerinaa saffisaanis xumuramaa ykn xumurameera. Waggaa 17tti, dhiironni baayyeen ga’umsa ga’eessaa guutuu dhihaataa jiru"
+  },
+  "Emotional stability, preparation for adult roles, career/education planning": {
+    "am": "ስሜታዊ መረጋጋት፣ ለአዋቂ ሚናዎች ዝግጅት፣ የሙያ/ትምህርት እቅድ",
+    "om": "Tasgabbiin miiraa, qophii gahee ga’eessaa, karoora hojii/barumsaa"
+  },
+  "By age 17": {
+    "am": "በ17 ዓመት",
+    "om": "Waggaa 17tti"
+  },
+  "Regression in skills": {
+    "am": "ክህሎቶች መመለስ",
+    "om": "Dandeettii deebi’ee hir’achuu"
+  },
+  "inability to plan future": {
+    "am": "የወደፊት ማቀድ አለመቻል",
+    "om": "fuuldura karoorsuu dadhabuu"
+  },
+  "persistent risky behaviors": {
+    "am": "የሚቀጥሉ አደገኛ ባህሪዎች",
+    "om": "amala balaa qabu kan itti fufu"
+  },
+  "severe emotional instability": {
+    "am": "ከባድ ስሜታዊ አለመረጋጋት",
+    "om": "tasgabbii miiraa dhabuu cimaa"
+  },
+  "Preparing for Adult Metabolism": {
+    "am": "ለአዋቂ ሜታቦሊዝም መዘጋጀት",
+    "om": "Qophii metabolism ga’eessaa"
+  },
+  "Focus on fiber, B‑vitamins, and whole grains for long‑term health.": {
+    "am": "ለረጅም ጊዜ ጤና ፋይበር፣ B‑ቫይታሚኖች እና ሙሉ እህሎች ላይ ያተኩሩ።",
+    "om": "Fayyaa yeroo dheeraaf fiber, B‑vitaaminii, fi midhaan guutuu irratti xiyyeeffadhaa."
+  },
+  "Foods: Whole grains, vegetables, fish, nuts, legumes.": {
+    "am": "ምግቦች፦ ሙሉ እህል፣ አትክልት፣ ዓሳ፣ ለውዝ፣ ጥራጥሬ።",
+    "om": "Nyaata: Midhaan guutuu, kuduraa, qurxummii, loonzuu, atara."
+  },
+  "18 years": {
+    "am": "18 ዓመት",
+    "om": "Waggaa 18"
+  },
+  "Stage 3 (Growth Spurt-Mid-puberty, Mid-adolescence) Rapid height growth (6-7cm/year), body hair begins to spread-no voice change in boys, -no menstrual cycle in girls": {
+    "am": "ደረጃ 3 (ፈጣን እድገት-መካከለኛ ጉርምስና፣ መካከለኛ ጎረምሳነት) ፈጣን የቁመት እድገት (6-7cm/ዓመት)፣ የሰውነት ጸጉር መስፋፋት ይጀምራል-በወንዶች የድምጽ ለውጥ የለም፣ -በሴቶች የወር አበባ የለም",
+    "om": "Sadarkaa 3 (Guddina saffisaa-garaagarummaa giddu-galeessaa, dargaggummaa giddu-galeessaa) Guddinni dheerinaa saffisaa (6-7cm/waggaatti), rifeensi qaamaa babal’achuu jalqaba-dhiira keessatti jijjiirama sagalee hin jiru, -durbii keessatti laguun hin jiru"
+  },
+  "-Mood swings, -identity exploration, -no voice change in boys, -no menstrual cycle in girls": {
+    "am": "-የስሜት መዋዠቅ፣ -የማንነት ፍለጋ፣ -በወንዶች የድምጽ ለውጥ የለም፣ -በሴቶች የወር አበባ የለም",
+    "om": "-Jijjiirama miiraa, -qorannoo eenyummaa, -dhiira keessatti jijjiirama sagalee hin jiru, -durbii keessatti laguun hin jiru"
+  },
+  "Stage 4 (late Puberty-Mid-adolescence) voice changes in boys, menstrual cycles begin in girls": {
+    "am": "ደረጃ 4 (የኋለኛ ጉርምስና-መካከለኛ ጎረምሳነት) በወንዶች የድምጽ ለውጥ፣ በሴቶች የወር አበባ ይጀምራል",
+    "om": "Sadarkaa 4 (garaagarummaa dhuma-dargaggummaa giddu-galeessaa) dhiira keessatti sagaleen jijjiirama, durbii keessatti laguun jalqaba"
+  },
+  "Wide variation is normal-   Girls: Almost all are in Tanner Stage 5. Breast and pubic hair development are adult in form, menstruation is established and regular, and growth has ended.     Boys: Most are in Tanner Stage 5. Testicular and penile growth are complete, pubic hair has adult distribution, and growth spurt is finished.": {
+    "am": "ሰፊ ልዩነት የተለመደ ነው-   ሴቶች፦ ሁሉ ማለት ይቻላል በ Tanner ደረጃ 5 ላይ ናቸው። የጡት እና የብልት ጸጉር እድገት የአዋቂ ቅርጽ አለው፣ የወር አበባ ተረጋግጧል እና መደበኛ ነው፣ እና እድገት አብቅቷል።     ወንዶች፦ አብዛኛዎቹ በ Tanner ደረጃ 5 ላይ ናቸው። የዘር እጢ እና የብልት እድገት ተጠናቋል፣ የብልት ጸጉር የአዋቂ ስርጭት አለው፣ እና ፈጣን የቁመት እድገት ተጠናቋል።",
+    "om": "Garaagarummaan bal’aan waanuma baramaa dha-   Durbii: Guutummaatti Tanner Sadarkaa 5 irratti jiru. Guddinni harmaa fi rifeensa nannoo saalaa bifa ga’eessaa qaba, laguun mirkanaa’ee yeroo beekamu dha, guddinniis dhaabbateera.     Dhiira: Baayyeen Tanner Sadarkaa 5 irratti jiru. Guddinni dhagaa kormaa fi quufaa xumurameera, rifeensi nannoo saalaa raabsama ga’eessaa qaba, guddinni dheerinaa saffisaanis xumurameera."
+  },
+  "By age 18-": {
+    "am": "በ18 ዓመት-",
+    "om": "Waggaa 18tti-"
+  },
+  "-Delayed puberty (no signs of puberty by 13 in girls, 14 in boys)- still on Tanner stage 1, Flat chest in girls, no testicular growth in boys\n-No menstruation in girls, no genital growth and hair growth in boys": {
+    "am": "-የዘገየ ጉርምስና (በሴቶች በ13፣ በወንዶች በ14 ምልክት የለም)- አሁንም Tanner ደረጃ 1 ላይ፣ በሴቶች ጠፍጣፋ ደረት፣ በወንዶች የዘር እጢ እድገት የለም\n-በሴቶች የወር አበባ የለም፣ በወንዶች የብልት እድገት እና የጸጉር እድገት የለም",
+    "om": "-Garaagarummaa harkifate (mallattoon durbii keessatti 13tti, dhiira keessatti 14tti hin jiru)- ammas Tanner sadarkaa 1 irratti, durbii keessatti harma diriiraa, dhiira keessatti guddinni dhagaa kormaa hin jiru\n-Durbii keessatti laguun hin jiru, dhiira keessatti guddinni qaama saalaa fi guddinni rifeensaa hin jiru"
+  },
+  "No independent skills": {
+    "am": "ነጻ ክህሎቶች የሉም",
+    "om": "Dandeettii walabaa hin qaban"
+  },
+  "inability to make decisions": {
+    "am": "ውሳኔ ማድረግ አለመቻል",
+    "om": "murtee kennuu dadhabuu"
+  },
+  "lack of empathy": {
+    "am": "ርህራሄ ማጣት",
+    "om": "gara-laafina dhabuu"
+  },
+  "dependence on parents for basic tasks": {
+    "am": "ለመሰረታዊ ተግባራት በወላጆች ላይ ጥገኛ መሆን",
+    "om": "hojii bu’uuraaf maatii irratti hirkachuu"
+  },
+  "Transition to Adult Nutrition": {
+    "am": "ወደ አዋቂ አመጋገብ ሽግግር",
+    "om": "Jijjiirama soorata ga’eessaa"
+  },
+  "Independent diet choices; reinforce calcium, vitamin D, and iron intake.": {
+    "am": "ነጻ የአመጋገብ ምርጫዎች፤ የካልሲየም፣ ቫይታሚን D እና ብረት አወሳሰድን ያጠናክሩ።",
+    "om": "Filannoo nyaataa walabaa; fudhannaa kaalisiyeemii, vitamin D, fi sibiila (iron) cimsaa."
+  },
+  "Foods: Dairy, leafy greens, lean meats, beans, fortified cereals.": {
+    "am": "ምግቦች፦ ወተት፣ ቅጠላ ቅጠል፣ ቀጭን ሥጋ፣ ባቄላ፣ የተጠናከሩ እህሎች።",
+    "om": "Nyaata: Aannan, baala magariisa, foon qallaa, atara, midhaan cimame."
+  }
+}

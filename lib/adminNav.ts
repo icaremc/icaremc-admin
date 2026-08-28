@@ -43,6 +43,7 @@ export function routePermission(pathname: string): AdminPermission {
 export function routeRequiresManage(pathname: string): boolean {
   if (pathname.includes("/edit") || pathname.includes("/new")) return true;
   if (pathname.startsWith("/admin/app-version")) return true;
+  if (pathname.startsWith("/admin/finance/app-membership")) return true;
   return false;
 }
 

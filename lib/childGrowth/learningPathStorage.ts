@@ -1,4 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { storagePathFromPublicUrl } from "@/lib/storage/storageImage";
+import { uploadStorageImage } from "@/lib/storage/uploadImage";
 
 export const LEARNING_PATH_IMAGE_BUCKET = "child-growth-learning-paths";
 
@@ -17,29 +19,15 @@ export async function uploadLearningPathImages(
       throw new Error("Use JPG, PNG, or WebP images.");
     }
 
-    const contentType =
-      normalizedExt === "png"
-        ? "image/png"
-        : normalizedExt === "webp"
-          ? "image/webp"
-          : "image/jpeg";
-
     const path = `${crypto.randomUUID()}.${normalizedExt}`;
-    const bytes = Buffer.from(await file.arrayBuffer());
-
-    const { error } = await client.storage
-      .from(LEARNING_PATH_IMAGE_BUCKET)
-      .upload(path, bytes, {
-        contentType,
-        upsert: false,
-      });
-
-    if (error) throw new Error(error.message);
-
-    urls.push(
-      client.storage.from(LEARNING_PATH_IMAGE_BUCKET).getPublicUrl(path).data
-        .publicUrl,
+    const url = await uploadStorageImage(
+      client,
+      LEARNING_PATH_IMAGE_BUCKET,
+      path,
+      file,
+      { preset: "photo", upsert: false },
     );
+    urls.push(url);
   }
 
   return urls;
@@ -51,10 +39,8 @@ export async function removeLearningPathImage(
 ) {
   if (!imageUrl?.trim()) return;
 
-  const marker = `/${LEARNING_PATH_IMAGE_BUCKET}/`;
-  const index = imageUrl.indexOf(marker);
-  if (index < 0) return;
+  const storagePath = storagePathFromPublicUrl(imageUrl, LEARNING_PATH_IMAGE_BUCKET);
+  if (!storagePath) return;
 
-  const storagePath = imageUrl.substring(index + marker.length);
   await client.storage.from(LEARNING_PATH_IMAGE_BUCKET).remove([storagePath]);
 }
