@@ -1,8 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   optimizeImageBytes,
-  STORAGE_CACHE_CONTROL,
   versionedPublicUrl,
+} from "@/lib/storage/optimizeImage";
+import {
+  STORAGE_CACHE_CONTROL,
   webpStoragePath,
   type ImagePreset,
 } from "@/lib/storage/storageImage";

@@ -13,7 +13,7 @@ import {
   type PregnancyWeekFormState,
   trimesterForWeek,
 } from "@/features/pregnancyWeeks/pregnancyWeeksSlice";
-import { pregnancyWeekHasImage } from "@/lib/pregnancyWeeks/storage";
+import { pregnancyWeekHasImage } from "@/lib/pregnancyWeeks/image";
 import { cn } from "@/lib/utils";
 
 const LOCALE_LABELS: Record<Locale, string> = {

@@ -4,11 +4,7 @@ import { uploadStorageImage } from "@/lib/storage/uploadImage";
 
 const PREGNANCY_WEEK_IMAGE_BUCKET = "pregnancy-weeks";
 
-export function pregnancyWeekHasImage(
-  imageUrl: string | null | undefined,
-): boolean {
-  return Boolean(imageUrl?.trim());
-}
+export { pregnancyWeekHasImage } from "@/lib/pregnancyWeeks/image";
 
 export async function uploadPregnancyWeekImage(
   client: SupabaseClient,
