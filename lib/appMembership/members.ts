@@ -41,3 +41,28 @@ export function latestSubscriptionPerPatient<T extends { patient_id: string }>(
 
   return latest;
 }
+
+export function matchesMembershipStatusFilter(
+  member: Pick<AppSubscriptionMember, "status" | "has_access">,
+  filter: string,
+): boolean {
+  if (!filter || filter === "all") return true;
+  if (filter === "active") return member.has_access;
+  if (filter === "cancelled") return member.status === "cancelled";
+  if (filter === "expired") {
+    return (
+      member.status === "expired" ||
+      (member.status === "active" && !member.has_access)
+    );
+  }
+  return true;
+}
+
+export function chunkValues<T>(values: T[], size: number): T[][] {
+  if (size <= 0) return [values];
+  const chunks: T[][] = [];
+  for (let index = 0; index < values.length; index += size) {
+    chunks.push(values.slice(index, index + size));
+  }
+  return chunks;
+}
