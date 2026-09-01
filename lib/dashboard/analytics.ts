@@ -16,8 +16,11 @@ export type DashboardAnalytics = {
   commissionChange: number;
   commissionPercent: number;
   completedPaidBookings: number;
+  subscriptionPaymentCount: number;
+  subscriptionPaymentVolume: number;
   paymentChart: ChartBucket[];
   commissionChart: ChartBucket[];
+  subscriptionChart: ChartBucket[];
 };
 
 type AppointmentRow = Pick<
@@ -30,6 +33,22 @@ type AppointmentRow = Pick<
   | "created_at"
   | "updated_at"
 >;
+
+export type SubscriptionPaymentRow = {
+  amount_paid: number;
+  created_at: string;
+};
+
+export function subscriptionPaymentAmount(row: SubscriptionPaymentRow): number {
+  const amount = Number(row.amount_paid ?? 0);
+  return Number.isFinite(amount) && amount > 0 ? amount : 0;
+}
+
+function resolveSubscriptionDate(row: SubscriptionPaymentRow): Date | null {
+  if (!row.created_at) return null;
+  const date = new Date(row.created_at);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
 
 function startOfDay(date: Date): Date {
   const next = new Date(date);
@@ -183,26 +202,29 @@ function resolveAppointmentCommissionDate(appt: AppointmentRow): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function resolveWalletDate(tx: WalletTransaction): Date | null {
-  if (!tx.created_at) return null;
-  const date = new Date(tx.created_at);
+function resolveAppointmentPaymentDate(appt: AppointmentRow): Date | null {
+  const raw = appt.updated_at ?? appt.created_at;
+  if (!raw) return null;
+  const date = new Date(raw);
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function resolveWalletCreditAmount(tx: WalletTransaction): number {
-  if (!tx.is_credit) return 0;
-  const amount = Number(tx.amount);
-  return Number.isFinite(amount) ? amount : 0;
+function appointmentPaymentAmount(appt: AppointmentRow): number {
+  if (!isPaymentDone(appt)) return 0;
+  const amount = Number(appt.amount_paid);
+  return Number.isFinite(amount) && amount > 0 ? amount : 0;
 }
 
 export function computeDashboardAnalytics({
   appointments,
   walletTransactions,
+  subscriptionPayments = [],
   commissionPercent,
   range,
 }: {
   appointments: AppointmentRow[];
   walletTransactions: WalletTransaction[];
+  subscriptionPayments?: SubscriptionPaymentRow[];
   commissionPercent: number;
   range: DashboardRange;
 }): DashboardAnalytics {
@@ -251,10 +273,21 @@ export function computeDashboardAnalytics({
     (appt) => isCompletedAppointment(appt) && isPaymentDone(appt),
   );
 
+  const paidSubscriptions = subscriptionPayments.filter(
+    (row) =>
+      subscriptionPaymentAmount(row) > 0 && isDateInRange(row.created_at, range),
+  );
+
+  const paidAppointmentsInRange = appointments.filter(
+    (appt) =>
+      appointmentPaymentAmount(appt) > 0 &&
+      isDateInRange(resolveAppointmentPaymentDate(appt)?.toISOString(), range),
+  );
+
   return {
     totalTransactions: rangedWalletRows.length,
-    totalPaymentVolume: rangedWalletRows.reduce(
-      (sum, row) => sum + resolveWalletCreditAmount(row),
+    totalPaymentVolume: paidAppointmentsInRange.reduce(
+      (sum, appt) => sum + appointmentPaymentAmount(appt),
       0,
     ),
     totalCommission,
@@ -262,11 +295,16 @@ export function computeDashboardAnalytics({
     commissionChange,
     commissionPercent,
     completedPaidBookings: completedPaidInRange.length,
+    subscriptionPaymentCount: paidSubscriptions.length,
+    subscriptionPaymentVolume: paidSubscriptions.reduce(
+      (sum, row) => sum + subscriptionPaymentAmount(row),
+      0,
+    ),
     paymentChart: buildTimeSeriesChart(
-      rangedWalletRows,
+      paidAppointmentsInRange,
       range,
-      resolveWalletDate,
-      resolveWalletCreditAmount,
+      resolveAppointmentPaymentDate,
+      appointmentPaymentAmount,
     ),
     commissionChart: buildTimeSeriesChart(
       commissionEligible.filter((appt) =>
@@ -275,6 +313,12 @@ export function computeDashboardAnalytics({
       range,
       resolveAppointmentCommissionDate,
       (appt) => getPlatformCommission(appt, commissionPercent),
+    ),
+    subscriptionChart: buildTimeSeriesChart(
+      paidSubscriptions,
+      range,
+      resolveSubscriptionDate,
+      subscriptionPaymentAmount,
     ),
   };
 }

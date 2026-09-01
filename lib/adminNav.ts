@@ -1,11 +1,13 @@
 import {
   adminCanManage,
   adminCanView,
+  adminHasPermission,
   type AdminPermission,
 } from "@/lib/adminRoles";
 import type { AdminRole } from "@/lib/types/database";
 
 export function routePermission(pathname: string): AdminPermission {
+  if (pathname.startsWith("/admin/documents")) return "manage_admins";
   if (pathname.startsWith("/admin/app-version")) return "manage_content";
   if (pathname.startsWith("/admin/finance")) return "manage_finance";
   if (pathname.startsWith("/admin/admins")) return "manage_admins";
@@ -24,6 +26,7 @@ export function routePermission(pathname: string): AdminPermission {
   }
   if (
     pathname.startsWith("/admin/doctors") ||
+    pathname.startsWith("/admin/referrals") ||
     pathname.startsWith("/admin/doctor-categories") ||
     pathname.startsWith("/admin/hospitals")
   ) {
@@ -44,6 +47,7 @@ export function routeRequiresManage(pathname: string): boolean {
   if (pathname.includes("/edit") || pathname.includes("/new")) return true;
   if (pathname.startsWith("/admin/app-version")) return true;
   if (pathname.startsWith("/admin/finance/app-membership")) return true;
+  if (pathname.startsWith("/admin/documents")) return true;
   return false;
 }
 
@@ -53,6 +57,9 @@ export function canAccessRoute(
 ): boolean {
   const permission = routePermission(pathname);
   if (!adminCanView(role, permission)) return false;
+  if (pathname.startsWith("/admin/documents") && !adminHasPermission(role, "manage_admins")) {
+    return false;
+  }
   if (routeRequiresManage(pathname) && !adminCanManage(role, permission)) {
     return false;
   }

@@ -157,6 +157,10 @@ export function adminCanManage(
   return adminHasPermission(role, permission);
 }
 
+export function isSuperAdmin(role: AdminRole | null | undefined): boolean {
+  return role === "super_admin";
+}
+
 export type CreateAdminInput = {
   email: string;
   password: string;

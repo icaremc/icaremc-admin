@@ -71,6 +71,7 @@ export type DoctorProfile = {
   currency: string;
   prepayment_mode: "none" | "percent" | "full";
   prepayment_percent: number;
+  referral_code?: string | null;
   created_at: string;
   updated_at: string;
   doctor_availability_slots?: DoctorAvailabilitySlot[];

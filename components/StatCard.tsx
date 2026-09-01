@@ -49,13 +49,13 @@ export default function StatCard({
   const content = (
     <div
       className={cn(
-        "group rounded-[var(--radius)] border border-gray-200 bg-white p-5 shadow-sm transition-colors",
+        "group flex h-full min-h-[8.5rem] flex-col rounded-[var(--radius)] border border-gray-200 bg-white p-5 shadow-sm transition-colors",
         href && "hover:border-emerald-200 hover:shadow-md",
       )}
     >
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-1 items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-gray-600">{label}</p>
+          <p className="min-h-10 text-sm font-medium leading-5 text-gray-600">{label}</p>
           <p
             className={cn(
               "mt-2 font-heading text-3xl font-bold tabular-nums tracking-normal",
@@ -83,16 +83,23 @@ export default function StatCard({
           <Icon className="h-5 w-5" />
         </div>
       </div>
-      {href ? (
-        <p className="mt-4 text-xs font-medium text-emerald-600 opacity-0 transition-opacity group-hover:opacity-100">
-          View details →
-        </p>
-      ) : null}
+      <p
+        className={cn(
+          "mt-4 text-xs font-medium text-emerald-600",
+          href ? "opacity-0 transition-opacity group-hover:opacity-100" : "invisible",
+        )}
+      >
+        View details →
+      </p>
     </div>
   );
 
   if (href) {
-    return <Link href={href}>{content}</Link>;
+    return (
+      <Link href={href} className="block h-full">
+        {content}
+      </Link>
+    );
   }
 
   return content;

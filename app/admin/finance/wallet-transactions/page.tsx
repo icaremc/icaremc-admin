@@ -14,6 +14,12 @@ import {
 } from "@/components/ui/table";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { fetchWalletTransactions } from "@/features/finance/walletTransactionsSlice";
+import {
+  isReferralCommissionTransaction,
+  isZeroAmountTransaction,
+  walletTransactionAmount,
+  walletTransactionTypeLabel,
+} from "@/lib/finance/walletTransactionDisplay";
 import { formatMoney } from "@/lib/appointments/display";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -31,8 +37,11 @@ export default function WalletTransactionsPage() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return transactions;
-    return transactions.filter((tx) => {
+    const withoutReferral = transactions.filter(
+      (tx) => !isReferralCommissionTransaction(tx),
+    );
+    if (!q) return withoutReferral;
+    return withoutReferral.filter((tx) => {
       const doctor = tx.doctor_profiles;
       const doctorName = doctor
         ? `${doctor.first_name} ${doctor.last_name}`.toLowerCase()
@@ -48,12 +57,16 @@ export default function WalletTransactionsPage() {
   const totals = useMemo(() => {
     return filtered.reduce(
       (acc, tx) => {
-        const amount = Number(tx.amount);
+        const amount = walletTransactionAmount(tx);
+        if (amount === 0) {
+          acc.zero += 1;
+          return acc;
+        }
         if (tx.is_credit) acc.credit += amount;
         else acc.debit += amount;
         return acc;
       },
-      { credit: 0, debit: 0 },
+      { credit: 0, debit: 0, zero: 0 },
     );
   }, [filtered]);
 
@@ -61,7 +74,7 @@ export default function WalletTransactionsPage() {
     <>
       <PageHero
         title="Wallet transactions"
-        description="Doctor wallet credits, payout holds, and releases"
+        description="Doctor wallet credits, payout holds, and releases. Referral commissions are on Referrals → Commissions."
         icon={Wallet}
         stat={{ label: "Entries", value: filtered.length }}
       />
@@ -75,11 +88,16 @@ export default function WalletTransactionsPage() {
             placeholder="Search doctor, type, note…"
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm sm:max-w-xs"
           />
-          <div className="flex gap-4 text-sm">
+          <div className="flex flex-wrap gap-4 text-sm">
             <span className="text-emerald-700">
               Credits: {formatMoney(totals.credit, "ETB")}
             </span>
             <span className="text-red-700">Debits: {formatMoney(totals.debit, "ETB")}</span>
+            {totals.zero > 0 ? (
+              <span className="text-gray-500">
+                {totals.zero} zero-amount entries excluded from totals
+              </span>
+            ) : null}
           </div>
         </div>
 
@@ -116,8 +134,11 @@ export default function WalletTransactionsPage() {
               ) : (
                 filtered.map((tx) => {
                   const doctor = tx.doctor_profiles;
+                  const amount = walletTransactionAmount(tx);
+                  const zeroAmount = isZeroAmountTransaction(tx);
+                  const referral = isReferralCommissionTransaction(tx);
                   return (
-                    <TableRow key={tx.id}>
+                    <TableRow key={tx.id} className={zeroAmount ? "bg-gray-50/80" : undefined}>
                       <TableCell>
                         {doctor ? (
                           <Link
@@ -130,18 +151,33 @@ export default function WalletTransactionsPage() {
                           "N/A"
                         )}
                       </TableCell>
-                      <TableCell className="capitalize">{tx.type.replace(/_/g, " ")}</TableCell>
+                      <TableCell className="capitalize">{walletTransactionTypeLabel(tx)}</TableCell>
                       <TableCell
                         className={cn(
                           "font-semibold",
-                          tx.is_credit ? "text-emerald-700" : "text-red-700",
+                          zeroAmount
+                            ? "text-gray-400"
+                            : tx.is_credit
+                              ? "text-emerald-700"
+                              : "text-red-700",
                         )}
                       >
-                        {tx.is_credit ? "+" : "−"}
-                        {formatMoney(Number(tx.amount), "ETB")}
+                        {zeroAmount ? (
+                          "ETB 0"
+                        ) : (
+                          <>
+                            {tx.is_credit ? "+" : "−"}
+                            {formatMoney(amount, "ETB")}
+                          </>
+                        )}
                       </TableCell>
-                      <TableCell className="max-w-[240px] truncate text-sm text-gray-600">
-                        {tx.note ?? "N/A"}
+                      <TableCell className="max-w-60 text-sm text-gray-600">
+                        <span className="block truncate">{tx.note ?? "N/A"}</span>
+                        {referral && zeroAmount ? (
+                          <span className="mt-1 block text-xs text-amber-700">
+                            Subscription amount was 0 — no wallet credit applied.
+                          </span>
+                        ) : null}
                       </TableCell>
                       <TableCell className="text-sm text-gray-500">
                         {formatDateTime(tx.created_at)}

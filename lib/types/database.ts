@@ -20,6 +20,8 @@ export type Profile = {
   onboarding_complete: boolean;
   role?: AppUserRole;
   is_admin?: boolean;
+  referral_code_used?: string | null;
+  referred_by_doctor_id?: string | null;
   created_at: string;
   updated_at: string;
 };

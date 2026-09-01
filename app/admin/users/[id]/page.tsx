@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import SendPushForm from "@/components/users/SendPushForm";
+import UserReferralPanel from "@/components/users/UserReferralPanel";
 import {
   Table,
   TableBody,
@@ -101,7 +102,7 @@ function VitalsTable({ logs }: { logs: PregnancyLog[] }) {
     <div className="admin-table-wrap">
       <Table>
         <TableHeader>
-          <TableRow className="border-b border-white/20 bg-gradient-to-r from-emerald-50/50 to-teal-50/50">
+          <TableRow className="border-b border-white/20 bg-linear-to-r from-emerald-50/50 to-teal-50/50">
             <TableHead>Week</TableHead>
             <TableHead>Weight</TableHead>
             <TableHead>Blood pressure</TableHead>
@@ -119,10 +120,10 @@ function VitalsTable({ logs }: { logs: PregnancyLog[] }) {
                   ? `${log.blood_pressure_systolic}/${log.blood_pressure_diastolic ?? "N/A"}`
                   : "N/A"}
               </TableCell>
-              <TableCell className="max-w-[180px]">
+              <TableCell className="max-w-45">
                 {log.symptoms.length ? formatSymptomsList(log.symptoms) : "N/A"}
               </TableCell>
-              <TableCell className="max-w-[200px] text-gray-600">
+              <TableCell className="max-w-50 text-gray-600">
                 {log.notes ? truncate(log.notes, 64) : "N/A"}
               </TableCell>
             </TableRow>
@@ -264,7 +265,7 @@ function PregnancyCard({
       </div>
 
       {isActive && age ? (
-        <div className="rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/80 to-teal-50/50 p-4">
+        <div className="rounded-xl border border-emerald-100 bg-linear-to-br from-emerald-50/80 to-teal-50/50 p-4">
           <p className="text-2xl font-semibold tracking-tight text-emerald-900">
             {formatGestationalAge(age)}
           </p>
@@ -532,6 +533,8 @@ export default function UserDetailPage() {
               </div>
             </section>
 
+            <UserReferralPanel userId={profile.id} />
+
             <section>
               <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                 <div>
@@ -577,7 +580,7 @@ export default function UserDetailPage() {
                 <div className="admin-table-wrap">
                   <Table>
                     <TableHeader>
-                      <TableRow className="border-b border-white/20 bg-gradient-to-r from-emerald-50/50 to-teal-50/50">
+                      <TableRow className="border-b border-white/20 bg-linear-to-r from-emerald-50/50 to-teal-50/50">
                         <TableHead>Name</TableHead>
                         <TableHead>Gender</TableHead>
                         <TableHead>Birth date</TableHead>

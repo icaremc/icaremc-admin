@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Baby,
+  BadgeCheck,
   BarChart3,
   CalendarCheck,
   DollarSign,
@@ -129,7 +130,7 @@ function DashboardContent() {
           </Button>
         </div>
 
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="grid auto-rows-fr gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <StatCard
             label="Transactions"
             value={
@@ -143,7 +144,7 @@ function DashboardContent() {
             accent="teal"
           />
           <StatCard
-            label="Payment volume"
+            label="Appointment payments"
             value={
               analyticsLoading
                 ? "…"
@@ -155,41 +156,43 @@ function DashboardContent() {
             accent="emerald"
           />
           <StatCard
+            label="Subscription payments"
+            value={
+              analyticsLoading
+                ? "…"
+                : formatMoney(analytics?.subscriptionPaymentVolume ?? 0, "ETB")
+            }
+            href="/admin/finance/app-membership"
+            icon={BadgeCheck}
+            loading={analyticsLoading}
+            accent="amber"
+          />
+          <StatCard
             label="Commission"
             value={
               analyticsLoading
                 ? "…"
-                : formatMoney(analytics?.totalCommission ?? 0, "ETB")
+                : formatMoney(analytics?.totalCommission ?? 0, "ETB", 2)
             }
             href="/admin/finance/settings"
             icon={TrendingUp}
             loading={analyticsLoading}
             accent="violet"
           />
-          <div className="rounded-[var(--radius)] border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Commission growth</p>
-                <p className="mt-2 font-heading text-3xl font-bold tabular-nums text-violet-700">
-                  {analyticsLoading ? (
-                    <span className="inline-block h-8 w-16 animate-pulse rounded-md bg-gray-200" />
-                  ) : (
-                    `${(analytics?.commissionChange ?? 0).toFixed(1)}%`
-                  )}
-                </p>
-              </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius)] bg-violet-50 text-violet-600 ring-1 ring-inset ring-violet-100">
-                {commissionTrendUp ? (
-                  <TrendingUp className="h-5 w-5" />
-                ) : (
-                  <TrendingDown className="h-5 w-5" />
-                )}
-              </div>
-            </div>
-          </div>
+          <StatCard
+            label="Commission growth"
+            value={
+              analyticsLoading
+                ? "…"
+                : `${(analytics?.commissionChange ?? 0).toFixed(1)}%`
+            }
+            icon={commissionTrendUp ? TrendingUp : TrendingDown}
+            loading={analyticsLoading}
+            accent="violet"
+          />
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-2">
+        <section className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
           <div className="admin-panel">
             <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
               <BarChart3 className="h-5 w-5 text-emerald-600" />
@@ -204,6 +207,23 @@ function DashboardContent() {
           </div>
           <div className="admin-panel">
             <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
+              <BadgeCheck className="h-5 w-5 text-amber-600" />
+              App membership
+            </h3>
+            <DashboardBarChart
+              buckets={analytics?.subscriptionChart ?? []}
+              emptyLabel="No subscription payments in this period"
+              valueLabel="Amount"
+              isCurrency
+            />
+            <p className="mt-3 text-sm text-gray-500">
+              {analyticsLoading
+                ? "…"
+                : `${(analytics?.subscriptionPaymentCount ?? 0).toLocaleString()} paid subscriptions in this period`}
+            </p>
+          </div>
+          <div className="admin-panel lg:col-span-2 xl:col-span-1">
+            <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
               <TrendingUp className="h-5 w-5 text-violet-600" />
               Commission
             </h3>
@@ -215,7 +235,7 @@ function DashboardContent() {
           </div>
         </section>
 
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="grid auto-rows-fr gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard
             label="Parents"
             value={stats.profiles}

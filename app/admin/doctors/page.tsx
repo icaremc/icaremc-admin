@@ -136,6 +136,7 @@ export default function DoctorsPage() {
                 <TableHead>Experience</TableHead>
                 <TableHead>Availability</TableHead>
                 <TableHead>Verified</TableHead>
+                <TableHead>Referral code</TableHead>
                 <TableHead>Joined</TableHead>
                 <TableHead className="w-10" />
               </TableRow>
@@ -143,13 +144,13 @@ export default function DoctorsPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-10 text-center text-gray-500">
+                  <TableCell colSpan={9} className="py-10 text-center text-gray-500">
                     Loading doctors…
                   </TableCell>
                 </TableRow>
               ) : filteredDoctors.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-10 text-center text-gray-500">
+                  <TableCell colSpan={9} className="py-10 text-center text-gray-500">
                     {filter === "pending"
                       ? "No doctors awaiting approval."
                       : filter === "verified"
@@ -183,7 +184,7 @@ export default function DoctorsPage() {
                     <TableCell>{doctorCategoryLabel(doctor)}</TableCell>
                     <TableCell>{doctor.hospital}</TableCell>
                     <TableCell>{doctor.experience_years} yrs</TableCell>
-                    <TableCell className="max-w-[220px]">
+                    <TableCell className="max-w-55">
                       <div className="truncate text-sm">
                         {summarizeAvailabilitySlots(doctor.doctor_availability_slots)}
                       </div>
@@ -233,6 +234,9 @@ export default function DoctorsPage() {
                           {doctor.is_verified ? "Verified" : "Pending"}
                         </span>
                       )}
+                    </TableCell>
+                    <TableCell className="font-mono text-xs text-gray-700">
+                      {doctor.referral_code ?? "—"}
                     </TableCell>
                     <TableCell>{formatDate(doctor.created_at)}</TableCell>
                     <TableCell>

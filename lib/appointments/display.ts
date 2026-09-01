@@ -23,12 +23,13 @@ export function patientPhone(appt: Appointment): string | null {
   return appt.patient_phone ?? appt.profiles?.phone ?? null;
 }
 
-export function formatMoney(amount: number, currency: string): string {
+export function formatMoney(amount: number, currency: string, fractionDigits = 0): string {
   try {
     return new Intl.NumberFormat(undefined, {
       style: "currency",
       currency: currency || "ETB",
-      maximumFractionDigits: 0,
+      minimumFractionDigits: fractionDigits,
+      maximumFractionDigits: fractionDigits,
     }).format(amount);
   } catch {
     return `${amount} ${currency}`;

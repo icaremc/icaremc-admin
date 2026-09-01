@@ -13,6 +13,8 @@ import {
   ChevronRight,
   CreditCard,
   DollarSign,
+  FileStack,
+  Gift,
   FileText,
   Heart,
   LayoutDashboard,
@@ -60,6 +62,7 @@ const doctorsItems: NavItem[] = [
   { href: "/admin/doctor-categories", label: "Speciality", icon: Tags },
   { href: "/admin/hospitals", label: "Hospitals", icon: Building2 },
   { href: "/admin/appointments", label: "Appointments", icon: CalendarCheck },
+  { href: "/admin/referrals", label: "Referrals", icon: Gift, matchPrefix: true },
 ];
 
 const contentItems: NavItem[] = [
@@ -85,12 +88,12 @@ const financeItems: NavItem[] = [
   { href: "/admin/finance/payout-request", label: "Payout request", icon: DollarSign },
   { href: "/admin/finance/payment", label: "Payment", icon: CreditCard },
   { href: "/admin/finance/app-membership", label: "App membership", icon: BadgeCheck },
-  { href: "/admin/finance/payment-settings", label: "Payment settings", icon: CreditCard },
   { href: "/admin/finance/wallet-transactions", label: "Wallet transactions", icon: Wallet },
   { href: "/admin/finance/settings", label: "Finance settings", icon: Settings2 },
 ];
 
 const adminItems: NavItem[] = [
+  { href: "/admin/documents", label: "Internal docs", icon: FileStack, matchPrefix: true },
   { href: "/admin/activity", label: "Activity log", icon: Activity, matchPrefix: true },
   { href: "/admin/admins", label: "Portal admins", icon: Shield },
 ];
@@ -130,7 +133,7 @@ function NavLink({ item, compact = false, onNavigate }: { item: NavItem; compact
       href={item.href}
       onClick={onNavigate}
       className={cn(
-        "group flex items-center gap-3 rounded-[var(--radius)] transition-colors",
+        "group flex items-center gap-3 rounded-(--radius) transition-colors",
         compact ? "px-3 py-2 text-sm" : "px-3 py-2.5 text-[15px]",
         navClass(active),
       )}
@@ -219,12 +222,12 @@ export default function Sidebar({ mobileOpen = false, onCloseMobile }: SidebarPr
 
       <aside
         className={cn(
-          "fixed left-0 top-0 z-50 flex h-screen w-[min(260px,85vw)] flex-col border-r border-gray-200 bg-white transition-transform duration-200 lg:w-[260px]",
+          "fixed left-0 top-0 z-50 flex h-screen w-[min(260px,85vw)] flex-col border-r border-gray-200 bg-white transition-transform duration-200 lg:w-65",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
       >
         <div className="flex h-16 shrink-0 items-center gap-3 border-b border-gray-200 px-5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-[var(--radius)] bg-gradient-to-br from-emerald-500 to-teal-600 text-xs font-bold text-white">
+          <div className="flex h-8 w-8 items-center justify-center rounded-(--radius) bg-linear-to-br from-emerald-500 to-teal-600 text-xs font-bold text-white">
             IC
           </div>
           <span className="font-heading text-[15px] font-semibold tracking-normal text-gray-900">ICare MC Admin</span>
@@ -239,7 +242,7 @@ export default function Sidebar({ mobileOpen = false, onCloseMobile }: SidebarPr
                     href="/admin/dashboard"
                     onClick={closeMobile}
                     className={cn(
-                      "group flex items-center gap-3 rounded-[var(--radius)] px-3 py-2.5 text-[15px] transition-colors",
+                      "group flex items-center gap-3 rounded-(--radius) px-3 py-2.5 text-[15px] transition-colors",
                       navClass(pathname === "/admin/dashboard"),
                     )}
                   >
@@ -270,7 +273,7 @@ export default function Sidebar({ mobileOpen = false, onCloseMobile }: SidebarPr
               await supabase.auth.signOut();
               location.href = "/";
             }}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-[var(--radius)] border border-gray-200 px-3 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-(--radius) border border-gray-200 px-3 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"
           >
             <LogOut className="h-4 w-4" />
             Sign out

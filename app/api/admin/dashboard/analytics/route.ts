@@ -12,6 +12,33 @@ import {
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
 import type { Appointment } from "@/lib/types/doctors";
 import type { WalletTransaction } from "@/lib/types/finance";
+import type { SubscriptionPaymentRow } from "@/lib/dashboard/analytics";
+
+const SUBSCRIPTION_PAGE_SIZE = 1000;
+
+async function fetchSubscriptionPayments(
+  client: ReturnType<typeof createServiceSupabaseClient>,
+): Promise<SubscriptionPaymentRow[]> {
+  const rows: SubscriptionPaymentRow[] = [];
+  let from = 0;
+
+  while (true) {
+    const { data, error } = await client
+      .from("app_subscriptions")
+      .select("amount_paid, created_at")
+      .order("created_at", { ascending: false })
+      .range(from, from + SUBSCRIPTION_PAGE_SIZE - 1);
+
+    if (error) throw new Error(error.message);
+
+    const page = (data as SubscriptionPaymentRow[] | null) ?? [];
+    rows.push(...page);
+    if (page.length < SUBSCRIPTION_PAGE_SIZE) break;
+    from += SUBSCRIPTION_PAGE_SIZE;
+  }
+
+  return rows;
+}
 
 export async function GET(request: Request) {
   const auth = await requireAdminViewPermission("view_dashboard");
@@ -26,7 +53,8 @@ export async function GET(request: Request) {
     const client = createServiceSupabaseClient();
     const canViewFinance = adminCanView(auth.adminRole, "manage_finance");
 
-    const [appointmentsResult, walletResult, financeResult] = await Promise.all([
+    const [appointmentsResult, walletResult, financeResult, subscriptionsResult] =
+      await Promise.all([
       client
         .from("appointments")
         .select(
@@ -46,6 +74,9 @@ export async function GET(request: Request) {
             .eq("id", "finance")
             .maybeSingle()
         : Promise.resolve({ data: null, error: null }),
+      canViewFinance
+        ? fetchSubscriptionPayments(client)
+        : Promise.resolve([]),
     ]);
 
     if (appointmentsResult.error) {
@@ -62,6 +93,7 @@ export async function GET(request: Request) {
     const analytics = computeDashboardAnalytics({
       appointments: (appointmentsResult.data ?? []) as Appointment[],
       walletTransactions: (walletResult.data ?? []) as WalletTransaction[],
+      subscriptionPayments: subscriptionsResult,
       commissionPercent: financeSettings.platformCommissionPercent,
       range,
     });

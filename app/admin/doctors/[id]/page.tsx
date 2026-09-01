@@ -30,6 +30,8 @@ import {
 import SendDoctorPushForm from "@/components/doctors/SendDoctorPushForm";
 import DoctorBookingPricingPanel from "@/components/doctors/DoctorBookingPricingPanel";
 import DoctorCredentialDocuments from "@/components/doctors/DoctorCredentialDocuments";
+import DoctorReferralPanel from "@/components/doctors/DoctorReferralPanel";
+import DoctorSharedDocuments from "@/components/doctors/DoctorSharedDocuments";
 import DoctorDetailTabs, {
   DOCTOR_DETAIL_TABS,
   type DoctorDetailTab,
@@ -241,6 +243,8 @@ function DoctorPersonalDetails({
         </div>
         <AvailabilityTable slots={doctor.doctor_availability_slots} />
       </div>
+
+      <DoctorReferralPanel doctorId={doctor.id} />
     </div>
   );
 }
@@ -415,7 +419,12 @@ export default function DoctorDetailPage() {
               <DoctorPersonalDetails doctor={doctor} canEdit={canManageDoctors} />
             ) : null}
 
-            {activeTab === "documents" ? <DoctorCredentialDocuments doctor={doctor} /> : null}
+            {activeTab === "documents" ? (
+              <div className="space-y-6">
+                <DoctorCredentialDocuments doctor={doctor} />
+                <DoctorSharedDocuments doctorId={doctor.id} />
+              </div>
+            ) : null}
 
             {activeTab === "services" ? (
               <DoctorBookingPricingPanel

@@ -28,7 +28,14 @@ export async function requireAdminSession() {
 }
 
 export async function requireSuperAdminSession() {
-  return requireAdminPermission("manage_admins");
+  const auth = await requireAdminSession();
+  if ("error" in auth) return auth;
+
+  if (auth.adminRole !== "super_admin") {
+    return { error: "Forbidden", status: 403 as const };
+  }
+
+  return auth;
 }
 
 export async function requireAdminPermission(permission: AdminPermission) {
