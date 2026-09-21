@@ -67,7 +67,6 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     backendHint: "GET /api/v1/admin/followup-templates (partial)",
   },
 
-  // Explicitly missing vs current production admin
   { pathPrefix: "/admin/referrals", label: "Referrals", backendHint: null },
   { pathPrefix: "/admin/children", label: "Children", backendHint: null },
   { pathPrefix: "/admin/content", label: "Content CMS", backendHint: null },
@@ -82,6 +81,9 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
   },
 ];
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export function getStagingCapability(pathname: string): StagingCapability | null {
   const normalized = pathname.replace(/\/$/, "") || "/";
   const matches = STAGING_CAPABILITIES.filter(
@@ -92,7 +94,27 @@ export function getStagingCapability(pathname: string): StagingCapability | null
   return matches.sort((a, b) => b.pathPrefix.length - a.pathPrefix.length)[0] ?? null;
 }
 
+/** Detail routes with no staging backend equivalent. */
+export function isStagingDetailUnsupported(pathname: string): boolean {
+  const parts = pathname.replace(/\/$/, "").split("/").filter(Boolean);
+  // /admin/doctors/:id
+  if (parts[0] === "admin" && parts[1] === "doctors" && parts[2] && UUID_RE.test(parts[2])) {
+    return true;
+  }
+  // /admin/appointments/:id
+  if (
+    parts[0] === "admin" &&
+    parts[1] === "appointments" &&
+    parts[2] &&
+    UUID_RE.test(parts[2])
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export function isStagingFeatureAvailable(pathname: string): boolean {
+  if (isStagingDetailUnsupported(pathname)) return false;
   const cap = getStagingCapability(pathname);
   if (!cap) return true;
   return cap.backendHint !== null;
@@ -111,12 +133,11 @@ export function mapAdminApiToBackend(adminPath: string): string | null {
       return null;
     case "appointments":
       if (rest.length === 0) return "/api/v1/admin/appointments";
-      // detail / status updates not exposed as dedicated admin routes on staging
+      if (rest[0] === "stats") return "/api/v1/admin/appointments";
       return null;
     case "doctors":
       if (rest.length === 0) return "/api/v1/admin/doctors";
-      if (rest.length === 1) return null; // detail still supabase-shaped locally
-      if (rest[1] === "verify" || (rest.length === 2 && rest[1] === "verify")) {
+      if (rest.length === 2 && rest[1] === "verify") {
         return `/api/v1/admin/doctors/${rest[0]}/verify`;
       }
       return null;
@@ -173,6 +194,8 @@ export function mapAdminApiToBackend(adminPath: string): string | null {
     case "child-growth":
       if (rest[0] === "learning-path-images") return null;
       return "/api/v1/admin/child-growth-periods";
+    case "followup-visits":
+      return "/api/v1/admin/followup-templates";
     case "referrals":
     case "referral-settings":
     case "referral-commissions":
@@ -181,3 +204,39 @@ export function mapAdminApiToBackend(adminPath: string): string | null {
       return null;
   }
 }
+
+/** Every /api/admin path we expect to map or explicitly 501. */
+export const ADMIN_API_MAPPING_CASES: Array<{
+  adminPath: string;
+  backendPath: string | null;
+}> = [
+  { adminPath: "dashboard/analytics", backendPath: "/api/v1/admin/dashboard" },
+  { adminPath: "appointments", backendPath: "/api/v1/admin/appointments" },
+  { adminPath: "appointments/stats", backendPath: "/api/v1/admin/appointments" },
+  { adminPath: "doctors", backendPath: "/api/v1/admin/doctors" },
+  { adminPath: "doctors/abc/verify", backendPath: "/api/v1/admin/doctors/abc/verify" },
+  { adminPath: "doctors/abc", backendPath: null },
+  { adminPath: "doctor-categories", backendPath: "/api/v1/admin/doctor-categories" },
+  { adminPath: "hospitals", backendPath: "/api/v1/admin/hospitals" },
+  { adminPath: "hospitals/h1", backendPath: "/api/v1/admin/hospitals/h1" },
+  { adminPath: "users", backendPath: "/api/v1/admin/users" },
+  { adminPath: "users/u1", backendPath: "/api/v1/admin/users/u1" },
+  { adminPath: "documents", backendPath: "/api/v1/admin/documents" },
+  { adminPath: "documents/d1/deliver", backendPath: "/api/v1/admin/documents/d1/deliver" },
+  { adminPath: "payout-requests", backendPath: "/api/v1/admin/payout-requests" },
+  { adminPath: "payout-requests/p1", backendPath: "/api/v1/admin/payout-requests/p1" },
+  { adminPath: "wallet-transactions", backendPath: "/api/v1/admin/wallet-transactions" },
+  { adminPath: "app-membership-members", backendPath: "/api/v1/admin/membership" },
+  { adminPath: "app-membership-members/x/grant", backendPath: "/api/v1/admin/membership/grant" },
+  { adminPath: "app-membership-members/x/revoke", backendPath: "/api/v1/admin/membership/x/revoke" },
+  { adminPath: "finance-settings", backendPath: "/api/v1/admin/settings/finance" },
+  { adminPath: "payment-settings", backendPath: "/api/v1/admin/settings/payment" },
+  { adminPath: "admins", backendPath: "/api/v1/admin/admins" },
+  { adminPath: "activity-logs", backendPath: "/api/v1/admin/activity/admin" },
+  { adminPath: "legal-documents", backendPath: "/api/v1/admin/legal-documents" },
+  { adminPath: "pregnancy-weeks", backendPath: "/api/v1/admin/pregnancy-weeks" },
+  { adminPath: "child-growth", backendPath: "/api/v1/admin/child-growth-periods" },
+  { adminPath: "followup-visits", backendPath: "/api/v1/admin/followup-templates" },
+  { adminPath: "referrals", backendPath: null },
+  { adminPath: "referral-commissions", backendPath: null },
+];

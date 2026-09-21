@@ -107,6 +107,41 @@ export const fetchDashboardStats = createAsyncThunk(
   "dashboard/fetchStats",
   async (_, { rejectWithValue }) => {
     try {
+      if (process.env.NEXT_PUBLIC_USE_BACKEND_API === "true") {
+        const [bookingStats, doctorsRes, usersRes, adminsRes] = await Promise.all([
+          fetchBookingStats(),
+          fetch("/api/admin/doctors").then(async (res) => {
+            if (!res.ok) return 0;
+            const body = (await res.json()) as { doctors?: unknown[] };
+            return body.doctors?.length ?? 0;
+          }),
+          fetch("/api/admin/users").then(async (res) => {
+            if (!res.ok) return 0;
+            const body = (await res.json()) as { profiles?: unknown[] };
+            return body.profiles?.length ?? 0;
+          }),
+          fetch("/api/admin/admins").then(async (res) => {
+            if (!res.ok) return 0;
+            const body = (await res.json()) as { admins?: unknown[] };
+            return body.admins?.length ?? 0;
+          }),
+        ]);
+
+        return {
+          profiles: usersRes,
+          contentItems: 0,
+          pregnancyWeeks: 0,
+          pregnancies: 0,
+          pregnancyLogs: 0,
+          children: 0,
+          adminUsers: adminsRes,
+          recentLogs: 0,
+          appointments: bookingStats.total,
+          pendingAppointments: bookingStats.pending,
+          doctors: doctorsRes,
+        } satisfies DashboardStats;
+      }
+
       const [
         profiles,
         milestones,

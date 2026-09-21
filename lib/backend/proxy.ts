@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { adaptBackendResponse } from "@/lib/backend/adapters";
 import {
   BACKEND_ACCESS_COOKIE,
   getBackendApiBaseUrl,
@@ -6,7 +7,7 @@ import {
 } from "@/lib/backend/config";
 import { mapAdminApiToBackend } from "@/lib/backend/capabilities";
 
-function readAccessToken(request: Request): string | null {
+export function readAccessToken(request: Request): string | null {
   const header = request.headers.get("authorization");
   if (header?.toLowerCase().startsWith("bearer ")) {
     return header.slice(7).trim() || null;
@@ -68,14 +69,18 @@ export async function proxyAdminRequestToBackend(
   try {
     const upstream = await fetch(target, init);
     const text = await upstream.text();
-    const responseHeaders = new Headers();
-    const upstreamType = upstream.headers.get("content-type");
-    if (upstreamType) responseHeaders.set("content-type", upstreamType);
+    let parsed: unknown = text;
+    try {
+      parsed = text ? JSON.parse(text) : null;
+    } catch {
+      return new NextResponse(text, {
+        status: upstream.status,
+        headers: { "content-type": upstream.headers.get("content-type") ?? "text/plain" },
+      });
+    }
 
-    return new NextResponse(text, {
-      status: upstream.status,
-      headers: responseHeaders,
-    });
+    const adapted = adaptBackendResponse(adminPath, method, upstream.status, parsed);
+    return NextResponse.json(adapted, { status: upstream.status });
   } catch (error) {
     return NextResponse.json(
       {

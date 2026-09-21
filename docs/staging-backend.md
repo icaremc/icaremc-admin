@@ -54,6 +54,21 @@ See `lib/backend/capabilities.ts`.
 
 **Proxied when signed in:** dashboard, appointments list, doctors list, users, hospitals, categories, documents, membership, payouts, wallet, settings, admins, activity, legal, pregnancy weeks, child-growth periods (partial).
 
+## Tests
+
+```bash
+# Unit: path map, adapters, capability gates
+npm test
+
+# Live smoke against Render (optional credentials)
+npm run test:staging-smoke
+STAGING_ADMIN_EMAIL=… STAGING_ADMIN_PASSWORD=… npm run test:staging-smoke
+```
+
+Without credentials, smoke expects **401/403** on each admin GET (proves routes exist).
+With credentials, expects **200**.
+
 ## Cutover later
 
 Only when parity is good: point a **production** Render API at prod data, then set the flag on the production Vercel project. Until then, never set the flag on production.
+

@@ -33,6 +33,16 @@ async function readApiError(response: Response): Promise<string> {
 export const fetchProfiles = createAsyncThunk(
   "profiles/fetchAll",
   async (_, { rejectWithValue }) => {
+    if (process.env.NEXT_PUBLIC_USE_BACKEND_API === "true") {
+      const response = await fetch("/api/admin/users");
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(body.error ?? "Failed to load users from staging API");
+      }
+      const body = (await response.json()) as { profiles?: Profile[]; items?: Profile[] };
+      return (body.profiles ?? body.items ?? []) as Profile[];
+    }
+
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
       .select("*")

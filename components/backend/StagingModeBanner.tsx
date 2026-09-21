@@ -5,6 +5,7 @@ import { AlertTriangle } from "lucide-react";
 import { isBackendApiEnabled } from "@/lib/backend/config";
 import {
   getStagingCapability,
+  isStagingDetailUnsupported,
   isStagingFeatureAvailable,
   STAGING_CAPABILITIES,
 } from "@/lib/backend/capabilities";
@@ -30,6 +31,7 @@ export function StagingModeBanner() {
 
 export function StagingUnavailablePanel({ pathname }: { pathname: string }) {
   const cap = getStagingCapability(pathname);
+  const detailMissing = isStagingDetailUnsupported(pathname);
   const available = STAGING_CAPABILITIES.filter((item) => item.backendHint);
 
   return (
@@ -43,9 +45,9 @@ export function StagingUnavailablePanel({ pathname }: { pathname: string }) {
                 Not on staging API yet
               </h1>
               <p className="mt-1 text-sm text-amber-900/80">
-                {cap?.label ?? "This area"} exists in the current production admin
-                (Supabase), but there is no matching endpoint on the Render staging
-                backend. It is hidden here so we do not mix prod data into staging.
+                {detailMissing
+                  ? "Detail pages for doctors/appointments are not exposed on the staging Render API yet. Use the list view, or production admin for detail actions."
+                  : `${cap?.label ?? "This area"} exists in the current production admin (Supabase), but there is no matching endpoint on the Render staging backend.`}
               </p>
             </div>
             <p className="text-sm">
