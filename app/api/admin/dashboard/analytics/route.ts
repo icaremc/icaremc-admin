@@ -4,6 +4,7 @@ import { adminCanView } from "@/lib/adminRoles";
 import {
   computeDashboardAnalytics,
   parseDashboardRange,
+  type SubscriptionPaymentRow,
 } from "@/lib/dashboard/analytics";
 import {
   defaultFinanceSettings,
@@ -12,32 +13,66 @@ import {
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
 import type { Appointment } from "@/lib/types/doctors";
 import type { WalletTransaction } from "@/lib/types/finance";
-import type { SubscriptionPaymentRow } from "@/lib/dashboard/analytics";
 
-const SUBSCRIPTION_PAGE_SIZE = 1000;
+const PAGE_SIZE = 1000;
 
-async function fetchSubscriptionPayments(
-  client: ReturnType<typeof createServiceSupabaseClient>,
-): Promise<SubscriptionPaymentRow[]> {
-  const rows: SubscriptionPaymentRow[] = [];
+type ServiceClient = ReturnType<typeof createServiceSupabaseClient>;
+
+async function fetchAllPages<T>(
+  fetchPage: (
+    from: number,
+    to: number,
+  ) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+): Promise<T[]> {
+  const rows: T[] = [];
   let from = 0;
 
   while (true) {
-    const { data, error } = await client
-      .from("app_subscriptions")
-      .select("amount_paid, created_at")
-      .order("created_at", { ascending: false })
-      .range(from, from + SUBSCRIPTION_PAGE_SIZE - 1);
-
+    const { data, error } = await fetchPage(from, from + PAGE_SIZE - 1);
     if (error) throw new Error(error.message);
-
-    const page = (data as SubscriptionPaymentRow[] | null) ?? [];
+    const page = data ?? [];
     rows.push(...page);
-    if (page.length < SUBSCRIPTION_PAGE_SIZE) break;
-    from += SUBSCRIPTION_PAGE_SIZE;
+    if (page.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
   }
 
   return rows;
+}
+
+async function fetchAppointments(client: ServiceClient): Promise<Appointment[]> {
+  return fetchAllPages((from, to) =>
+    client
+      .from("appointments")
+      .select(
+        "id, status, amount_paid, payment_status, total_amount, created_at, updated_at",
+      )
+      .order("created_at", { ascending: false })
+      .range(from, to),
+  ) as Promise<Appointment[]>;
+}
+
+async function fetchWalletTransactions(
+  client: ServiceClient,
+): Promise<WalletTransaction[]> {
+  return fetchAllPages((from, to) =>
+    client
+      .from("wallet_transactions")
+      .select("id, amount, is_credit, type, created_at")
+      .order("created_at", { ascending: false })
+      .range(from, to),
+  ) as Promise<WalletTransaction[]>;
+}
+
+async function fetchSubscriptionPayments(
+  client: ServiceClient,
+): Promise<SubscriptionPaymentRow[]> {
+  return fetchAllPages((from, to) =>
+    client
+      .from("app_subscriptions")
+      .select("amount_paid, created_at")
+      .order("created_at", { ascending: false })
+      .range(from, to),
+  );
 }
 
 export async function GET(request: Request) {
@@ -53,37 +88,18 @@ export async function GET(request: Request) {
     const client = createServiceSupabaseClient();
     const canViewFinance = adminCanView(auth.adminRole, "manage_finance");
 
-    const [appointmentsResult, walletResult, financeResult, subscriptionsResult] =
+    const [appointments, walletTransactions, financeResult, subscriptionPayments] =
       await Promise.all([
-      client
-        .from("appointments")
-        .select(
-          "id, status, amount_paid, payment_status, total_amount, created_at, updated_at",
-        )
-        .order("created_at", { ascending: false }),
-      canViewFinance
-        ? client
-            .from("wallet_transactions")
-            .select("id, amount, is_credit, type, created_at")
-            .order("created_at", { ascending: false })
-        : Promise.resolve({ data: [], error: null }),
-      canViewFinance
-        ? client
-            .from("app_settings")
-            .select("data")
-            .eq("id", "finance")
-            .maybeSingle()
-        : Promise.resolve({ data: null, error: null }),
-      canViewFinance
-        ? fetchSubscriptionPayments(client)
-        : Promise.resolve([]),
-    ]);
+        fetchAppointments(client),
+        canViewFinance ? fetchWalletTransactions(client) : Promise.resolve([]),
+        canViewFinance
+          ? client.from("app_settings").select("data").eq("id", "finance").maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+        canViewFinance ? fetchSubscriptionPayments(client) : Promise.resolve([]),
+      ]);
 
-    if (appointmentsResult.error) {
-      return NextResponse.json({ error: appointmentsResult.error.message }, { status: 500 });
-    }
-    if (walletResult.error) {
-      return NextResponse.json({ error: walletResult.error.message }, { status: 500 });
+    if (financeResult.error) {
+      return NextResponse.json({ error: financeResult.error.message }, { status: 500 });
     }
 
     const financeSettings = parseFinanceSettings(
@@ -91,9 +107,9 @@ export async function GET(request: Request) {
     );
 
     const analytics = computeDashboardAnalytics({
-      appointments: (appointmentsResult.data ?? []) as Appointment[],
-      walletTransactions: (walletResult.data ?? []) as WalletTransaction[],
-      subscriptionPayments: subscriptionsResult,
+      appointments,
+      walletTransactions,
+      subscriptionPayments,
       commissionPercent: financeSettings.platformCommissionPercent,
       range,
     });

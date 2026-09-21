@@ -11,6 +11,8 @@ export type ChartBucket = {
 export type DashboardAnalytics = {
   totalTransactions: number;
   totalPaymentVolume: number;
+  doctorBookingEarnings: number;
+  doctorBookingEarningCount: number;
   totalCommission: number;
   monthlyCommission: number;
   commissionChange: number;
@@ -21,6 +23,7 @@ export type DashboardAnalytics = {
   paymentChart: ChartBucket[];
   commissionChart: ChartBucket[];
   subscriptionChart: ChartBucket[];
+  doctorEarningsChart: ChartBucket[];
 };
 
 type AppointmentRow = Pick<
@@ -215,6 +218,22 @@ function appointmentPaymentAmount(appt: AppointmentRow): number {
   return Number.isFinite(amount) && amount > 0 ? amount : 0;
 }
 
+function isAppointmentEarning(row: WalletTransaction): boolean {
+  return row.type === "appointment_earning" && row.is_credit;
+}
+
+function walletEarningAmount(row: WalletTransaction): number {
+  if (!isAppointmentEarning(row)) return 0;
+  const amount = Number(row.amount);
+  return Number.isFinite(amount) && amount > 0 ? amount : 0;
+}
+
+function resolveWalletDate(row: WalletTransaction): Date | null {
+  if (!row.created_at) return null;
+  const date = new Date(row.created_at);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 export function computeDashboardAnalytics({
   appointments,
   walletTransactions,
@@ -236,6 +255,10 @@ export function computeDashboardAnalytics({
   );
   const completedPaidInRange = rangedAppointments.filter(
     (appt) => isCompletedAppointment(appt) && isPaymentDone(appt),
+  );
+  const doctorEarningsInRange = walletTransactions.filter(
+    (row) =>
+      walletEarningAmount(row) > 0 && isDateInRange(row.created_at, range),
   );
 
   const totalCommission = completedPaidInRange.reduce(
@@ -290,6 +313,11 @@ export function computeDashboardAnalytics({
       (sum, appt) => sum + appointmentPaymentAmount(appt),
       0,
     ),
+    doctorBookingEarnings: doctorEarningsInRange.reduce(
+      (sum, row) => sum + walletEarningAmount(row),
+      0,
+    ),
+    doctorBookingEarningCount: doctorEarningsInRange.length,
     totalCommission,
     monthlyCommission,
     commissionChange,
@@ -319,6 +347,12 @@ export function computeDashboardAnalytics({
       range,
       resolveSubscriptionDate,
       subscriptionPaymentAmount,
+    ),
+    doctorEarningsChart: buildTimeSeriesChart(
+      doctorEarningsInRange,
+      range,
+      resolveWalletDate,
+      walletEarningAmount,
     ),
   };
 }

@@ -107,6 +107,7 @@ export type Appointment = {
   amount_paid: number;
   payment_status: "unpaid" | "partial" | "paid" | "waived";
   cancelled_by?: "patient" | "doctor" | "admin" | null;
+  confirmed_at?: string | null;
   created_at: string;
   updated_at: string;
   doctor_profiles?: {

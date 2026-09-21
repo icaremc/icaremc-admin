@@ -147,6 +147,9 @@ export async function PATCH(request: Request, context: RouteContext) {
         status,
         updated_at: new Date().toISOString(),
         ...(status === "cancelled" ? { cancelled_by: "admin" } : {}),
+        ...(status === "confirmed" && !previous.confirmed_at
+          ? { confirmed_at: new Date().toISOString() }
+          : {}),
       })
       .eq("id", id)
       .select(APPOINTMENT_SELECT)

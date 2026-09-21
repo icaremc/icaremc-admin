@@ -130,7 +130,7 @@ function DashboardContent() {
           </Button>
         </div>
 
-        <section className="grid auto-rows-fr gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <section className="grid auto-rows-fr gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
           <StatCard
             label="Transactions"
             value={
@@ -154,6 +154,28 @@ function DashboardContent() {
             icon={DollarSign}
             loading={analyticsLoading}
             accent="emerald"
+            description={
+              analyticsLoading
+                ? undefined
+                : `${(analytics?.completedPaidBookings ?? 0).toLocaleString()} completed paid`
+            }
+          />
+          <StatCard
+            label="Doctor booking earnings"
+            value={
+              analyticsLoading
+                ? "…"
+                : formatMoney(analytics?.doctorBookingEarnings ?? 0, "ETB", 2)
+            }
+            href="/admin/finance/wallet-transactions"
+            icon={Stethoscope}
+            loading={analyticsLoading}
+            accent="cyan"
+            description={
+              analyticsLoading
+                ? undefined
+                : `${(analytics?.doctorBookingEarningCount ?? 0).toLocaleString()} completed bookings`
+            }
           />
           <StatCard
             label="Subscription payments"
@@ -192,11 +214,11 @@ function DashboardContent() {
           />
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
+        <section className="grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
           <div className="admin-panel">
             <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
               <BarChart3 className="h-5 w-5 text-emerald-600" />
-              Payments
+              Appointment payments
             </h3>
             <DashboardBarChart
               buckets={analytics?.paymentChart ?? []}
@@ -204,6 +226,23 @@ function DashboardContent() {
               valueLabel="Amount"
               isCurrency
             />
+          </div>
+          <div className="admin-panel">
+            <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
+              <Stethoscope className="h-5 w-5 text-cyan-600" />
+              Doctor earnings
+            </h3>
+            <DashboardBarChart
+              buckets={analytics?.doctorEarningsChart ?? []}
+              emptyLabel="No doctor booking earnings in this period"
+              valueLabel="Amount"
+              isCurrency
+            />
+            <p className="mt-3 text-sm text-gray-500">
+              {analyticsLoading
+                ? "…"
+                : `${(analytics?.doctorBookingEarningCount ?? 0).toLocaleString()} wallet credits from completed bookings`}
+            </p>
           </div>
           <div className="admin-panel">
             <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
@@ -222,7 +261,7 @@ function DashboardContent() {
                 : `${(analytics?.subscriptionPaymentCount ?? 0).toLocaleString()} paid subscriptions in this period`}
             </p>
           </div>
-          <div className="admin-panel lg:col-span-2 xl:col-span-1">
+          <div className="admin-panel">
             <h3 className="mb-4 flex items-center gap-2 font-semibold text-gray-900">
               <TrendingUp className="h-5 w-5 text-violet-600" />
               Commission

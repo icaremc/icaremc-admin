@@ -37,11 +37,18 @@ import {
   patientPhone,
   statusActionLabel,
 } from "@/lib/appointments/display";
+import {
+  DOCTOR_RESPONSE_SLA_HOURS,
+  doctorResponseBadgeClass,
+  getDoctorResponseInfo,
+  type DoctorResponseState,
+} from "@/lib/appointments/responseMonitor";
 import { cn } from "@/lib/utils";
 import { appointmentStatusConfirmCopy } from "@/lib/admin/confirmMessages";
 import type { Appointment, AppointmentStatus } from "@/lib/types/doctors";
 
 type StatusFilter = "all" | AppointmentStatus;
+type ResponseFilter = "all" | DoctorResponseState;
 
 const ACTIVE_STATUSES: AppointmentStatus[] = ["pending", "confirmed"];
 
@@ -104,6 +111,21 @@ function paymentBadge(appt: Appointment) {
       className={`rounded-full px-2 py-0.5 text-xs font-medium ${styles[appt.payment_status]}`}
     >
       {labels[appt.payment_status]}
+    </span>
+  );
+}
+
+function responseBadge(appt: Appointment) {
+  const info = getDoctorResponseInfo(appt);
+  return (
+    <span
+      className={cn(
+        "rounded-full px-2 py-0.5 text-xs font-medium",
+        doctorResponseBadgeClass(info.state),
+      )}
+      title={`Doctor response SLA: ${DOCTOR_RESPONSE_SLA_HOURS}h from booking`}
+    >
+      {info.label}
     </span>
   );
 }
@@ -193,6 +215,7 @@ function AppointmentCard({
               {appt.time_slot}
             </div>
             {statusBadge(appt.status)}
+            {responseBadge(appt)}
             {appt.total_amount > 0 ? paymentBadge(appt) : null}
           </div>
 
@@ -349,6 +372,7 @@ export default function AppointmentsPage() {
     (state) => state.appointments,
   );
   const [filter, setFilter] = useState<StatusFilter>("pending");
+  const [responseFilter, setResponseFilter] = useState<ResponseFilter>("all");
   const [search, setSearch] = useState("");
   const [pendingStatusChange, setPendingStatusChange] = useState<{
     appointment: Appointment;
@@ -360,11 +384,28 @@ export default function AppointmentsPage() {
     dispatch(fetchBookingStats());
   }, [dispatch]);
 
+  const responseCounts = useMemo(() => {
+    const counts: Record<DoctorResponseState, number> = {
+      awaiting: 0,
+      overdue: 0,
+      on_time: 0,
+      late: 0,
+      unanswered: 0,
+    };
+    for (const appt of appointments) {
+      counts[getDoctorResponseInfo(appt).state] += 1;
+    }
+    return counts;
+  }, [appointments]);
+
   const filteredAppointments = useMemo(() => {
     const query = search.trim().toLowerCase();
     return appointments
       .filter((appt) => {
         if (filter !== "all" && appt.status !== filter) return false;
+        if (responseFilter !== "all") {
+          if (getDoctorResponseInfo(appt).state !== responseFilter) return false;
+        }
         if (!query) return true;
 
         const doctor = appt.doctor_profiles;
@@ -393,7 +434,7 @@ export default function AppointmentsPage() {
         );
       })
       .sort(compareAppointments);
-  }, [appointments, filter, search]);
+  }, [appointments, filter, responseFilter, search]);
 
   const groupedAppointments = useMemo(
     () => groupByDate(filteredAppointments),
@@ -437,13 +478,24 @@ export default function AppointmentsPage() {
       })
     : null;
 
+  const responseFilters: Array<{ value: ResponseFilter; label: string; count: number }> = [
+    { value: "all", label: "All responses", count: appointments.length },
+    { value: "overdue", label: "Overdue", count: responseCounts.overdue },
+    { value: "awaiting", label: "Awaiting", count: responseCounts.awaiting },
+    { value: "late", label: "Late", count: responseCounts.late },
+    { value: "on_time", label: "On time", count: responseCounts.on_time },
+  ];
+
   return (
     <>
       <PageHero
         title="Appointments"
-        description="Bookings from ICare-MC. Review upcoming visits and update status."
+        description={`Bookings from ICare-MC. Doctors should confirm within ${DOCTOR_RESPONSE_SLA_HOURS}h.`}
         icon={CalendarCheck}
-        stat={{ label: "Upcoming", value: upcomingCount }}
+        stat={{
+          label: "Overdue",
+          value: responseCounts.overdue,
+        }}
       />
 
       <div className="admin-page">
@@ -474,6 +526,30 @@ export default function AppointmentsPage() {
           })}
         </div>
 
+        <div className="mb-4 flex flex-wrap gap-2">
+          {responseFilters.map(({ value, label, count }) => {
+            const selected = responseFilter === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setResponseFilter(value)}
+                className={cn(
+                  "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition",
+                  selected
+                    ? value === "overdue"
+                      ? "border-red-300 bg-red-50 text-red-800"
+                      : "border-emerald-300 bg-emerald-50 text-emerald-800"
+                    : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50",
+                )}
+              >
+                {label}
+                <span className="tabular-nums text-xs opacity-80">{count}</span>
+              </button>
+            );
+          })}
+        </div>
+
         <div className="mb-6">
           <div className="relative w-full sm:max-w-md">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
@@ -485,6 +561,10 @@ export default function AppointmentsPage() {
               className="w-full rounded-lg border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm text-gray-900 shadow-sm placeholder:text-gray-500 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-200/50"
             />
           </div>
+          <p className="mt-2 text-xs text-gray-500">
+            Response SLA: confirm within {DOCTOR_RESPONSE_SLA_HOURS}h of booking ·{" "}
+            {upcomingCount} upcoming active booking{upcomingCount === 1 ? "" : "s"}
+          </p>
         </div>
 
         {error ? (
@@ -500,9 +580,11 @@ export default function AppointmentsPage() {
           </div>
         ) : filteredAppointments.length === 0 ? (
           <div className="admin-panel py-12 text-center text-sm text-gray-500">
-            {filter === "pending"
-              ? "No pending appointments."
-              : "No appointments match your filters."}
+            {responseFilter === "overdue"
+              ? "No overdue doctor responses."
+              : filter === "pending"
+                ? "No pending appointments."
+                : "No appointments match your filters."}
           </div>
         ) : (
           <div className="space-y-8">
