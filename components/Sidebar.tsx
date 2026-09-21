@@ -270,7 +270,11 @@ export default function Sidebar({ mobileOpen = false, onCloseMobile }: SidebarPr
                 event_type: ADMIN_ACTIVITY_EVENTS.LOGOUT,
                 event_label: "Signed out of admin portal",
               });
-              await supabase.auth.signOut();
+              if (process.env.NEXT_PUBLIC_USE_BACKEND_API === "true") {
+                await fetch("/api/backend/auth/session", { method: "DELETE" });
+              } else {
+                await supabase.auth.signOut();
+              }
               location.href = "/";
             }}
             className="inline-flex w-full items-center justify-center gap-2 rounded-(--radius) border border-gray-200 px-3 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"

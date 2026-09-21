@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { authActions, login, restoreSession } from "@/app/store/slices/authSlice";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 
 function LoginContent() {
   const router = useRouter();
@@ -16,6 +17,7 @@ function LoginContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const stagingMode = isBackendApiEnabled();
 
   useEffect(() => {
     dispatch(restoreSession()).then((result) => {
@@ -60,13 +62,20 @@ function LoginContent() {
     <div className="grid min-h-screen place-items-center bg-gray-50 px-6">
       <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 text-sm font-bold text-white">
+          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-linear-to-br from-emerald-600 via-teal-600 to-cyan-600 text-sm font-bold text-white">
             IC
           </div>
           <h1 className="text-lg font-semibold text-gray-900">ICare MC Admin</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Sign in with your authorized admin account.
+            {stagingMode
+              ? "Staging mode — sign in with your Render staging admin account."
+              : "Sign in with your authorized admin account."}
           </p>
+          {stagingMode ? (
+            <p className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-900">
+              Connected to icaremc-backend.onrender.com
+            </p>
+          ) : null}
         </div>
 
         <form onSubmit={onSubmit} className="space-y-4">

@@ -4,8 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:staging": "NEXT_PUBLIC_USE_BACKEND_API=true USE_BACKEND_API=true API_BASE_URL=https://icaremc-backend.onrender.com NEXT_PUBLIC_API_BASE_URL=https://icaremc-backend.onrender.com next dev -p 3001",
     "build": "next build",
+    "build:staging": "NEXT_PUBLIC_USE_BACKEND_API=true USE_BACKEND_API=true API_BASE_URL=https://icaremc-backend.onrender.com NEXT_PUBLIC_API_BASE_URL=https://icaremc-backend.onrender.com next build",
     "start": "next start",
+    "start:staging": "NEXT_PUBLIC_USE_BACKEND_API=true USE_BACKEND_API=true API_BASE_URL=https://icaremc-backend.onrender.com NEXT_PUBLIC_API_BASE_URL=https://icaremc-backend.onrender.com next start -p 3001",
     "lint": "eslint"
   },
   "dependencies": {
