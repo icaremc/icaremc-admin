@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { Textarea } from "@/components/ui/textarea";
+import { adminFetch } from "@/lib/client/adminFetch";
 
 type PushStatus = {
   fcmRegistered: boolean;
@@ -37,7 +38,7 @@ export default function SendDoctorPushForm({ doctorId }: Props) {
     setStatusError(null);
 
     try {
-      const response = await fetch(`/api/admin/doctors/${doctorId}/push`);
+      const response = await adminFetch(`/api/admin/doctors/${doctorId}/push`);
       const data = (await response.json()) as PushStatus & { error?: string };
 
       if (!response.ok) {
@@ -73,7 +74,7 @@ export default function SendDoctorPushForm({ doctorId }: Props) {
     setSending(true);
 
     try {
-      const response = await fetch(`/api/admin/doctors/${doctorId}/push`, {
+      const response = await adminFetch(`/api/admin/doctors/${doctorId}/push`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
