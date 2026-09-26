@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "@/app/store/store";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
 import { supabase } from "@/lib/supabaseClient";
 import { logContentDeleted, logContentSaved } from "@/lib/client/adminActivityEvents";
@@ -202,6 +203,19 @@ const initialState: PregnancyWeeksState = {
 export const fetchPregnancyWeeks = createAsyncThunk(
   "pregnancyWeeks/fetchAll",
   async (_, { rejectWithValue }) => {
+    if (isBackendApiEnabled()) {
+      const response = await fetch("/api/admin/pregnancy-weeks");
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(body.error ?? "Failed to load pregnancy weeks");
+      }
+      const body = (await response.json()) as {
+        weeks?: PregnancyWeek[];
+        items?: PregnancyWeek[];
+      };
+      return (body.weeks ?? body.items ?? []) as PregnancyWeek[];
+    }
+
     const { data, error } = await supabase
       .from("pregnancy_weeks")
       .select(WEEK_SELECT)
@@ -215,6 +229,22 @@ export const fetchPregnancyWeeks = createAsyncThunk(
 export const fetchPregnancyWeek = createAsyncThunk(
   "pregnancyWeeks/fetchOne",
   async (weekNumber: number, { rejectWithValue }) => {
+    if (isBackendApiEnabled()) {
+      const response = await fetch("/api/admin/pregnancy-weeks");
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(body.error ?? "Failed to load pregnancy week");
+      }
+      const body = (await response.json()) as {
+        weeks?: PregnancyWeek[];
+        items?: PregnancyWeek[];
+      };
+      const weeks = body.weeks ?? body.items ?? [];
+      const found = weeks.find((week) => week.week_number === weekNumber);
+      if (!found) return rejectWithValue("Pregnancy week not found.");
+      return found;
+    }
+
     const { data, error } = await supabase
       .from("pregnancy_weeks")
       .select(WEEK_SELECT)

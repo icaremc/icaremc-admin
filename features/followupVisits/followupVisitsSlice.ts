@@ -9,6 +9,7 @@ import {
   type NameTranslationsForm,
 } from "@/lib/i18n/nameTranslations";
 import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 import { supabase } from "@/lib/supabaseClient";
 import type {
   ChildFollowupVisitTemplate,
@@ -141,6 +142,19 @@ async function fetchTemplateById(id: string) {
 export const fetchFollowupVisitTemplates = createAsyncThunk(
   "followupVisits/fetchAll",
   async (_, { rejectWithValue }) => {
+    if (isBackendApiEnabled()) {
+      const response = await fetch("/api/admin/followup-visits");
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(body.error ?? "Failed to load follow-up templates");
+      }
+      const body = (await response.json()) as {
+        templates?: ChildFollowupVisitTemplate[];
+        items?: ChildFollowupVisitTemplate[];
+      };
+      return (body.templates ?? body.items ?? []) as ChildFollowupVisitTemplate[];
+    }
+
     const { data, error } = await supabase
       .from("child_followup_visit_templates")
       .select(TEMPLATE_SELECT)
@@ -154,6 +168,22 @@ export const fetchFollowupVisitTemplates = createAsyncThunk(
 export const fetchFollowupVisitTemplate = createAsyncThunk(
   "followupVisits/fetchOne",
   async (id: string, { rejectWithValue }) => {
+    if (isBackendApiEnabled()) {
+      const response = await fetch("/api/admin/followup-visits");
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(body.error ?? "Failed to load follow-up template");
+      }
+      const body = (await response.json()) as {
+        templates?: ChildFollowupVisitTemplate[];
+        items?: ChildFollowupVisitTemplate[];
+      };
+      const templates = body.templates ?? body.items ?? [];
+      const found = templates.find((template) => template.id === id);
+      if (!found) return rejectWithValue("Template not found");
+      return found;
+    }
+
     const { data, error } = await fetchTemplateById(id);
     if (error) return rejectWithValue(error.message);
     if (!data) return rejectWithValue("Template not found");

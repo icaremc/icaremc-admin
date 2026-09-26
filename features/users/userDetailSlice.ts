@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 import { supabase } from "@/lib/supabaseClient";
 import type { Child, Pregnancy, PregnancyLog, Profile } from "@/lib/types/database";
 
@@ -26,6 +27,27 @@ const initialState: UserDetailState = {
 export const fetchUserDetail = createAsyncThunk(
   "userDetail/fetch",
   async (userId: string, { rejectWithValue }) => {
+    if (isBackendApiEnabled()) {
+      const response = await fetch(`/api/admin/users/${userId}`);
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(body.error ?? "Failed to load user from staging API");
+      }
+      const body = (await response.json()) as {
+        profile?: Profile;
+        pregnancies?: Pregnancy[];
+        children?: Child[];
+        logsByPregnancy?: Record<string, PregnancyLog[]>;
+      };
+      if (!body.profile) return rejectWithValue("User not found");
+      return {
+        profile: body.profile,
+        pregnancies: body.pregnancies ?? [],
+        children: body.children ?? [],
+        logsByPregnancy: body.logsByPregnancy ?? {},
+      } satisfies UserDetailPayload;
+    }
+
     const [profileRes, pregnanciesRes, childrenRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", userId).single(),
       supabase

@@ -6,6 +6,7 @@ import PageHero from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { adminFetch } from "@/lib/client/adminFetch";
 
 type Result = {
   ok: boolean;
@@ -44,7 +45,7 @@ function BroadcastForm({
 
     setSending(true);
     try {
-      const response = await fetch(endpoint, {
+      const response = await adminFetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

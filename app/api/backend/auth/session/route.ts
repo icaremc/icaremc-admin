@@ -8,7 +8,10 @@ import {
 
 export async function GET(request: Request) {
   if (!isBackendApiEnabled()) {
-    return NextResponse.json({ user: null, mode: "supabase" });
+    return NextResponse.json(
+      { error: "Backend API mode is disabled on this deploy" },
+      { status: 404 },
+    );
   }
 
   const cookie = request.headers.get("cookie") ?? "";

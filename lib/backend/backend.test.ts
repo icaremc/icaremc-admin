@@ -36,8 +36,11 @@ describe("backend config", () => {
 
 describe("mapAdminApiToBackend", () => {
   for (const testCase of ADMIN_API_MAPPING_CASES) {
-    it(`maps ${testCase.adminPath} → ${testCase.backendPath ?? "null"}`, () => {
-      assert.equal(mapAdminApiToBackend(testCase.adminPath), testCase.backendPath);
+    it(`maps ${testCase.method ?? "GET"} ${testCase.adminPath} → ${testCase.backendPath ?? "null"}`, () => {
+      assert.equal(
+        mapAdminApiToBackend(testCase.adminPath, { method: testCase.method }),
+        testCase.backendPath,
+      );
     });
   }
 });
@@ -52,12 +55,22 @@ describe("staging capabilities", () => {
     assert.equal(isStagingFeatureAvailable("/admin/dashboard"), true);
   });
 
-  it("blocks doctor and appointment detail UUIDs", () => {
+  it("allows doctor and appointment detail via list synthesis", () => {
     const id = "11111111-1111-4111-8111-111111111111";
-    assert.equal(isStagingDetailUnsupported(`/admin/doctors/${id}`), true);
-    assert.equal(isStagingFeatureAvailable(`/admin/doctors/${id}`), false);
-    assert.equal(isStagingDetailUnsupported(`/admin/appointments/${id}`), true);
+    assert.equal(isStagingDetailUnsupported(`/admin/doctors/${id}`), false);
+    assert.equal(isStagingFeatureAvailable(`/admin/doctors/${id}`), true);
+    assert.equal(isStagingDetailUnsupported(`/admin/appointments/${id}`), false);
+    assert.equal(isStagingFeatureAvailable(`/admin/appointments/${id}`), true);
     assert.equal(isStagingFeatureAvailable("/admin/doctors"), true);
+  });
+
+  it("marks about and app-version available", () => {
+    assert.equal(isStagingFeatureAvailable("/admin/about"), true);
+    assert.equal(isStagingFeatureAvailable("/admin/app-version"), true);
+  });
+
+  it("keeps broadcast push unavailable", () => {
+    assert.equal(isStagingFeatureAvailable("/admin/push"), false);
   });
 });
 
@@ -67,9 +80,28 @@ describe("adaptBackendResponse", () => {
     assert.deepEqual(out, { doctors: [{ id: "1" }] });
   });
 
+  it("picks doctor detail from list", () => {
+    const out = adaptBackendResponse("doctors/d1", "GET", 200, [
+      { id: "d1", first_name: "A" },
+      { id: "d2", first_name: "B" },
+    ]);
+    assert.deepEqual(out, { doctor: { id: "d1", first_name: "A" } });
+  });
+
   it("wraps appointments array", () => {
     const out = adaptBackendResponse("appointments", "GET", 200, [{ id: "a" }]);
     assert.deepEqual(out, { appointments: [{ id: "a" }] });
+  });
+
+  it("picks appointment detail from list", () => {
+    const out = adaptBackendResponse("appointments/a1", "GET", 200, [
+      { id: "a1", status: "pending" },
+    ]);
+    assert.deepEqual(out, {
+      appointment: { id: "a1", status: "pending" },
+      conversation: null,
+      messages: [],
+    });
   });
 
   it("wraps dashboard object", () => {

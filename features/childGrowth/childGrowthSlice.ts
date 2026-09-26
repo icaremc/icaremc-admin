@@ -25,6 +25,7 @@ import {
   ageGroupForMonths,
   type ChildAgeGroup,
 } from "@/lib/childGrowth/periods";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 import { supabase } from "@/lib/supabaseClient";
 import { logContentDeleted, logContentSaved } from "@/lib/client/adminActivityEvents";
 import type {
@@ -510,6 +511,19 @@ const initialState: ChildGrowthState = {
 export const fetchChildGrowthPeriods = createAsyncThunk(
   "childGrowth/fetchAll",
   async (_, { rejectWithValue }) => {
+    if (isBackendApiEnabled()) {
+      const response = await fetch("/api/admin/child-growth");
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(body.error ?? "Failed to load child growth periods");
+      }
+      const body = (await response.json()) as {
+        periods?: ChildGrowthPeriod[];
+        items?: ChildGrowthPeriod[];
+      };
+      return (body.periods ?? body.items ?? []) as ChildGrowthPeriod[];
+    }
+
     const { data, error } = await supabase
       .from("child_growth_periods")
       .select(PERIOD_SELECT)
@@ -523,6 +537,22 @@ export const fetchChildGrowthPeriods = createAsyncThunk(
 export const fetchChildGrowthPeriod = createAsyncThunk(
   "childGrowth/fetchOne",
   async (ageMonths: number, { rejectWithValue }) => {
+    if (isBackendApiEnabled()) {
+      const response = await fetch("/api/admin/child-growth");
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(body.error ?? "Failed to load child growth period");
+      }
+      const body = (await response.json()) as {
+        periods?: ChildGrowthPeriod[];
+        items?: ChildGrowthPeriod[];
+      };
+      const periods = body.periods ?? body.items ?? [];
+      const found = periods.find((period) => period.age_months === ageMonths);
+      if (!found) return rejectWithValue("Child growth period not found.");
+      return found;
+    }
+
     const { data, error } = await supabase
       .from("child_growth_periods")
       .select(PERIOD_SELECT)

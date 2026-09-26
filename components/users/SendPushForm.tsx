@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Modal } from "@/components/ui/modal";
 import { Textarea } from "@/components/ui/textarea";
+import { adminFetch } from "@/lib/client/adminFetch";
 
 type PushStatus = {
   fcmRegistered: boolean;
@@ -39,7 +40,7 @@ export default function SendPushForm({ userId, role }: Props) {
     setStatusError(null);
 
     try {
-      const response = await fetch(`/api/admin/users/${userId}/push`);
+      const response = await adminFetch(`/api/admin/users/${userId}/push`);
       const data = (await response.json()) as PushStatus & { error?: string };
 
       if (!response.ok) {
@@ -75,7 +76,7 @@ export default function SendPushForm({ userId, role }: Props) {
     setSending(true);
 
     try {
-      const response = await fetch(`/api/admin/users/${userId}/push`, {
+      const response = await adminFetch(`/api/admin/users/${userId}/push`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -130,7 +131,10 @@ export default function SendPushForm({ userId, role }: Props) {
   let badgeLabel = "Checking…";
   let badgeClass = "bg-gray-100 text-gray-700";
 
-  if (!loadingStatus && status) {
+  if (statusError) {
+    badgeLabel = "Auth error";
+    badgeClass = "bg-red-100 text-red-800";
+  } else if (!loadingStatus && status) {
     if (canSend) {
       badgeLabel = "Ready to send";
       badgeClass = "bg-emerald-100 text-emerald-800";

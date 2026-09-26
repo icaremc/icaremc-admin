@@ -45,8 +45,8 @@ async function login(): Promise<string | null> {
   if (!EMAIL || !PASSWORD) return null;
   const res = await fetch(`${BASE}/api/v1/auth/admin/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: EMAIL, password: PASSWORD }),
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ username: EMAIL, password: PASSWORD }).toString(),
   });
   if (!res.ok) {
     const text = await res.text();

@@ -42,8 +42,8 @@ export async function POST(request: Request) {
   try {
     const upstream = await fetch(`${getBackendApiBaseUrl()}/api/v1/auth/admin/login`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ username: email, password }).toString(),
       cache: "no-store",
     });
 

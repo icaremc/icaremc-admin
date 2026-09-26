@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 import { supabase } from "@/lib/supabaseClient";
 import type { CreateAdminInput, UpdateAdminInput } from "@/lib/adminRoles";
 import type { AdminUser } from "@/lib/types/database";
@@ -31,7 +32,7 @@ async function readApiError(response: Response): Promise<string> {
 export const fetchAdmins = createAsyncThunk(
   "admins/fetchAll",
   async (_, { rejectWithValue }) => {
-    if (process.env.NEXT_PUBLIC_USE_BACKEND_API === "true") {
+    if (isBackendApiEnabled()) {
       const response = await fetch("/api/admin/admins");
       if (!response.ok) {
         const body = (await response.json().catch(() => ({}))) as { error?: string };

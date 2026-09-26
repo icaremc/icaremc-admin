@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 import { supabase } from "@/lib/supabaseClient";
 import type { DashboardStats } from "@/lib/types/database";
 
@@ -107,38 +108,31 @@ export const fetchDashboardStats = createAsyncThunk(
   "dashboard/fetchStats",
   async (_, { rejectWithValue }) => {
     try {
-      if (process.env.NEXT_PUBLIC_USE_BACKEND_API === "true") {
-        const [bookingStats, doctorsRes, usersRes, adminsRes] = await Promise.all([
-          fetchBookingStats(),
-          fetch("/api/admin/doctors").then(async (res) => {
-            if (!res.ok) return 0;
-            const body = (await res.json()) as { doctors?: unknown[] };
-            return body.doctors?.length ?? 0;
-          }),
-          fetch("/api/admin/users").then(async (res) => {
-            if (!res.ok) return 0;
-            const body = (await res.json()) as { profiles?: unknown[] };
-            return body.profiles?.length ?? 0;
-          }),
-          fetch("/api/admin/admins").then(async (res) => {
-            if (!res.ok) return 0;
-            const body = (await res.json()) as { admins?: unknown[] };
-            return body.admins?.length ?? 0;
-          }),
-        ]);
+      if (isBackendApiEnabled()) {
+        const response = await fetch("/api/admin/dashboard/analytics");
+        if (!response.ok) {
+          const body = (await response.json().catch(() => ({}))) as { error?: string };
+          return rejectWithValue(body.error ?? "Failed to load staging dashboard");
+        }
+        const payload = (await response.json()) as {
+          analytics?: Record<string, unknown>;
+        } & Record<string, unknown>;
+        const a = (payload.analytics ?? payload) as Record<string, unknown>;
+        const num = (key: string) =>
+          typeof a[key] === "number" ? (a[key] as number) : 0;
 
         return {
-          profiles: usersRes,
+          profiles: num("profiles"),
           contentItems: 0,
           pregnancyWeeks: 0,
-          pregnancies: 0,
+          pregnancies: num("pregnancies"),
           pregnancyLogs: 0,
-          children: 0,
-          adminUsers: adminsRes,
+          children: num("children"),
+          adminUsers: num("admin_users"),
           recentLogs: 0,
-          appointments: bookingStats.total,
-          pendingAppointments: bookingStats.pending,
-          doctors: doctorsRes,
+          appointments: num("appointments"),
+          pendingAppointments: num("pending_appointments"),
+          doctors: num("doctors"),
         } satisfies DashboardStats;
       }
 

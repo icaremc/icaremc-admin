@@ -3,6 +3,16 @@
  * Production must leave NEXT_PUBLIC_USE_BACKEND_API unset or "false".
  */
 export function isBackendApiEnabled(): boolean {
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (
+      host === "icaremc-admin-staging.vercel.app" ||
+      host.endsWith("-icaremc-admin-staging.vercel.app")
+    ) {
+      return true;
+    }
+  }
+
   const flag =
     process.env.NEXT_PUBLIC_USE_BACKEND_API?.trim().toLowerCase() ??
     process.env.USE_BACKEND_API?.trim().toLowerCase() ??

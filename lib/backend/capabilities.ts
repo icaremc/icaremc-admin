@@ -13,20 +13,32 @@ export type StagingCapability = {
 
 export const STAGING_CAPABILITIES: StagingCapability[] = [
   { pathPrefix: "/admin/dashboard", label: "Dashboard", backendHint: "GET /api/v1/admin/dashboard" },
-  { pathPrefix: "/admin/appointments", label: "Appointments", backendHint: "GET /api/v1/admin/appointments" },
-  { pathPrefix: "/admin/doctors", label: "Doctors", backendHint: "GET /api/v1/admin/doctors" },
+  {
+    pathPrefix: "/admin/appointments",
+    label: "Appointments",
+    backendHint: "GET /api/v1/admin/appointments (detail via list)",
+  },
+  {
+    pathPrefix: "/admin/doctors",
+    label: "Doctors",
+    backendHint: "GET /api/v1/admin/doctors + POST verify (detail via list)",
+  },
   {
     pathPrefix: "/admin/doctor-categories",
     label: "Speciality",
     backendHint: "GET|POST /api/v1/admin/doctor-categories",
   },
   { pathPrefix: "/admin/hospitals", label: "Hospitals", backendHint: "GET|POST|PATCH /api/v1/admin/hospitals" },
-  { pathPrefix: "/admin/users", label: "Parents", backendHint: "GET /api/v1/admin/users" },
+  {
+    pathPrefix: "/admin/users",
+    label: "Parents",
+    backendHint: "GET /api/v1/admin/users + GET /users/{id} + POST /push/notify",
+  },
   { pathPrefix: "/admin/documents", label: "Internal docs", backendHint: "GET|POST deliver /api/v1/admin/documents" },
   {
     pathPrefix: "/admin/finance/payout-request",
     label: "Payout requests",
-    backendHint: "GET|POST /api/v1/admin/payout-requests",
+    backendHint: "GET|POST /api/v1/admin/payout-requests (detail via list)",
   },
   {
     pathPrefix: "/admin/finance/wallet-transactions",
@@ -52,27 +64,44 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
   { pathPrefix: "/admin/activity", label: "Activity log", backendHint: "GET /api/v1/admin/activity/*" },
   { pathPrefix: "/admin/legal", label: "Policies", backendHint: "GET|PUT /api/v1/admin/legal-documents" },
   {
+    pathPrefix: "/admin/about",
+    label: "About the app",
+    backendHint: "GET|PUT /api/v1/admin/legal-documents",
+  },
+  {
+    pathPrefix: "/admin/app-version",
+    label: "App release",
+    backendHint: "GET|PUT /api/v1/admin/settings/app_version*",
+  },
+  {
     pathPrefix: "/admin/pregnancy-weeks",
     label: "Pregnancy weeks",
-    backendHint: "GET|POST /api/v1/admin/pregnancy-weeks",
+    backendHint: "GET|POST /api/v1/admin/pregnancy-weeks (list + create)",
   },
   {
     pathPrefix: "/admin/child-growth",
     label: "Child milestones",
-    backendHint: "GET /api/v1/admin/child-growth-periods (partial)",
+    backendHint: "GET /api/v1/admin/child-growth-periods (list only)",
   },
   {
     pathPrefix: "/admin/followup-visits",
     label: "Follow-up visits",
-    backendHint: "GET /api/v1/admin/followup-templates (partial)",
+    backendHint: "GET /api/v1/admin/followup-templates (list only)",
   },
 
   { pathPrefix: "/admin/referrals", label: "Referrals", backendHint: null },
+  {
+    pathPrefix: "/admin/finance/referral-settings",
+    label: "Referral settings",
+    backendHint: null,
+  },
   { pathPrefix: "/admin/children", label: "Children", backendHint: null },
   { pathPrefix: "/admin/content", label: "Content CMS", backendHint: null },
-  { pathPrefix: "/admin/push", label: "Push notifications", backendHint: null },
-  { pathPrefix: "/admin/app-version", label: "App release", backendHint: null },
-  { pathPrefix: "/admin/about", label: "About the app", backendHint: null },
+  {
+    pathPrefix: "/admin/push",
+    label: "Broadcast push",
+    backendHint: null,
+  },
   { pathPrefix: "/admin/health-logs", label: "Health logs", backendHint: null },
   {
     pathPrefix: "/admin/finance/payment-settings",
@@ -80,9 +109,6 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     backendHint: "Use Finance settings → Payment gateway (settings/payment)",
   },
 ];
-
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export function getStagingCapability(pathname: string): StagingCapability | null {
   const normalized = pathname.replace(/\/$/, "") || "/";
@@ -94,34 +120,28 @@ export function getStagingCapability(pathname: string): StagingCapability | null
   return matches.sort((a, b) => b.pathPrefix.length - a.pathPrefix.length)[0] ?? null;
 }
 
-/** Detail routes with no staging backend equivalent. */
-export function isStagingDetailUnsupported(pathname: string): boolean {
-  const parts = pathname.replace(/\/$/, "").split("/").filter(Boolean);
-  // /admin/doctors/:id
-  if (parts[0] === "admin" && parts[1] === "doctors" && parts[2] && UUID_RE.test(parts[2])) {
-    return true;
-  }
-  // /admin/appointments/:id
-  if (
-    parts[0] === "admin" &&
-    parts[1] === "appointments" &&
-    parts[2] &&
-    UUID_RE.test(parts[2])
-  ) {
-    return true;
-  }
+/** @deprecated Detail pages are synthesized from list endpoints when present. */
+export function isStagingDetailUnsupported(_pathname: string): boolean {
   return false;
 }
 
 export function isStagingFeatureAvailable(pathname: string): boolean {
-  if (isStagingDetailUnsupported(pathname)) return false;
   const cap = getStagingCapability(pathname);
   if (!cap) return true;
   return cap.backendHint !== null;
 }
 
+export type MapAdminApiOptions = {
+  method?: string;
+  searchParams?: URLSearchParams;
+};
+
 /** Map /api/admin/... remainder → backend path or null if unsupported. */
-export function mapAdminApiToBackend(adminPath: string): string | null {
+export function mapAdminApiToBackend(
+  adminPath: string,
+  options: MapAdminApiOptions = {},
+): string | null {
+  const method = (options.method ?? "GET").toUpperCase();
   const path = adminPath.replace(/^\/+/, "").replace(/\/+$/, "");
   const segments = path.split("/").filter(Boolean);
   const head = segments[0] ?? "";
@@ -134,11 +154,24 @@ export function mapAdminApiToBackend(adminPath: string): string | null {
     case "appointments":
       if (rest.length === 0) return "/api/v1/admin/appointments";
       if (rest[0] === "stats") return "/api/v1/admin/appointments";
+      if (rest.length === 1 && method === "GET") return "/api/v1/admin/appointments";
       return null;
     case "doctors":
       if (rest.length === 0) return "/api/v1/admin/doctors";
       if (rest.length === 2 && rest[1] === "verify") {
         return `/api/v1/admin/doctors/${rest[0]}/verify`;
+      }
+      if (rest.length === 2 && rest[1] === "push") {
+        if (method === "POST") return "/api/v1/push/notify";
+        if (method === "GET") return "/api/v1/admin/doctors";
+        return null;
+      }
+      if (rest.length === 1) {
+        if (method === "GET") return "/api/v1/admin/doctors";
+        if (method === "PATCH" || method === "POST") {
+          return `/api/v1/admin/doctors/${rest[0]}/verify`;
+        }
+        return null;
       }
       return null;
     case "doctor-categories":
@@ -150,6 +183,11 @@ export function mapAdminApiToBackend(adminPath: string): string | null {
       return null;
     case "users":
       if (rest.length === 0) return "/api/v1/admin/users";
+      if (rest.length === 2 && rest[1] === "push") {
+        if (method === "POST") return "/api/v1/push/notify";
+        if (method === "GET") return `/api/v1/admin/users/${rest[0]}`;
+        return null;
+      }
       if (rest.length === 1) return `/api/v1/admin/users/${rest[0]}`;
       return null;
     case "documents":
@@ -160,7 +198,13 @@ export function mapAdminApiToBackend(adminPath: string): string | null {
       return null;
     case "payout-requests":
       if (rest.length === 0) return "/api/v1/admin/payout-requests";
-      if (rest.length === 1) return `/api/v1/admin/payout-requests/${rest[0]}`;
+      if (rest.length === 1) {
+        if (method === "GET") return "/api/v1/admin/payout-requests";
+        if (method === "PATCH" || method === "POST") {
+          return `/api/v1/admin/payout-requests/${rest[0]}`;
+        }
+        return null;
+      }
       return null;
     case "wallet-transactions":
       return "/api/v1/admin/wallet-transactions";
@@ -176,6 +220,11 @@ export function mapAdminApiToBackend(adminPath: string): string | null {
       return "/api/v1/admin/settings/finance";
     case "payment-settings":
       return "/api/v1/admin/settings/payment";
+    case "app-version-settings": {
+      const app = options.searchParams?.get("app");
+      const rowId = app === "doctors" ? "app_version_doctors" : "app_version";
+      return `/api/v1/admin/settings/${rowId}`;
+    }
     case "admins":
       return "/api/v1/admin/admins";
     case "activity-logs":
@@ -209,28 +258,59 @@ export function mapAdminApiToBackend(adminPath: string): string | null {
 export const ADMIN_API_MAPPING_CASES: Array<{
   adminPath: string;
   backendPath: string | null;
+  method?: string;
 }> = [
   { adminPath: "dashboard/analytics", backendPath: "/api/v1/admin/dashboard" },
   { adminPath: "appointments", backendPath: "/api/v1/admin/appointments" },
   { adminPath: "appointments/stats", backendPath: "/api/v1/admin/appointments" },
+  {
+    adminPath: "appointments/a1",
+    backendPath: "/api/v1/admin/appointments",
+    method: "GET",
+  },
   { adminPath: "doctors", backendPath: "/api/v1/admin/doctors" },
   { adminPath: "doctors/abc/verify", backendPath: "/api/v1/admin/doctors/abc/verify" },
-  { adminPath: "doctors/abc", backendPath: null },
+  { adminPath: "doctors/abc", backendPath: "/api/v1/admin/doctors", method: "GET" },
+  {
+    adminPath: "doctors/abc",
+    backendPath: "/api/v1/admin/doctors/abc/verify",
+    method: "PATCH",
+  },
+  {
+    adminPath: "doctors/abc/push",
+    backendPath: "/api/v1/push/notify",
+    method: "POST",
+  },
   { adminPath: "doctor-categories", backendPath: "/api/v1/admin/doctor-categories" },
   { adminPath: "hospitals", backendPath: "/api/v1/admin/hospitals" },
   { adminPath: "hospitals/h1", backendPath: "/api/v1/admin/hospitals/h1" },
   { adminPath: "users", backendPath: "/api/v1/admin/users" },
   { adminPath: "users/u1", backendPath: "/api/v1/admin/users/u1" },
+  {
+    adminPath: "users/u1/push",
+    backendPath: "/api/v1/push/notify",
+    method: "POST",
+  },
   { adminPath: "documents", backendPath: "/api/v1/admin/documents" },
   { adminPath: "documents/d1/deliver", backendPath: "/api/v1/admin/documents/d1/deliver" },
   { adminPath: "payout-requests", backendPath: "/api/v1/admin/payout-requests" },
-  { adminPath: "payout-requests/p1", backendPath: "/api/v1/admin/payout-requests/p1" },
+  {
+    adminPath: "payout-requests/p1",
+    backendPath: "/api/v1/admin/payout-requests",
+    method: "GET",
+  },
+  {
+    adminPath: "payout-requests/p1",
+    backendPath: "/api/v1/admin/payout-requests/p1",
+    method: "PATCH",
+  },
   { adminPath: "wallet-transactions", backendPath: "/api/v1/admin/wallet-transactions" },
   { adminPath: "app-membership-members", backendPath: "/api/v1/admin/membership" },
   { adminPath: "app-membership-members/x/grant", backendPath: "/api/v1/admin/membership/grant" },
   { adminPath: "app-membership-members/x/revoke", backendPath: "/api/v1/admin/membership/x/revoke" },
   { adminPath: "finance-settings", backendPath: "/api/v1/admin/settings/finance" },
   { adminPath: "payment-settings", backendPath: "/api/v1/admin/settings/payment" },
+  { adminPath: "app-version-settings", backendPath: "/api/v1/admin/settings/app_version" },
   { adminPath: "admins", backendPath: "/api/v1/admin/admins" },
   { adminPath: "activity-logs", backendPath: "/api/v1/admin/activity/admin" },
   { adminPath: "legal-documents", backendPath: "/api/v1/admin/legal-documents" },
