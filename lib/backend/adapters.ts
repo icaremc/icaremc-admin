@@ -208,7 +208,7 @@ export function adaptBackendResponse(
     if (head === "admins" && upper === "POST") {
       return { admin: body };
     }
-    if (head === "doctor-categories" && upper === "POST") {
+    if (head === "doctor-categories" && (upper === "POST" || rest.length === 1)) {
       return { category: body };
     }
     if (head === "finance-settings" || head === "app-membership-settings") {

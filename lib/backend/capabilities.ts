@@ -26,7 +26,7 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
   {
     pathPrefix: "/admin/doctor-categories",
     label: "Speciality",
-    backendHint: "GET|POST /api/v1/admin/doctor-categories",
+    backendHint: "GET|POST|PATCH|DELETE /api/v1/admin/doctor-categories",
   },
   { pathPrefix: "/admin/hospitals", label: "Hospitals", backendHint: "GET|POST|PATCH /api/v1/admin/hospitals" },
   {
@@ -176,6 +176,7 @@ export function mapAdminApiToBackend(
       return null;
     case "doctor-categories":
       if (rest.length === 0) return "/api/v1/admin/doctor-categories";
+      if (rest.length === 1) return `/api/v1/admin/doctor-categories/${rest[0]}`;
       return null;
     case "hospitals":
       if (rest.length === 0) return "/api/v1/admin/hospitals";
