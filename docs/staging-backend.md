@@ -8,7 +8,7 @@ Production stays on Supabase. Staging turns on only when `NEXT_PUBLIC_USE_BACKEN
 npm run dev:staging
 ```
 
-Opens on [http://localhost:3001](http://localhost:3001) against `https://icaremc-backend.onrender.com`.
+Opens on [http://localhost:3001](http://localhost:3001) against `https://api.icaremchealth.com`.
 
 Sign in with a **staging admin** email/password (`POST /api/v1/auth/admin/login`).
 
@@ -21,8 +21,8 @@ Sign in with a **staging admin** email/password (`POST /api/v1/auth/admin/login`
 |------|--------|
 | `NEXT_PUBLIC_USE_BACKEND_API` | `true` |
 | `USE_BACKEND_API` | `true` |
-| `API_BASE_URL` | `https://icaremc-backend.onrender.com` |
-| `NEXT_PUBLIC_API_BASE_URL` | `https://icaremc-backend.onrender.com` |
+| `API_BASE_URL` | `https://api.icaremchealth.com` |
+| `NEXT_PUBLIC_API_BASE_URL` | `https://api.icaremchealth.com` |
 
 3. Optional: attach domain `admin-staging.…` or use the Vercel `*.vercel.app` URL.
 4. Production project: leave `NEXT_PUBLIC_USE_BACKEND_API` **unset**.

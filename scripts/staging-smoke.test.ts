@@ -14,7 +14,7 @@ import { describe, it } from "node:test";
 
 const BASE =
   process.env.API_BASE_URL?.replace(/\/$/, "") ||
-  "https://icaremc-backend.onrender.com";
+  "https://api.icaremchealth.com";
 
 const EMAIL = process.env.STAGING_ADMIN_EMAIL?.trim() ?? "";
 const PASSWORD = process.env.STAGING_ADMIN_PASSWORD ?? "";

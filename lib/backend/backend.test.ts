@@ -19,7 +19,7 @@ describe("backend config", () => {
     const previous = process.env.API_BASE_URL;
     delete process.env.API_BASE_URL;
     delete process.env.NEXT_PUBLIC_API_BASE_URL;
-    assert.equal(getBackendApiBaseUrl(), "https://icaremc-backend.onrender.com");
+    assert.equal(getBackendApiBaseUrl(), "https://api.icaremchealth.com");
     if (previous !== undefined) process.env.API_BASE_URL = previous;
   });
 

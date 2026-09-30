@@ -16,12 +16,12 @@ export function StagingModeBanner() {
     <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-sm text-amber-900">
       Staging API mode — data from{" "}
       <a
-        href="https://icaremc-backend.onrender.com/docs"
+        href="https://api.icaremchealth.com/docs"
         target="_blank"
         rel="noreferrer"
         className="font-medium underline"
       >
-        icaremc-backend.onrender.com
+        api.icaremchealth.com
       </a>
       . Production users are unaffected.
     </div>

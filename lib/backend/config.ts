@@ -24,7 +24,7 @@ export function getBackendApiBaseUrl(): string {
   const raw =
     process.env.API_BASE_URL?.trim() ||
     process.env.NEXT_PUBLIC_API_BASE_URL?.trim() ||
-    "https://icaremc-backend.onrender.com";
+    "https://api.icaremchealth.com";
   return raw.replace(/\/$/, "");
 }
 
