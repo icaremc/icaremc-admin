@@ -27,6 +27,7 @@ Admin staging mode (`NEXT_PUBLIC_USE_BACKEND_API=true`) proxies `/api/admin/*` t
 | Portal admins | `/admin/admins` | list, create, patch | PR #3 |
 | Activity / legal / about / app version | corresponding pages | as before | |
 | Pregnancy weeks / child growth / follow-ups | corresponding pages | list (+ limited writes) | |
+| Content CMS daily tips | `/admin/content/daily_tip` | `GET /api/v1/cms/daily-tips` (read) | Writes: backend `feat/admin-cms-writes` → `/api/v1/admin/daily-tips` |
 
 ---
 
@@ -34,7 +35,7 @@ Admin staging mode (`NEXT_PUBLIC_USE_BACKEND_API=true`) proxies `/api/admin/*` t
 
 | Admin area | Why |
 |---|---|
-| Content CMS (`/admin/content/*`) | Public CMS GET only; no admin write API |
+| Content CMS **writes** (until CMS PR merges) | Read via public CMS; admin CRUD pending deploy |
 | Broadcast push (`/admin/push`) | Only per-user `/push/notify` exists |
 | Health logs | No admin health-log API |
 | Child growth / follow-up **writes** | List-only admin routes |
@@ -42,7 +43,7 @@ Admin staging mode (`NEXT_PUBLIC_USE_BACKEND_API=true`) proxies `/api/admin/*` t
 
 ### Backend asks (remaining)
 
-1. CMS admin mutations (if CMS stays in this portal)
+1. Merge/deploy admin daily-tip CMS writes (`feat/admin-cms-writes`)
 2. Non-image upload support for admin documents
 3. Child milestone / vaccine / growth write + nested detail joins
 4. Health-log / broadcast push admin APIs (if needed)

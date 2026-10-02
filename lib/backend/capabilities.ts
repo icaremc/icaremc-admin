@@ -97,7 +97,7 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     backendHint: "GET|PUT /api/v1/admin/settings/referral",
   },
   { pathPrefix: "/admin/children", label: "Children", backendHint: "GET /api/v1/admin/children (+ detail)" },
-  { pathPrefix: "/admin/content", label: "Content CMS", backendHint: null },
+  { pathPrefix: "/admin/content", label: "Content CMS", backendHint: "GET /api/v1/cms/daily-tips (read); writes via admin PR /api/v1/admin/daily-tips" },
   {
     pathPrefix: "/admin/push",
     label: "Broadcast push",
@@ -318,6 +318,10 @@ export function mapAdminApiToBackend(
       if (rest.length === 0 && method === "GET") return "/api/v1/admin/children";
       if (rest.length === 1 && method === "GET") return `/api/v1/admin/children/${rest[0]}`;
       return null;
+    case "daily-tips":
+      if (rest.length === 0 && method === "GET") return "/api/v1/cms/daily-tips";
+      // Writes need admin CMS API (backend PR); staging public CMS is read-only
+      return null;
     default:
       return null;
   }
@@ -426,4 +430,6 @@ export const ADMIN_API_MAPPING_CASES: Array<{
     backendPath: "/api/v1/admin/doctors/abc/referral-stats",
     method: "GET",
   },
+  { adminPath: "daily-tips", backendPath: "/api/v1/cms/daily-tips", method: "GET" },
+  { adminPath: "daily-tips", backendPath: null, method: "POST" },
 ];

@@ -15,6 +15,7 @@ import PageHero from "@/components/PageHero";
 import StatCard from "@/components/StatCard";
 import { Button } from "@/components/ui/button";
 import { CONTENT_SECTIONS } from "@/lib/constants";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 import { supabase } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
 
@@ -59,6 +60,47 @@ async function countRows(
 }
 
 async function fetchContentStats(): Promise<ContentOverviewStats> {
+  if (isBackendApiEnabled()) {
+    const [weeksRes, growthRes, tipsRes] = await Promise.all([
+      fetch("/api/admin/pregnancy-weeks"),
+      fetch("/api/admin/child-growth"),
+      fetch("/api/admin/daily-tips"),
+    ]);
+    const weeksBody = weeksRes.ok
+      ? ((await weeksRes.json()) as { weeks?: unknown[]; items?: unknown[] })
+      : { weeks: [] };
+    const growthBody = growthRes.ok
+      ? ((await growthRes.json()) as { periods?: unknown[]; items?: unknown[] })
+      : { periods: [] };
+    const tipsBody = tipsRes.ok
+      ? ((await tipsRes.json()) as { tips?: Array<{ week_number?: number; is_active?: boolean }>; items?: Array<{ week_number?: number; is_active?: boolean }> })
+      : { tips: [] };
+
+    const weeks = weeksBody.weeks ?? weeksBody.items ?? [];
+    const periods = growthBody.periods ?? growthBody.items ?? [];
+    const tips = tipsBody.tips ?? tipsBody.items ?? [];
+    const activeTips = tips.filter((tip) => tip.is_active !== false);
+    const weeksWithTips = new Set(activeTips.map((tip) => tip.week_number)).size;
+
+    return {
+      pregnancyWeeks: {
+        total: weeks.length,
+        active: weeks.length,
+        detail: `${weeks.length} weeks on staging API`,
+      },
+      childGrowth: {
+        total: periods.length,
+        active: periods.length,
+        detail: `${periods.length} milestone periods on staging API`,
+      },
+      dailyTips: {
+        total: tips.length,
+        active: activeTips.length,
+        detail: `${weeksWithTips} week${weeksWithTips === 1 ? "" : "s"} with tips (read-only)`,
+      },
+    };
+  }
+
   const [
     pregnancyWeeksTotal,
     pregnancyWeeksPublished,
@@ -254,12 +296,14 @@ export default function ContentIndexPage() {
                         <ArrowRight className="ml-2 h-4 w-4 opacity-60 transition-transform group-hover:translate-x-0.5" />
                       </Button>
                     </Link>
-                    <Link href={section.addHref}>
-                      <Button>
-                        <Plus className="mr-2 h-4 w-4" />
-                        {section.addLabel}
-                      </Button>
-                    </Link>
+                    {isBackendApiEnabled() && section.key === "daily_tips" ? null : (
+                      <Link href={section.addHref}>
+                        <Button>
+                          <Plus className="mr-2 h-4 w-4" />
+                          {section.addLabel}
+                        </Button>
+                      </Link>
+                    )}
                   </div>
                 </article>
               );

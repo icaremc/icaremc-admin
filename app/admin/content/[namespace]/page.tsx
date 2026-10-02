@@ -37,6 +37,7 @@ import {
   DAILY_TIP_TRIMESTERS,
   dailyTipMatchesSearch,
 } from "@/lib/content/dailyTipUi";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import { formatDateTime } from "@/lib/format";
 import type { ContentNamespace } from "@/lib/types/database";
@@ -52,7 +53,9 @@ import {
 function DailyTipWeeksView() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const canManageContent = useAdminCanManage("manage_content");
+  // ponytail: staging CMS is read-only until admin daily-tips write PR lands
+  const canManageContent =
+    useAdminCanManage("manage_content") && !isBackendApiEnabled();
   const { tips, loading, error } = useAppSelector((state) => state.dailyTips);
   const [query, setQuery] = useState("");
   const [expandedTrimester, setExpandedTrimester] = useState<number | null>(1);
@@ -274,7 +277,7 @@ function DailyTipWeeksView() {
                                   </li>
                                 ) : null}
                               </ul>
-                            ) : (
+                            ) : canManageContent ? (
                               <button
                                 type="button"
                                 className="mt-3 text-xs font-medium text-emerald-700 hover:underline"
@@ -282,6 +285,8 @@ function DailyTipWeeksView() {
                               >
                                 Add tips for this week
                               </button>
+                            ) : (
+                              <p className="mt-3 text-xs text-gray-400">No tips yet</p>
                             )}
                           </article>
                         );

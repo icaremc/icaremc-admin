@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "@/app/store/store";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
 import { supabase } from "@/lib/supabaseClient";
 import { logContentDeleted, logContentSaved } from "@/lib/client/adminActivityEvents";
@@ -142,6 +143,16 @@ const initialState: DailyTipsState = {
 export const fetchDailyTips = createAsyncThunk(
   "dailyTips/fetchAll",
   async (_, { rejectWithValue }) => {
+    if (isBackendApiEnabled()) {
+      const response = await fetch("/api/admin/daily-tips");
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(body.error ?? "Failed to load daily tips");
+      }
+      const body = (await response.json()) as { tips?: DailyTip[]; items?: DailyTip[] };
+      return sortTips((body.tips ?? body.items ?? []).map(normalizeDailyTip));
+    }
+
     const { data, error } = await supabase
       .from("daily_tips")
       .select(TIP_SELECT)
@@ -156,6 +167,19 @@ export const fetchDailyTips = createAsyncThunk(
 export const fetchDailyTip = createAsyncThunk(
   "dailyTips/fetchOne",
   async (id: string, { rejectWithValue }) => {
+    if (isBackendApiEnabled()) {
+      const response = await fetch("/api/admin/daily-tips");
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(body.error ?? "Failed to load daily tip");
+      }
+      const body = (await response.json()) as { tips?: DailyTip[]; items?: DailyTip[] };
+      const tips = (body.tips ?? body.items ?? []).map(normalizeDailyTip);
+      const found = tips.find((tip) => tip.id === id);
+      if (!found) return rejectWithValue("Daily tip not found.");
+      return found;
+    }
+
     const { data, error } = await supabase
       .from("daily_tips")
       .select(TIP_SELECT)
@@ -174,6 +198,12 @@ export const saveDailyTip = createAsyncThunk(
     payload: { id?: string; form: DailyTipFormState },
     { rejectWithValue, getState },
   ) => {
+    if (isBackendApiEnabled()) {
+      return rejectWithValue(
+        "Creating or editing daily tips is not available on the staging API yet.",
+      );
+    }
+
     const denied = rejectUnlessCanManage(
       (getState() as RootState).auth.user?.adminRole,
       "manage_content",
@@ -241,6 +271,12 @@ export const saveDailyTip = createAsyncThunk(
 export const deleteDailyTip = createAsyncThunk(
   "dailyTips/delete",
   async (id: string, { rejectWithValue, getState }) => {
+    if (isBackendApiEnabled()) {
+      return rejectWithValue(
+        "Creating or editing daily tips is not available on the staging API yet.",
+      );
+    }
+
     const denied = rejectUnlessCanManage(
       (getState() as RootState).auth.user?.adminRole,
       "manage_content",

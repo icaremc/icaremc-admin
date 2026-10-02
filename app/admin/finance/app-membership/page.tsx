@@ -156,6 +156,14 @@ export default function FinanceAppMembershipPage() {
 
   const handleSaveSettings = async () => {
     if (!settings) return;
+    if (!Number.isFinite(settings.yearlyPrice) || settings.yearlyPrice < 0) {
+      setError("Enter a valid yearly price.");
+      return;
+    }
+    if (!Number.isFinite(settings.durationDays) || settings.durationDays < 1) {
+      setError("Enter a valid duration in days.");
+      return;
+    }
     setSaving(true);
     setError(null);
     setMessage(null);
@@ -584,13 +592,22 @@ export default function FinanceAppMembershipPage() {
                       type="number"
                       min={0}
                       step="0.01"
-                      value={settings.yearlyPrice}
-                      onChange={(event) =>
+                      value={
+                        Number.isFinite(settings.yearlyPrice)
+                          ? settings.yearlyPrice
+                          : ""
+                      }
+                      onChange={(event) => {
+                        const raw = event.target.value;
                         setSettings({
                           ...settings,
-                          yearlyPrice: Number(event.target.value),
-                        })
-                      }
+                          // ponytail: Number("") === 0 traps the field; keep empty while typing
+                          yearlyPrice:
+                            raw === ""
+                              ? (Number.NaN as unknown as number)
+                              : Number(raw),
+                        });
+                      }}
                       disabled={!canManage}
                       className="mt-1.5"
                     />
@@ -616,13 +633,21 @@ export default function FinanceAppMembershipPage() {
                       id="duration_days"
                       type="number"
                       min={1}
-                      value={settings.durationDays}
-                      onChange={(event) =>
+                      value={
+                        Number.isFinite(settings.durationDays)
+                          ? settings.durationDays
+                          : ""
+                      }
+                      onChange={(event) => {
+                        const raw = event.target.value;
                         setSettings({
                           ...settings,
-                          durationDays: Number(event.target.value),
-                        })
-                      }
+                          durationDays:
+                            raw === ""
+                              ? (Number.NaN as unknown as number)
+                              : Number(raw),
+                        });
+                      }}
                       disabled={!canManage}
                       className="mt-1.5"
                     />
