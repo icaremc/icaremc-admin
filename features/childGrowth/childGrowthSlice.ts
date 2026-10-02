@@ -568,6 +568,13 @@ export const fetchChildGrowthPeriod = createAsyncThunk(
 export const saveChildGrowthPeriod = createAsyncThunk(
   "childGrowth/save",
   async (form: ChildGrowthPeriodFormState, { rejectWithValue, getState }) => {
+    if (isBackendApiEnabled()) {
+      // ponytail: admin write routes land in BE PR; wire save after deploy
+      return rejectWithValue(
+        "Saving child milestones is not available on the staging API yet.",
+      );
+    }
+
     const denied = rejectUnlessCanManage(
       (getState() as RootState).auth.user?.adminRole,
       "manage_content",
@@ -647,6 +654,12 @@ export const saveChildGrowthPeriod = createAsyncThunk(
 export const deleteChildGrowthPeriod = createAsyncThunk(
   "childGrowth/delete",
   async (id: string, { rejectWithValue, getState }) => {
+    if (isBackendApiEnabled()) {
+      return rejectWithValue(
+        "Deleting child milestones is not available on the staging API yet.",
+      );
+    }
+
     const denied = rejectUnlessCanManage(
       (getState() as RootState).auth.user?.adminRole,
       "manage_content",

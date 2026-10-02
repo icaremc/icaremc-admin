@@ -194,6 +194,13 @@ export const fetchFollowupVisitTemplate = createAsyncThunk(
 export const createFollowupVisitTemplate = createAsyncThunk(
   "followupVisits/create",
   async (form: FollowupVisitTemplateFormState, { getState, rejectWithValue }) => {
+    if (isBackendApiEnabled()) {
+      // ponytail: admin write routes land in BE PR; wire save after deploy
+      return rejectWithValue(
+        "Creating follow-up templates is not available on the staging API yet.",
+      );
+    }
+
     const denied = rejectUnlessCanManage(
       (getState() as RootState).auth.user?.adminRole,
       "manage_content",
@@ -233,6 +240,12 @@ export const updateFollowupVisitTemplate = createAsyncThunk(
     payload: { id: string; form: FollowupVisitTemplateFormState },
     { getState, rejectWithValue },
   ) => {
+    if (isBackendApiEnabled()) {
+      return rejectWithValue(
+        "Updating follow-up templates is not available on the staging API yet.",
+      );
+    }
+
     const denied = rejectUnlessCanManage(
       (getState() as RootState).auth.user?.adminRole,
       "manage_content",
@@ -269,6 +282,12 @@ export const updateFollowupVisitTemplate = createAsyncThunk(
 export const deleteFollowupVisitTemplate = createAsyncThunk(
   "followupVisits/delete",
   async (id: string, { getState, rejectWithValue }) => {
+    if (isBackendApiEnabled()) {
+      return rejectWithValue(
+        "Deleting follow-up templates is not available on the staging API yet.",
+      );
+    }
+
     const denied = rejectUnlessCanManage(
       (getState() as RootState).auth.user?.adminRole,
       "manage_content",

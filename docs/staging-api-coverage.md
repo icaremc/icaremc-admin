@@ -26,7 +26,7 @@ Admin staging mode (`NEXT_PUBLIC_USE_BACKEND_API=true`) proxies `/api/admin/*` t
 | Finance / payment settings | `/admin/finance/settings` | settings/finance + payment | |
 | Portal admins | `/admin/admins` | list, create, patch | PR #3 |
 | Activity / legal / about / app version | corresponding pages | as before | |
-| Pregnancy weeks / child growth / follow-ups | corresponding pages | list (+ limited writes) | |
+| Pregnancy weeks / child growth / follow-ups | corresponding pages | list + write routes in BE PR | Reads live; FE write wire after deploy |
 | Content CMS daily tips | `/admin/content/daily_tip` | `GET /api/v1/cms/daily-tips` (read) | Writes: backend `feat/admin-cms-writes` → `/api/v1/admin/daily-tips` |
 
 ---
@@ -35,18 +35,18 @@ Admin staging mode (`NEXT_PUBLIC_USE_BACKEND_API=true`) proxies `/api/admin/*` t
 
 | Admin area | Why |
 |---|---|
-| Content CMS **writes** (until CMS PR merges) | Read via public CMS; admin CRUD pending deploy |
+| Content CMS **writes** (until CMS PRs merge/deploy) | Daily tips + pregnancy/child write APIs pending |
 | Broadcast push (`/admin/push`) | Only per-user `/push/notify` exists |
 | Health logs | No admin health-log API |
-| Child growth / follow-up **writes** | List-only admin routes |
 | Multipart PDF document upload | Staging uploads API is image-only |
 
 ### Backend asks (remaining)
 
 1. Merge/deploy admin daily-tip CMS writes (`feat/admin-cms-writes`)
-2. Non-image upload support for admin documents
-3. Child milestone / vaccine / growth write + nested detail joins
-4. Health-log / broadcast push admin APIs (if needed)
+2. Merge/deploy pregnancy/child CMS writes (`feat/admin-cms-content-writes`)
+3. Non-image upload support for admin documents
+4. Child nested detail joins (growth/vaccines on children)
+5. Health-log / broadcast push admin APIs (if needed)
 
 ---
 

@@ -260,6 +260,13 @@ export const fetchPregnancyWeek = createAsyncThunk(
 export const savePregnancyWeek = createAsyncThunk(
   "pregnancyWeeks/save",
   async (form: PregnancyWeekFormState, { rejectWithValue, getState }) => {
+    if (isBackendApiEnabled()) {
+      // ponytail: admin write routes land in BE PR; wire save after deploy
+      return rejectWithValue(
+        "Saving pregnancy weeks is not available on the staging API yet.",
+      );
+    }
+
     const denied = rejectUnlessCanManage(
       (getState() as RootState).auth.user?.adminRole,
       "manage_content",
@@ -331,6 +338,12 @@ export const savePregnancyWeek = createAsyncThunk(
 export const deletePregnancyWeek = createAsyncThunk(
   "pregnancyWeeks/delete",
   async (id: string, { rejectWithValue, getState }) => {
+    if (isBackendApiEnabled()) {
+      return rejectWithValue(
+        "Deleting pregnancy weeks is not available on the staging API yet.",
+      );
+    }
+
     const denied = rejectUnlessCanManage(
       (getState() as RootState).auth.user?.adminRole,
       "manage_content",

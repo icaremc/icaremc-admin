@@ -77,17 +77,20 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
   {
     pathPrefix: "/admin/pregnancy-weeks",
     label: "Pregnancy weeks",
-    backendHint: "GET|POST /api/v1/admin/pregnancy-weeks (list + create)",
+    backendHint:
+      "GET|POST|PATCH|DELETE /api/v1/admin/pregnancy-weeks (+ translations); FE write wire pending deploy",
   },
   {
     pathPrefix: "/admin/child-growth",
     label: "Child milestones",
-    backendHint: "GET /api/v1/admin/child-growth-periods (list only)",
+    backendHint:
+      "GET|POST|PATCH|DELETE /api/v1/admin/child-growth-periods (+ translations); FE write wire pending deploy",
   },
   {
     pathPrefix: "/admin/followup-visits",
     label: "Follow-up visits",
-    backendHint: "GET /api/v1/admin/followup-templates (list only)",
+    backendHint:
+      "GET|POST|PATCH|DELETE /api/v1/admin/followup-templates; FE write wire pending deploy",
   },
 
   { pathPrefix: "/admin/referrals", label: "Referrals", backendHint: "GET /api/v1/admin/referrals + commissions + settings/referral" },
@@ -295,16 +298,46 @@ export function mapAdminApiToBackend(
         if (method === "GET" || method === "POST") return "/api/v1/admin/pregnancy-weeks";
         return null;
       }
+      if (rest.length === 1) {
+        if (method === "PATCH") return `/api/v1/admin/pregnancy-weeks/${rest[0]}`;
+        if (method === "DELETE") return `/api/v1/admin/pregnancy-weeks/${rest[0]}`;
+        return null;
+      }
       if (rest[1] === "translations" && method === "POST") {
         return `/api/v1/admin/pregnancy-weeks/${rest[0]}/translations`;
       }
       return null;
     case "child-growth":
       if (rest[0] === "learning-path-images") return null;
-      if (method === "GET") return "/api/v1/admin/child-growth-periods";
+      if (rest.length === 0) {
+        if (method === "GET" || method === "POST") {
+          return "/api/v1/admin/child-growth-periods";
+        }
+        return null;
+      }
+      if (rest.length === 1) {
+        if (method === "GET" || method === "PATCH") {
+          return `/api/v1/admin/child-growth-periods/${rest[0]}`;
+        }
+        if (method === "DELETE") return `/api/v1/admin/child-growth-periods/${rest[0]}`;
+        return null;
+      }
+      if (rest[1] === "translations" && method === "POST") {
+        return `/api/v1/admin/child-growth-periods/${rest[0]}/translations`;
+      }
       return null;
     case "followup-visits":
-      if (method === "GET") return "/api/v1/admin/followup-templates";
+      if (rest.length === 0) {
+        if (method === "GET" || method === "POST") {
+          return "/api/v1/admin/followup-templates";
+        }
+        return null;
+      }
+      if (rest.length === 1) {
+        if (method === "PATCH") return `/api/v1/admin/followup-templates/${rest[0]}`;
+        if (method === "DELETE") return `/api/v1/admin/followup-templates/${rest[0]}`;
+        return null;
+      }
       return null;
     case "referrals":
       if (method === "GET") return "/api/v1/admin/referrals";
@@ -419,10 +452,38 @@ export const ADMIN_API_MAPPING_CASES: Array<{
   { adminPath: "activity-logs", backendPath: "/api/v1/admin/activity/admin" },
   { adminPath: "legal-documents", backendPath: "/api/v1/admin/legal-documents" },
   { adminPath: "pregnancy-weeks", backendPath: "/api/v1/admin/pregnancy-weeks" },
+  {
+    adminPath: "pregnancy-weeks/abc",
+    backendPath: "/api/v1/admin/pregnancy-weeks/abc",
+    method: "PATCH",
+  },
+  {
+    adminPath: "pregnancy-weeks/abc",
+    backendPath: "/api/v1/admin/pregnancy-weeks/abc",
+    method: "DELETE",
+  },
   { adminPath: "child-growth", backendPath: "/api/v1/admin/child-growth-periods", method: "GET" },
-  { adminPath: "child-growth", backendPath: null, method: "POST" },
-  { adminPath: "followup-visits", backendPath: "/api/v1/admin/followup-templates", method: "GET" },
-  { adminPath: "referrals", backendPath: "/api/v1/admin/referrals" },
+  { adminPath: "child-growth", backendPath: "/api/v1/admin/child-growth-periods", method: "POST" },
+  {
+    adminPath: "child-growth/abc",
+    backendPath: "/api/v1/admin/child-growth-periods/abc",
+    method: "PATCH",
+  },
+  {
+    adminPath: "followup-visits",
+    backendPath: "/api/v1/admin/followup-templates",
+    method: "GET",
+  },
+  {
+    adminPath: "followup-visits",
+    backendPath: "/api/v1/admin/followup-templates",
+    method: "POST",
+  },
+  {
+    adminPath: "followup-visits/abc",
+    backendPath: "/api/v1/admin/followup-templates/abc",
+    method: "PATCH",
+  },  { adminPath: "referrals", backendPath: "/api/v1/admin/referrals" },
   { adminPath: "referral-commissions", backendPath: "/api/v1/admin/referral-commissions" },
   { adminPath: "referral-settings", backendPath: "/api/v1/admin/settings/referral" },
   {
