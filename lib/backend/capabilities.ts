@@ -21,14 +21,15 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
   {
     pathPrefix: "/admin/doctors",
     label: "Doctors",
-    backendHint: "GET /api/v1/admin/doctors + POST verify (detail via list)",
+    backendHint:
+      "GET /api/v1/admin/doctors + GET /api/v1/doctors/{id} (services) + verify/push; wallet/booking writes not on admin API",
   },
   {
     pathPrefix: "/admin/doctor-categories",
     label: "Speciality",
     backendHint: "GET|POST|PATCH|DELETE /api/v1/admin/doctor-categories",
   },
-  { pathPrefix: "/admin/hospitals", label: "Hospitals", backendHint: "GET|POST|PATCH /api/v1/admin/hospitals" },
+  { pathPrefix: "/admin/hospitals", label: "Hospitals", backendHint: "GET|POST|PATCH|DELETE /api/v1/admin/hospitals" },
   {
     pathPrefix: "/admin/users",
     label: "Parents",
@@ -48,7 +49,7 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
   {
     pathPrefix: "/admin/finance/app-membership",
     label: "App membership",
-    backendHint: "GET|grant|revoke /api/v1/admin/membership",
+    backendHint: "GET|grant|revoke /api/v1/admin/membership + settings/subscription",
   },
   {
     pathPrefix: "/admin/finance/settings",
@@ -157,7 +158,10 @@ export function mapAdminApiToBackend(
       if (rest.length === 1 && method === "GET") return "/api/v1/admin/appointments";
       return null;
     case "doctors":
-      if (rest.length === 0) return "/api/v1/admin/doctors";
+      if (rest.length === 0) {
+        if (method === "GET") return "/api/v1/admin/doctors";
+        return null;
+      }
       if (rest.length === 2 && rest[1] === "verify") {
         return `/api/v1/admin/doctors/${rest[0]}/verify`;
       }
@@ -166,8 +170,18 @@ export function mapAdminApiToBackend(
         if (method === "GET") return "/api/v1/admin/doctors";
         return null;
       }
+      if (rest.length === 2 && rest[1] === "document-deliveries") {
+        // POST rewritten in proxy (needs documentId from body); GET has no OpenAPI history
+        if (method === "GET") return null;
+        if (method === "POST") return "__document_deliver__";
+        return null;
+      }
+      if (rest.length === 2 && (rest[1] === "wallet" || rest[1] === "booking" || rest[1] === "referral-stats")) {
+        return null;
+      }
       if (rest.length === 1) {
-        if (method === "GET") return "/api/v1/admin/doctors";
+        // Public doctor detail includes services + slots (admin list does not)
+        if (method === "GET") return `/api/v1/doctors/${rest[0]}`;
         if (method === "PATCH" || method === "POST") {
           return `/api/v1/admin/doctors/${rest[0]}/verify`;
         }
@@ -192,8 +206,11 @@ export function mapAdminApiToBackend(
       if (rest.length === 1) return `/api/v1/admin/users/${rest[0]}`;
       return null;
     case "documents":
-      if (rest.length === 0) return "/api/v1/admin/documents";
-      if (rest.length === 2 && rest[1] === "deliver") {
+      if (rest.length === 0) {
+        if (method === "GET") return "/api/v1/admin/documents";
+        return null; // upload not in OpenAPI admin
+      }
+      if (rest.length === 2 && rest[1] === "deliver" && method === "POST") {
         return `/api/v1/admin/documents/${rest[0]}/deliver`;
       }
       return null;
@@ -217,6 +234,7 @@ export function mapAdminApiToBackend(
       }
       return null;
     case "app-membership-settings":
+      return "/api/v1/admin/settings/subscription";
     case "finance-settings":
       return "/api/v1/admin/settings/finance";
     case "payment-settings":
@@ -227,25 +245,45 @@ export function mapAdminApiToBackend(
       return `/api/v1/admin/settings/${rowId}`;
     }
     case "admins":
-      return "/api/v1/admin/admins";
+      if (method === "GET" || method === "POST") return "/api/v1/admin/admins";
+      return null;
     case "activity-logs":
-      return "/api/v1/admin/activity/admin";
+      if (rest.length === 2) {
+        return rest[0] === "platform"
+          ? "/api/v1/admin/activity/platform"
+          : "/api/v1/admin/activity/admin";
+      }
+      if (method !== "GET") return null;
+      {
+        const source = options.searchParams?.get("source");
+        if (source === "platform") return "/api/v1/admin/activity/platform";
+        if (source === "all") return "__activity_all__";
+        return "/api/v1/admin/activity/admin";
+      }
     case "activity":
       if (rest[0] === "log") return null;
       return "/api/v1/admin/activity/platform";
     case "legal-documents":
-      return "/api/v1/admin/legal-documents";
+      if (method === "GET" || method === "PATCH" || method === "PUT") {
+        return "/api/v1/admin/legal-documents";
+      }
+      return null;
     case "pregnancy-weeks":
-      if (rest.length === 0) return "/api/v1/admin/pregnancy-weeks";
-      if (rest[1] === "translations") {
+      if (rest.length === 0) {
+        if (method === "GET" || method === "POST") return "/api/v1/admin/pregnancy-weeks";
+        return null;
+      }
+      if (rest[1] === "translations" && method === "POST") {
         return `/api/v1/admin/pregnancy-weeks/${rest[0]}/translations`;
       }
       return null;
     case "child-growth":
       if (rest[0] === "learning-path-images") return null;
-      return "/api/v1/admin/child-growth-periods";
+      if (method === "GET") return "/api/v1/admin/child-growth-periods";
+      return null;
     case "followup-visits":
-      return "/api/v1/admin/followup-templates";
+      if (method === "GET") return "/api/v1/admin/followup-templates";
+      return null;
     case "referrals":
     case "referral-settings":
     case "referral-commissions":
@@ -271,7 +309,7 @@ export const ADMIN_API_MAPPING_CASES: Array<{
   },
   { adminPath: "doctors", backendPath: "/api/v1/admin/doctors" },
   { adminPath: "doctors/abc/verify", backendPath: "/api/v1/admin/doctors/abc/verify" },
-  { adminPath: "doctors/abc", backendPath: "/api/v1/admin/doctors", method: "GET" },
+  { adminPath: "doctors/abc", backendPath: "/api/v1/doctors/abc", method: "GET" },
   {
     adminPath: "doctors/abc",
     backendPath: "/api/v1/admin/doctors/abc/verify",
@@ -281,6 +319,16 @@ export const ADMIN_API_MAPPING_CASES: Array<{
     adminPath: "doctors/abc/push",
     backendPath: "/api/v1/push/notify",
     method: "POST",
+  },
+  {
+    adminPath: "doctors/abc/wallet",
+    backendPath: null,
+    method: "GET",
+  },
+  {
+    adminPath: "doctors/abc/booking",
+    backendPath: null,
+    method: "PATCH",
   },
   { adminPath: "doctor-categories", backendPath: "/api/v1/admin/doctor-categories" },
   { adminPath: "hospitals", backendPath: "/api/v1/admin/hospitals" },
@@ -292,8 +340,9 @@ export const ADMIN_API_MAPPING_CASES: Array<{
     backendPath: "/api/v1/push/notify",
     method: "POST",
   },
-  { adminPath: "documents", backendPath: "/api/v1/admin/documents" },
-  { adminPath: "documents/d1/deliver", backendPath: "/api/v1/admin/documents/d1/deliver" },
+  { adminPath: "documents", backendPath: "/api/v1/admin/documents", method: "GET" },
+  { adminPath: "documents", backendPath: null, method: "POST" },
+  { adminPath: "documents/d1/deliver", backendPath: "/api/v1/admin/documents/d1/deliver", method: "POST" },
   { adminPath: "payout-requests", backendPath: "/api/v1/admin/payout-requests" },
   {
     adminPath: "payout-requests/p1",
@@ -309,15 +358,18 @@ export const ADMIN_API_MAPPING_CASES: Array<{
   { adminPath: "app-membership-members", backendPath: "/api/v1/admin/membership" },
   { adminPath: "app-membership-members/x/grant", backendPath: "/api/v1/admin/membership/grant" },
   { adminPath: "app-membership-members/x/revoke", backendPath: "/api/v1/admin/membership/x/revoke" },
+  { adminPath: "app-membership-settings", backendPath: "/api/v1/admin/settings/subscription" },
   { adminPath: "finance-settings", backendPath: "/api/v1/admin/settings/finance" },
   { adminPath: "payment-settings", backendPath: "/api/v1/admin/settings/payment" },
   { adminPath: "app-version-settings", backendPath: "/api/v1/admin/settings/app_version" },
-  { adminPath: "admins", backendPath: "/api/v1/admin/admins" },
+  { adminPath: "admins", backendPath: "/api/v1/admin/admins", method: "GET" },
+  { adminPath: "admins", backendPath: null, method: "PATCH" },
   { adminPath: "activity-logs", backendPath: "/api/v1/admin/activity/admin" },
   { adminPath: "legal-documents", backendPath: "/api/v1/admin/legal-documents" },
   { adminPath: "pregnancy-weeks", backendPath: "/api/v1/admin/pregnancy-weeks" },
-  { adminPath: "child-growth", backendPath: "/api/v1/admin/child-growth-periods" },
-  { adminPath: "followup-visits", backendPath: "/api/v1/admin/followup-templates" },
+  { adminPath: "child-growth", backendPath: "/api/v1/admin/child-growth-periods", method: "GET" },
+  { adminPath: "child-growth", backendPath: null, method: "POST" },
+  { adminPath: "followup-visits", backendPath: "/api/v1/admin/followup-templates", method: "GET" },
   { adminPath: "referrals", backendPath: null },
   { adminPath: "referral-commissions", backendPath: null },
 ];

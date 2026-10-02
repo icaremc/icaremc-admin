@@ -19,6 +19,7 @@ export const STAGING_BACKEND_ADMIN_ROUTES = [
   { method: "GET", path: "/api/v1/admin/followup-templates", label: "followup-templates" },
   { method: "GET", path: "/api/v1/admin/settings/finance", label: "settings-finance" },
   { method: "GET", path: "/api/v1/admin/settings/payment", label: "settings-payment" },
+  { method: "GET", path: "/api/v1/admin/settings/subscription", label: "settings-subscription" },
   { method: "GET", path: "/api/v1/auth/me", label: "auth-me" },
 ] as const;
 
