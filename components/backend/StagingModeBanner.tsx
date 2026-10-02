@@ -31,6 +31,11 @@ export function StagingModeBanner() {
 export function StagingUnavailablePanel({ pathname }: { pathname: string }) {
   const cap = getStagingCapability(pathname);
   const available = STAGING_CAPABILITIES.filter((item) => item.backendHint);
+  const missingReason =
+    pathname.startsWith("/admin/referrals") ||
+    pathname.startsWith("/admin/finance/referral-settings")
+      ? "OpenAPI only exposes GET /api/v1/doctor/referrals (doctor app token). There is no /api/v1/admin/referrals (or commissions/settings) route to wire."
+      : "This area exists in the production admin (Supabase), but there is no matching admin endpoint on api.icaremchealth.com.";
 
   return (
     <div className="admin-page">
@@ -43,11 +48,18 @@ export function StagingUnavailablePanel({ pathname }: { pathname: string }) {
                 Not on staging API yet
               </h1>
               <p className="mt-1 text-sm text-amber-900/80">
-                {`${cap?.label ?? "This area"} exists in the current production admin (Supabase), but there is no matching endpoint on the Render staging backend.`}
+                <span className="font-medium">{cap?.label ?? "This area"}</span>
+                {": "}
+                {missingReason}
               </p>
             </div>
             <p className="text-sm">
-              Use production admin for this feature until the backend adds it.
+              Use production admin for this feature until the backend adds an{" "}
+              <span className="font-medium">admin</span> API. Coverage list:{" "}
+              <code className="rounded bg-amber-100/80 px-1 text-xs">
+                docs/staging-api-coverage.md
+              </code>
+              .
             </p>
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">

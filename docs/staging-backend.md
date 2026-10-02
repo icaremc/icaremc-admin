@@ -48,11 +48,13 @@ Chapa webhooks and `activity/log` stay on Next even in staging mode.
 
 ## Available vs missing
 
-See `lib/backend/capabilities.ts`.
+Full matrix (integrated vs blocked, with OpenAPI paths):
 
-**Missing on staging API (message shown):** referrals, children, content CMS, push, app-version, about, health-logs, many doctor detail sub-panels.
+→ **[staging-api-coverage.md](./staging-api-coverage.md)**
 
-**Proxied when signed in:** dashboard, appointments list, doctors list, users, hospitals, categories, documents, membership, payouts, wallet, settings, admins, activity, legal, pregnancy weeks, child-growth periods (partial).
+**Blocked on staging (no admin OpenAPI):** referrals, referral settings, children, content CMS, broadcast push, health logs, doctor wallet/earnings writes, document upload/history, and a few write-only prod flows (see coverage doc).
+
+**Integrated when signed in:** dashboard, appointments, doctors (incl. services read), categories, hospitals, users, documents list/deliver, membership, payouts, wallet ledger, settings, admins, activity, legal/about, app version, pregnancy weeks, child-growth/followup lists.
 
 ## Tests
 

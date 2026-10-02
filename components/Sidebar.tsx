@@ -35,6 +35,8 @@ import {
 import { supabase } from "@/lib/supabaseClient";
 import { CONTENT_NAMESPACES } from "@/lib/constants";
 import { canAccessRoute } from "@/lib/adminNav";
+import { isBackendApiEnabled } from "@/lib/backend/config";
+import { isStagingFeatureAvailable } from "@/lib/backend/capabilities";
 import { cn } from "@/lib/utils";
 import { useAppSelector } from "@/app/store/hooks";
 import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
@@ -201,13 +203,18 @@ export default function Sidebar({ mobileOpen = false, onCloseMobile }: SidebarPr
 
   const closeMobile = () => onCloseMobile?.();
 
-  const showDashboard = canAccessRoute(adminRole, "/admin/dashboard");
-  const visibleMothers = mothersItems.filter((item) => canAccessRoute(adminRole, item.href));
-  const visibleDoctors = doctorsItems.filter((item) => canAccessRoute(adminRole, item.href));
-  const visibleContent = contentItems.filter((item) => canAccessRoute(adminRole, item.href));
-  const visibleAppSettings = appSettingsItems.filter((item) => canAccessRoute(adminRole, item.href));
-  const visibleFinance = financeItems.filter((item) => canAccessRoute(adminRole, item.href));
-  const visibleAdmin = adminItems.filter((item) => canAccessRoute(adminRole, item.href));
+  const stagingMode = isBackendApiEnabled();
+  const allowNav = (href: string) =>
+    canAccessRoute(adminRole, href) &&
+    (!stagingMode || isStagingFeatureAvailable(href));
+
+  const showDashboard = allowNav("/admin/dashboard");
+  const visibleMothers = mothersItems.filter((item) => allowNav(item.href));
+  const visibleDoctors = doctorsItems.filter((item) => allowNav(item.href));
+  const visibleContent = contentItems.filter((item) => allowNav(item.href));
+  const visibleAppSettings = appSettingsItems.filter((item) => allowNav(item.href));
+  const visibleFinance = financeItems.filter((item) => allowNav(item.href));
+  const visibleAdmin = adminItems.filter((item) => allowNav(item.href));
 
   return (
     <>
