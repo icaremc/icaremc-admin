@@ -35,6 +35,9 @@ Admin staging mode (`NEXT_PUBLIC_USE_BACKEND_API=true`) proxies `/api/admin/*` t
 | Auth | Login | `POST /api/v1/auth/admin/login` | |
 | **Referrals** | `/admin/referrals` | `GET /api/v1/admin/referrals`, `…/referral-commissions`, `GET\|PUT …/settings/referral`, `GET …/doctors/{id}/referral-stats` | Pending backend PR merge + deploy; bridge already wired |
 | **Doctor wallet** | `/admin/doctors/[id]` wallet tab | `GET /api/v1/admin/doctors/{id}/wallet` | Pending backend PR #2 merge + deploy; bridge already wired |
+| Appointment status | `/admin/appointments/[id]` | `PATCH /api/v1/admin/appointments/{id}` | Pending backend PR #3 |
+| Portal admin edit | `/admin/admins` | `PATCH /api/v1/admin/admins/{id}` | Pending backend PR #3 |
+| Document create + delivery history | `/admin/documents`, doctor docs panel | `POST /documents`, `GET …/doctors/{id}/document-deliveries` | Multipart PDF upload still limited (uploads API is image-only) |
 
 ---
 
@@ -61,9 +64,8 @@ Add **admin** routes (not doctor-scoped), for example:
 
 1. `GET/PATCH /api/v1/admin/doctors/{id}/services` (or booking)
 2. Admin children / health-logs / CMS mutations (if those stay in this portal)
-3. `POST /api/v1/admin/documents` (upload) + delivery history list
-4. `PATCH /api/v1/admin/appointments/{id}` (status)
-5. `PATCH /api/v1/admin/admins/{id}`
+3. Multipart / non-image document upload support on staging uploads API
+4. Child milestone / follow-up write APIs
 
 Until those land, the admin bridge correctly returns 501 / gates the UI.
 

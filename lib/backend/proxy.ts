@@ -140,6 +140,19 @@ async function rewriteUpstreamRequest(
     return rewriteHospitalMultipart(upper, rawBody, contentType, accessToken);
   }
 
+  // Staging uploads API is image-only; PDF multipart document create stays unsupported.
+  if (
+    head === "documents" &&
+    upper === "POST" &&
+    contentType?.includes("multipart/form-data")
+  ) {
+    return {
+      error:
+        "Staging document upload expects JSON DocumentIn after a separate file host. Multipart PDF upload is not on the staging uploads API yet.",
+      status: 501,
+    };
+  }
+
   // Grant membership: admin posts multipart with receipt; staging expects JSON SubscriptionGrantIn
   if (
     head === "app-membership-members" &&
@@ -292,6 +305,19 @@ async function rewriteUpstreamRequest(
     }
   }
 
+  // PATCH /admins { id, fields } → strip id (path carries it)
+  if (head === "admins" && upper === "PATCH" && isPlainObject(parsed)) {
+    const { id: _id, ...restBody } = parsed;
+    return {
+      method: "PATCH",
+      body: encodeJson(restBody),
+      contentType: "application/json",
+    };
+  }
+
+  // POST documents multipart is not supported on staging uploads (images only).
+  // JSON DocumentIn is accepted as-is.
+
   // Legal docs: admin UI PATCHes; OpenAPI only accepts PUT LegalIn
   if (head === "legal-documents" && (upper === "PATCH" || upper === "PUT")) {
     return {
@@ -342,19 +368,7 @@ export async function proxyAdminRequestToBackend(
   const head = segments[0] ?? "";
   const rest = segments.slice(1);
 
-  // Delivery history has no OpenAPI admin endpoint — don't fail the doctor docs panel
-  if (
-    head === "doctors" &&
-    rest.length === 2 &&
-    rest[1] === "document-deliveries" &&
-    method === "GET"
-  ) {
-    return NextResponse.json({
-      deliveries: [],
-      stagingPartial: true,
-      message: "Document delivery history is not available on the staging API yet.",
-    });
-  }
+  // Delivery history is proxied to GET /api/v1/admin/doctors/{id}/document-deliveries
 
   let backendPath = mapAdminApiToBackend(adminPath, {
     method,
@@ -389,6 +403,23 @@ export async function proxyAdminRequestToBackend(
     }
     backendPath = `/api/v1/admin/documents/${documentId}/deliver`;
     incomingUrl.searchParams.set("recipient_id", rest[0] ?? "");
+  }
+
+  // PATCH /admins { id, … } → PATCH /admins/{id}
+  if (backendPath === "__admin_patch__") {
+    let adminId = "";
+    try {
+      const parsed = JSON.parse(new TextDecoder().decode(rawBody ?? new ArrayBuffer(0))) as {
+        id?: string;
+      };
+      adminId = String(parsed.id ?? "").trim();
+    } catch {
+      adminId = "";
+    }
+    if (!adminId) {
+      return NextResponse.json({ error: "Admin id is required" }, { status: 400 });
+    }
+    backendPath = `/api/v1/admin/admins/${adminId}`;
   }
 
   if (!backendPath) {

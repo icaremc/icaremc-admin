@@ -16,7 +16,7 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
   {
     pathPrefix: "/admin/appointments",
     label: "Appointments",
-    backendHint: "GET /api/v1/admin/appointments (detail via list)",
+    backendHint: "GET|PATCH /api/v1/admin/appointments (detail via list)",
   },
   {
     pathPrefix: "/admin/doctors",
@@ -35,7 +35,7 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     label: "Parents",
     backendHint: "GET /api/v1/admin/users + GET /users/{id} + POST /push/notify",
   },
-  { pathPrefix: "/admin/documents", label: "Internal docs", backendHint: "GET|POST deliver /api/v1/admin/documents" },
+  { pathPrefix: "/admin/documents", label: "Internal docs", backendHint: "GET|POST /api/v1/admin/documents + deliver + delivery history" },
   {
     pathPrefix: "/admin/finance/payout-request",
     label: "Payout requests",
@@ -61,7 +61,7 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     label: "Appointment payments",
     backendHint: "Via appointments list on staging API",
   },
-  { pathPrefix: "/admin/admins", label: "Portal admins", backendHint: "GET|POST /api/v1/admin/admins" },
+  { pathPrefix: "/admin/admins", label: "Portal admins", backendHint: "GET|POST|PATCH /api/v1/admin/admins" },
   { pathPrefix: "/admin/activity", label: "Activity log", backendHint: "GET /api/v1/admin/activity/*" },
   { pathPrefix: "/admin/legal", label: "Policies", backendHint: "GET|PUT /api/v1/admin/legal-documents" },
   {
@@ -155,7 +155,10 @@ export function mapAdminApiToBackend(
     case "appointments":
       if (rest.length === 0) return "/api/v1/admin/appointments";
       if (rest[0] === "stats") return "/api/v1/admin/appointments";
-      if (rest.length === 1 && method === "GET") return "/api/v1/admin/appointments";
+      if (rest.length === 1) {
+        if (method === "GET") return "/api/v1/admin/appointments";
+        if (method === "PATCH") return `/api/v1/admin/appointments/${rest[0]}`;
+      }
       return null;
     case "doctors":
       if (rest.length === 0) {
@@ -171,8 +174,9 @@ export function mapAdminApiToBackend(
         return null;
       }
       if (rest.length === 2 && rest[1] === "document-deliveries") {
-        // POST rewritten in proxy (needs documentId from body); GET has no OpenAPI history
-        if (method === "GET") return null;
+        if (method === "GET") {
+          return `/api/v1/admin/doctors/${rest[0]}/document-deliveries`;
+        }
         if (method === "POST") return "__document_deliver__";
         return null;
       }
@@ -221,8 +225,8 @@ export function mapAdminApiToBackend(
       return null;
     case "documents":
       if (rest.length === 0) {
-        if (method === "GET") return "/api/v1/admin/documents";
-        return null; // upload not in OpenAPI admin
+        if (method === "GET" || method === "POST") return "/api/v1/admin/documents";
+        return null;
       }
       if (rest.length === 2 && rest[1] === "deliver" && method === "POST") {
         return `/api/v1/admin/documents/${rest[0]}/deliver`;
@@ -260,6 +264,7 @@ export function mapAdminApiToBackend(
     }
     case "admins":
       if (method === "GET" || method === "POST") return "/api/v1/admin/admins";
+      if (method === "PATCH") return "__admin_patch__";
       return null;
     case "activity-logs":
       if (rest.length === 2) {
@@ -325,6 +330,11 @@ export const ADMIN_API_MAPPING_CASES: Array<{
     backendPath: "/api/v1/admin/appointments",
     method: "GET",
   },
+  {
+    adminPath: "appointments/a1",
+    backendPath: "/api/v1/admin/appointments/a1",
+    method: "PATCH",
+  },
   { adminPath: "doctors", backendPath: "/api/v1/admin/doctors" },
   { adminPath: "doctors/abc/verify", backendPath: "/api/v1/admin/doctors/abc/verify" },
   { adminPath: "doctors/abc", backendPath: "__doctor_detail__", method: "GET" },
@@ -364,8 +374,13 @@ export const ADMIN_API_MAPPING_CASES: Array<{
     method: "POST",
   },
   { adminPath: "documents", backendPath: "/api/v1/admin/documents", method: "GET" },
-  { adminPath: "documents", backendPath: null, method: "POST" },
+  { adminPath: "documents", backendPath: "/api/v1/admin/documents", method: "POST" },
   { adminPath: "documents/d1/deliver", backendPath: "/api/v1/admin/documents/d1/deliver", method: "POST" },
+  {
+    adminPath: "doctors/abc/document-deliveries",
+    backendPath: "/api/v1/admin/doctors/abc/document-deliveries",
+    method: "GET",
+  },
   { adminPath: "payout-requests", backendPath: "/api/v1/admin/payout-requests" },
   {
     adminPath: "payout-requests/p1",
@@ -386,7 +401,7 @@ export const ADMIN_API_MAPPING_CASES: Array<{
   { adminPath: "payment-settings", backendPath: "/api/v1/admin/settings/payment" },
   { adminPath: "app-version-settings", backendPath: "/api/v1/admin/settings/app_version" },
   { adminPath: "admins", backendPath: "/api/v1/admin/admins", method: "GET" },
-  { adminPath: "admins", backendPath: null, method: "PATCH" },
+  { adminPath: "admins", backendPath: "__admin_patch__", method: "PATCH" },
   { adminPath: "activity-logs", backendPath: "/api/v1/admin/activity/admin" },
   { adminPath: "legal-documents", backendPath: "/api/v1/admin/legal-documents" },
   { adminPath: "pregnancy-weeks", backendPath: "/api/v1/admin/pregnancy-weeks" },

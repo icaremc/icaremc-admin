@@ -181,6 +181,25 @@ export function adaptBackendResponse(
     };
   }
 
+  if (head === "doctors" && rest.length === 2 && rest[1] === "document-deliveries" && upper === "GET") {
+    const rows = Array.isArray(body) ? body.filter(isPlainObject) : [];
+    return {
+      deliveries: rows.map((row) => ({
+        id: str(row.id),
+        document_id: str(row.document_id ?? row.documentId),
+        recipient_type: str(row.recipient_type ?? row.recipientType ?? "doctor"),
+        recipient_id: str(row.recipient_id ?? row.recipientId),
+        sent_by: (row.sent_by ?? row.sentBy ?? null) as string | null,
+        sent_at: str(row.sent_at ?? row.sentAt),
+        acknowledged_at: (row.acknowledged_at ?? row.acknowledgedAt ?? null) as string | null,
+        // ponytail: backend list has no joined doc titles yet
+        document_title: (row.document_title ?? null) as string | null,
+        document_category: (row.document_category ?? null) as string | null,
+        file_name: (row.file_name ?? null) as string | null,
+      })),
+    };
+  }
+
   if (head === "doctors" && rest.length === 2 && rest[1] === "referral-stats" && upper === "GET") {
     if (!isPlainObject(body)) return body;
     return { stats: mapReferralStats(body) };
@@ -235,6 +254,18 @@ export function adaptBackendResponse(
     const appointment = findById(body, rest[0]);
     if (!appointment) return { error: "Appointment not found", stagingNotFound: true };
     return { appointment, conversation: null, messages: [] };
+  }
+
+  if (head === "appointments" && rest.length === 1 && upper === "PATCH") {
+    return isPlainObject(body) ? { appointment: body } : body;
+  }
+
+  if (head === "admins" && upper === "PATCH") {
+    return isPlainObject(body) ? { admin: body } : body;
+  }
+
+  if (head === "documents" && upper === "POST" && rest.length === 0) {
+    return isPlainObject(body) ? { document: body } : body;
   }
 
   if (head === "payout-requests" && rest.length === 1 && upper === "GET") {
