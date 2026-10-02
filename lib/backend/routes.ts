@@ -24,6 +24,7 @@ export const STAGING_BACKEND_ADMIN_ROUTES = [
   { method: "GET", path: "/api/v1/admin/settings/referral", label: "settings-referral" },
   { method: "GET", path: "/api/v1/admin/referrals", label: "referrals" },
   { method: "GET", path: "/api/v1/admin/referral-commissions", label: "referral-commissions" },
+  { method: "GET", path: "/api/v1/admin/doctors/{id}/wallet", label: "doctor-wallet" },
   { method: "GET", path: "/api/v1/auth/me", label: "auth-me" },
 ] as const;
 

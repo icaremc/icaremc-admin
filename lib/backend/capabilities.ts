@@ -22,7 +22,7 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     pathPrefix: "/admin/doctors",
     label: "Doctors",
     backendHint:
-      "GET /api/v1/admin/doctors + GET /api/v1/admin/doctors/{id}/services + verify/push; wallet/booking writes not on admin API",
+      "GET /api/v1/admin/doctors + services + wallet + verify/push; booking writes not on admin API",
   },
   {
     pathPrefix: "/admin/doctor-categories",
@@ -186,7 +186,11 @@ export function mapAdminApiToBackend(
         }
         return null;
       }
-      if (rest.length === 2 && (rest[1] === "wallet" || rest[1] === "booking")) {
+      if (rest.length === 2 && rest[1] === "wallet") {
+        if (method === "GET") return `/api/v1/admin/doctors/${rest[0]}/wallet`;
+        return null;
+      }
+      if (rest.length === 2 && rest[1] === "booking") {
         return null;
       }
       if (rest.length === 1) {
@@ -341,7 +345,7 @@ export const ADMIN_API_MAPPING_CASES: Array<{
   },
   {
     adminPath: "doctors/abc/wallet",
-    backendPath: null,
+    backendPath: "/api/v1/admin/doctors/abc/wallet",
     method: "GET",
   },
   {

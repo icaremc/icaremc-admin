@@ -34,6 +34,7 @@ Admin staging mode (`NEXT_PUBLIC_USE_BACKEND_API=true`) proxies `/api/admin/*` t
 | Follow-up visits | `/admin/followup-visits` | `GET /api/v1/admin/followup-templates` | **List only** |
 | Auth | Login | `POST /api/v1/auth/admin/login` | |
 | **Referrals** | `/admin/referrals` | `GET /api/v1/admin/referrals`, `…/referral-commissions`, `GET\|PUT …/settings/referral`, `GET …/doctors/{id}/referral-stats` | Pending backend PR merge + deploy; bridge already wired |
+| **Doctor wallet** | `/admin/doctors/[id]` wallet tab | `GET /api/v1/admin/doctors/{id}/wallet` | Pending backend PR #2 merge + deploy; bridge already wired |
 
 ---
 
@@ -43,7 +44,6 @@ These production-admin features have **no matching admin endpoint** on [api.icar
 
 | Admin area | Why blocked | Closest OpenAPI (unusable for admin) |
 |---|---|---|
-| **Doctor wallet / earnings** (doctor detail tab) | No admin wallet-by-doctor API | `GET /api/v1/doctor/wallet` (doctor token only) |
 | **Edit doctor services / booking** | No admin booking/services write API | `/api/v1/doctor/services*` (doctor token only) |
 | **Children** | No admin children API | Patient `/api/v1/children*` |
 | **Content CMS** (`/admin/content/*`) | No admin CMS write/list for tips/symptoms/etc. | Public `GET /api/v1/cms/*` only |
@@ -59,12 +59,11 @@ These production-admin features have **no matching admin endpoint** on [api.icar
 
 Add **admin** routes (not doctor-scoped), for example:
 
-1. `GET /api/v1/admin/doctors/{id}/wallet` (and earnings)
-2. `GET/PATCH /api/v1/admin/doctors/{id}/services` (or booking)
-3. Admin children / health-logs / CMS mutations (if those stay in this portal)
-4. `POST /api/v1/admin/documents` (upload) + delivery history list
-5. `PATCH /api/v1/admin/appointments/{id}` (status)
-6. `PATCH /api/v1/admin/admins/{id}`
+1. `GET/PATCH /api/v1/admin/doctors/{id}/services` (or booking)
+2. Admin children / health-logs / CMS mutations (if those stay in this portal)
+3. `POST /api/v1/admin/documents` (upload) + delivery history list
+4. `PATCH /api/v1/admin/appointments/{id}` (status)
+5. `PATCH /api/v1/admin/admins/{id}`
 
 Until those land, the admin bridge correctly returns 501 / gates the UI.
 
