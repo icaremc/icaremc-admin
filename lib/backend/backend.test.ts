@@ -46,9 +46,10 @@ describe("mapAdminApiToBackend", () => {
 });
 
 describe("staging capabilities", () => {
-  it("marks referrals unavailable", () => {
-    assert.equal(isStagingFeatureAvailable("/admin/referrals"), false);
-    assert.equal(getStagingCapability("/admin/referrals")?.backendHint ?? null, null);
+  it("marks referrals available", () => {
+    assert.equal(isStagingFeatureAvailable("/admin/referrals"), true);
+    assert.ok(getStagingCapability("/admin/referrals")?.backendHint);
+    assert.equal(isStagingFeatureAvailable("/admin/finance/referral-settings"), true);
   });
 
   it("marks dashboard available", () => {
@@ -203,6 +204,72 @@ describe("adaptBackendResponse", () => {
     assert.deepEqual(out, {
       document: { slug: "privacy", title: "Privacy", locale: "en", sections: [] },
     });
+  });
+
+  it("adapts referrals list to camelCase", () => {
+    const out = adaptBackendResponse(
+      "referrals",
+      "GET",
+      200,
+      [
+        {
+          id: "r1",
+          patient_id: "p1",
+          doctor_id: "d1",
+          referral_code: "ABC",
+          created_at: "2026-01-02T00:00:00Z",
+          patient_name: "Pat",
+          patient_phone: null,
+          doctor_name: "Doc",
+          is_subscribed: true,
+        },
+      ],
+      { searchParams: new URLSearchParams("subscribed=yes") },
+    );
+    assert.deepEqual(out, {
+      referrals: [
+        {
+          id: "r1",
+          patientId: "p1",
+          doctorId: "d1",
+          referralCode: "ABC",
+          createdAt: "2026-01-02T00:00:00Z",
+          patientName: "Pat",
+          patientPhone: null,
+          doctorName: "Doc",
+          isSubscribed: true,
+        },
+      ],
+    });
+  });
+
+  it("adapts referral-stats and referral-settings", () => {
+    assert.deepEqual(
+      adaptBackendResponse("doctors/d1/referral-stats", "GET", 200, {
+        referral_code: "XYZ",
+        referred_count: 3,
+        total_commission: 12.5,
+        currency: "ETB",
+      }),
+      {
+        stats: {
+          referralCode: "XYZ",
+          referredCount: 3,
+          totalCommission: 12.5,
+          currency: "ETB",
+        },
+      },
+    );
+    assert.deepEqual(
+      adaptBackendResponse("referral-settings", "GET", 200, {
+        data: { commissionPercent: 25 },
+        updated_at: "2026-01-01T00:00:00Z",
+      }),
+      {
+        referralSettings: { commissionPercent: 25 },
+        updatedAt: "2026-01-01T00:00:00Z",
+      },
+    );
   });
 });
 

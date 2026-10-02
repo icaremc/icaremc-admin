@@ -58,6 +58,73 @@ export type AdaptOptions = {
   searchParams?: URLSearchParams;
 };
 
+function str(value: unknown): string {
+  return value == null ? "" : String(value);
+}
+
+function num(value: unknown): number {
+  const n = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function mapReferralRow(row: Record<string, unknown>) {
+  return {
+    id: str(row.id),
+    patientId: str(row.patient_id ?? row.patientId),
+    doctorId: str(row.doctor_id ?? row.doctorId),
+    referralCode: str(row.referral_code ?? row.referralCode),
+    createdAt: str(row.created_at ?? row.createdAt),
+    patientName: (row.patient_name ?? row.patientName ?? null) as string | null,
+    patientPhone: (row.patient_phone ?? row.patientPhone ?? null) as string | null,
+    doctorName: (row.doctor_name ?? row.doctorName ?? null) as string | null,
+    isSubscribed: Boolean(row.is_subscribed ?? row.isSubscribed),
+  };
+}
+
+function mapCommissionRow(row: Record<string, unknown>) {
+  return {
+    id: str(row.id),
+    referralId: str(row.referral_id ?? row.referralId),
+    doctorId: str(row.doctor_id ?? row.doctorId),
+    patientId: str(row.patient_id ?? row.patientId),
+    paymentId: (row.payment_id ?? row.paymentId ?? null) as string | null,
+    subscriptionAmount: num(row.subscription_amount ?? row.subscriptionAmount),
+    commissionPercent: num(row.commission_percent ?? row.commissionPercent),
+    commissionAmount: num(row.commission_amount ?? row.commissionAmount),
+    currency: str(row.currency || "ETB"),
+    createdAt: str(row.created_at ?? row.createdAt),
+    patientName: (row.patient_name ?? row.patientName ?? null) as string | null,
+    doctorName: (row.doctor_name ?? row.doctorName ?? null) as string | null,
+  };
+}
+
+function mapReferralStats(row: Record<string, unknown>) {
+  return {
+    referralCode: (row.referral_code ?? row.referralCode ?? null) as string | null,
+    referredCount: num(row.referred_count ?? row.referredCount),
+    totalCommission: num(row.total_commission ?? row.totalCommission),
+    currency: str(row.currency || "ETB"),
+  };
+}
+
+/** ponytail: backend list ignores filters; apply admin query params in the bridge */
+function filterByAdminParams<T extends { doctorId: string; createdAt: string }>(
+  rows: T[],
+  searchParams: URLSearchParams | undefined,
+  extra?: (row: T) => boolean,
+): T[] {
+  if (!searchParams) return extra ? rows.filter(extra) : rows;
+  const doctorId = searchParams.get("doctorId");
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+  return rows.filter((row) => {
+    if (doctorId && row.doctorId !== doctorId) return false;
+    if (from && row.createdAt && row.createdAt < from) return false;
+    if (to && row.createdAt && row.createdAt > to) return false;
+    return extra ? extra(row) : true;
+  });
+}
+
 export function adaptBackendResponse(
   adminPath: string,
   method: string,
@@ -112,6 +179,11 @@ export function adaptBackendResponse(
       ...readiness,
       role: typeof profile.role === "string" ? profile.role : null,
     };
+  }
+
+  if (head === "doctors" && rest.length === 2 && rest[1] === "referral-stats" && upper === "GET") {
+    if (!isPlainObject(body)) return body;
+    return { stats: mapReferralStats(body) };
   }
 
   if (head === "doctors" && rest.length === 1 && upper === "GET") {
@@ -211,6 +283,23 @@ export function adaptBackendResponse(
         return { periods: body, items: body };
       case "followup-visits":
         return { templates: body, items: body };
+      case "referrals": {
+        const mapped = body
+          .filter(isPlainObject)
+          .map(mapReferralRow);
+        const subscribed = options.searchParams?.get("subscribed");
+        return {
+          referrals: filterByAdminParams(mapped, options.searchParams, (row) => {
+            if (subscribed === "yes") return row.isSubscribed;
+            if (subscribed === "no") return !row.isSubscribed;
+            return true;
+          }),
+        };
+      }
+      case "referral-commissions": {
+        const mapped = body.filter(isPlainObject).map(mapCommissionRow);
+        return { commissions: filterByAdminParams(mapped, options.searchParams) };
+      }
       default:
         return { items: body, data: body };
     }
@@ -247,6 +336,17 @@ export function adaptBackendResponse(
     if (head === "app-membership-settings") {
       return {
         appMembershipSettings: parseAppMembershipSettingsData(body.data ?? body),
+        updatedAt: body.updated_at ?? null,
+      };
+    }
+    if (head === "referral-settings") {
+      const data = isPlainObject(body.data) ? body.data : body;
+      return {
+        referralSettings: {
+          commissionPercent: num(
+            data.commissionPercent ?? data.commission_percent ?? 20,
+          ),
+        },
         updatedAt: body.updated_at ?? null,
       };
     }

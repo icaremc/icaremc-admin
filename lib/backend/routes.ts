@@ -21,6 +21,9 @@ export const STAGING_BACKEND_ADMIN_ROUTES = [
   { method: "GET", path: "/api/v1/admin/settings/finance", label: "settings-finance" },
   { method: "GET", path: "/api/v1/admin/settings/payment", label: "settings-payment" },
   { method: "GET", path: "/api/v1/admin/settings/subscription", label: "settings-subscription" },
+  { method: "GET", path: "/api/v1/admin/settings/referral", label: "settings-referral" },
+  { method: "GET", path: "/api/v1/admin/referrals", label: "referrals" },
+  { method: "GET", path: "/api/v1/admin/referral-commissions", label: "referral-commissions" },
   { method: "GET", path: "/api/v1/auth/me", label: "auth-me" },
 ] as const;
 

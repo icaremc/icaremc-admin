@@ -52,7 +52,7 @@ Full matrix (integrated vs blocked, with OpenAPI paths):
 
 → **[staging-api-coverage.md](./staging-api-coverage.md)**
 
-**Blocked on staging (no admin OpenAPI):** referrals, referral settings, children, content CMS, broadcast push, health logs, doctor wallet/earnings writes, document upload/history, and a few write-only prod flows (see coverage doc).
+**Blocked on staging (no admin OpenAPI):** children, content CMS, broadcast push, health logs, doctor wallet/earnings writes, document upload/history, and a few write-only prod flows (see coverage doc). Referrals are wired pending backend PR deploy.
 
 **Integrated when signed in:** dashboard, appointments, doctors (incl. services read), categories, hospitals, users, documents list/deliver, membership, payouts, wallet ledger, settings, admins, activity, legal/about, app version, pregnancy weeks, child-growth/followup lists.
 

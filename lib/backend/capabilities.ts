@@ -90,11 +90,11 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     backendHint: "GET /api/v1/admin/followup-templates (list only)",
   },
 
-  { pathPrefix: "/admin/referrals", label: "Referrals", backendHint: null },
+  { pathPrefix: "/admin/referrals", label: "Referrals", backendHint: "GET /api/v1/admin/referrals + commissions + settings/referral" },
   {
     pathPrefix: "/admin/finance/referral-settings",
     label: "Referral settings",
-    backendHint: null,
+    backendHint: "GET|PUT /api/v1/admin/settings/referral",
   },
   { pathPrefix: "/admin/children", label: "Children", backendHint: null },
   { pathPrefix: "/admin/content", label: "Content CMS", backendHint: null },
@@ -180,7 +180,13 @@ export function mapAdminApiToBackend(
         if (method === "GET") return `/api/v1/admin/doctors/${rest[0]}/services`;
         return null;
       }
-      if (rest.length === 2 && (rest[1] === "wallet" || rest[1] === "booking" || rest[1] === "referral-stats")) {
+      if (rest.length === 2 && rest[1] === "referral-stats") {
+        if (method === "GET") {
+          return `/api/v1/admin/doctors/${rest[0]}/referral-stats`;
+        }
+        return null;
+      }
+      if (rest.length === 2 && (rest[1] === "wallet" || rest[1] === "booking")) {
         return null;
       }
       if (rest.length === 1) {
@@ -289,9 +295,13 @@ export function mapAdminApiToBackend(
       if (method === "GET") return "/api/v1/admin/followup-templates";
       return null;
     case "referrals":
-    case "referral-settings":
-    case "referral-commissions":
+      if (method === "GET") return "/api/v1/admin/referrals";
       return null;
+    case "referral-commissions":
+      if (method === "GET") return "/api/v1/admin/referral-commissions";
+      return null;
+    case "referral-settings":
+      return "/api/v1/admin/settings/referral";
     default:
       return null;
   }
@@ -379,6 +389,12 @@ export const ADMIN_API_MAPPING_CASES: Array<{
   { adminPath: "child-growth", backendPath: "/api/v1/admin/child-growth-periods", method: "GET" },
   { adminPath: "child-growth", backendPath: null, method: "POST" },
   { adminPath: "followup-visits", backendPath: "/api/v1/admin/followup-templates", method: "GET" },
-  { adminPath: "referrals", backendPath: null },
-  { adminPath: "referral-commissions", backendPath: null },
+  { adminPath: "referrals", backendPath: "/api/v1/admin/referrals" },
+  { adminPath: "referral-commissions", backendPath: "/api/v1/admin/referral-commissions" },
+  { adminPath: "referral-settings", backendPath: "/api/v1/admin/settings/referral" },
+  {
+    adminPath: "doctors/abc/referral-stats",
+    backendPath: "/api/v1/admin/doctors/abc/referral-stats",
+    method: "GET",
+  },
 ];

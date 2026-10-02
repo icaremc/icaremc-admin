@@ -33,6 +33,7 @@ Admin staging mode (`NEXT_PUBLIC_USE_BACKEND_API=true`) proxies `/api/admin/*` t
 | Child milestones | `/admin/child-growth` | `GET /api/v1/admin/child-growth-periods` | **List only** |
 | Follow-up visits | `/admin/followup-visits` | `GET /api/v1/admin/followup-templates` | **List only** |
 | Auth | Login | `POST /api/v1/auth/admin/login` | |
+| **Referrals** | `/admin/referrals` | `GET /api/v1/admin/referrals`, `…/referral-commissions`, `GET\|PUT …/settings/referral`, `GET …/doctors/{id}/referral-stats` | Pending backend PR merge + deploy; bridge already wired |
 
 ---
 
@@ -42,8 +43,6 @@ These production-admin features have **no matching admin endpoint** on [api.icar
 
 | Admin area | Why blocked | Closest OpenAPI (unusable for admin) |
 |---|---|---|
-| **Referrals** (`/admin/referrals`) | No admin referrals / commissions API | `GET /api/v1/doctor/referrals` (doctor token only) |
-| **Referral settings** (`/admin/finance/referral-settings`) | No admin setting/doc for referral config | — |
 | **Doctor wallet / earnings** (doctor detail tab) | No admin wallet-by-doctor API | `GET /api/v1/doctor/wallet` (doctor token only) |
 | **Edit doctor services / booking** | No admin booking/services write API | `/api/v1/doctor/services*` (doctor token only) |
 | **Children** | No admin children API | Patient `/api/v1/children*` |
@@ -60,13 +59,12 @@ These production-admin features have **no matching admin endpoint** on [api.icar
 
 Add **admin** routes (not doctor-scoped), for example:
 
-1. `GET/POST /api/v1/admin/referrals` (+ commissions / settings)
-2. `GET /api/v1/admin/doctors/{id}/wallet` (and earnings)
-3. `GET/PATCH /api/v1/admin/doctors/{id}/services` (or booking)
-4. Admin children / health-logs / CMS mutations (if those stay in this portal)
-5. `POST /api/v1/admin/documents` (upload) + delivery history list
-6. `PATCH /api/v1/admin/appointments/{id}` (status)
-7. `PATCH /api/v1/admin/admins/{id}`
+1. `GET /api/v1/admin/doctors/{id}/wallet` (and earnings)
+2. `GET/PATCH /api/v1/admin/doctors/{id}/services` (or booking)
+3. Admin children / health-logs / CMS mutations (if those stay in this portal)
+4. `POST /api/v1/admin/documents` (upload) + delivery history list
+5. `PATCH /api/v1/admin/appointments/{id}` (status)
+6. `PATCH /api/v1/admin/admins/{id}`
 
 Until those land, the admin bridge correctly returns 501 / gates the UI.
 

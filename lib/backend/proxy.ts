@@ -268,11 +268,12 @@ async function rewriteUpstreamRequest(
     }
   }
 
-  // PATCH finance/payment/app-membership settings → PUT { data }
+  // PATCH finance/payment/app-membership/referral settings → PUT { data }
   if (
     (head === "finance-settings" ||
       head === "payment-settings" ||
-      head === "app-membership-settings") &&
+      head === "app-membership-settings" ||
+      head === "referral-settings") &&
     (upper === "PATCH" || upper === "PUT")
   ) {
     if (isPlainObject(parsed)) {
@@ -280,6 +281,7 @@ async function rewriteUpstreamRequest(
         parsed.financeSettings ??
         parsed.paymentSettings ??
         parsed.appMembershipSettings ??
+        parsed.referralSettings ??
         parsed.data ??
         parsed;
       return {
