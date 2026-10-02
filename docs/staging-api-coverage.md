@@ -39,6 +39,8 @@ Admin staging mode (`NEXT_PUBLIC_USE_BACKEND_API=true`) proxies `/api/admin/*` t
 | Portal admin edit | `/admin/admins` | `PATCH /api/v1/admin/admins/{id}` | Pending backend PR #3 |
 | Document create + delivery history | `/admin/documents`, doctor docs panel | `POST /documents`, `GET …/doctors/{id}/document-deliveries` | Multipart PDF upload still limited (uploads API is image-only) |
 | Doctor booking / services write | `/admin/doctors/[id]` | `PATCH /api/v1/admin/doctors/{id}/booking` | Pending backend PR #4 |
+| Children | `/admin/children` | `GET /api/v1/admin/children`, `GET …/children/{id}` | Pending backend PR #5 |
+| Appointment detail by id | `/admin/appointments/[id]` | `GET /api/v1/admin/appointments/{id}` | Pending backend PR #5 |
 
 ---
 
@@ -48,7 +50,7 @@ These production-admin features have **no matching admin endpoint** on [api.icar
 
 | Admin area | Why blocked | Closest OpenAPI (unusable for admin) |
 |---|---|---|
-| **Children** | No admin children list/detail API | Patient `/api/v1/children*` |
+| **Content CMS** (`/admin/content/*`) | No admin CMS write/list for tips/symptoms/etc. | Public `GET /api/v1/cms/*` only |
 | **Children** | No admin children API | Patient `/api/v1/children*` |
 | **Content CMS** (`/admin/content/*`) | No admin CMS write/list for tips/symptoms/etc. | Public `GET /api/v1/cms/*` only |
 | **Broadcast push** (`/admin/push`) | No broadcast admin API | `POST /api/v1/push/notify` is per-user only (already used for doctor/parent push) |

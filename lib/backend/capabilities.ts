@@ -16,7 +16,7 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
   {
     pathPrefix: "/admin/appointments",
     label: "Appointments",
-    backendHint: "GET|PATCH /api/v1/admin/appointments (detail via list)",
+    backendHint: "GET|PATCH /api/v1/admin/appointments (+ detail by id)",
   },
   {
     pathPrefix: "/admin/doctors",
@@ -96,7 +96,7 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     label: "Referral settings",
     backendHint: "GET|PUT /api/v1/admin/settings/referral",
   },
-  { pathPrefix: "/admin/children", label: "Children", backendHint: null },
+  { pathPrefix: "/admin/children", label: "Children", backendHint: "GET /api/v1/admin/children (+ detail)" },
   { pathPrefix: "/admin/content", label: "Content CMS", backendHint: null },
   {
     pathPrefix: "/admin/push",
@@ -156,7 +156,7 @@ export function mapAdminApiToBackend(
       if (rest.length === 0) return "/api/v1/admin/appointments";
       if (rest[0] === "stats") return "/api/v1/admin/appointments";
       if (rest.length === 1) {
-        if (method === "GET") return "/api/v1/admin/appointments";
+        if (method === "GET") return `/api/v1/admin/appointments/${rest[0]}`;
         if (method === "PATCH") return `/api/v1/admin/appointments/${rest[0]}`;
       }
       return null;
@@ -314,6 +314,10 @@ export function mapAdminApiToBackend(
       return null;
     case "referral-settings":
       return "/api/v1/admin/settings/referral";
+    case "children":
+      if (rest.length === 0 && method === "GET") return "/api/v1/admin/children";
+      if (rest.length === 1 && method === "GET") return `/api/v1/admin/children/${rest[0]}`;
+      return null;
     default:
       return null;
   }
@@ -330,7 +334,7 @@ export const ADMIN_API_MAPPING_CASES: Array<{
   { adminPath: "appointments/stats", backendPath: "/api/v1/admin/appointments" },
   {
     adminPath: "appointments/a1",
-    backendPath: "/api/v1/admin/appointments",
+    backendPath: "/api/v1/admin/appointments/a1",
     method: "GET",
   },
   {
@@ -338,6 +342,8 @@ export const ADMIN_API_MAPPING_CASES: Array<{
     backendPath: "/api/v1/admin/appointments/a1",
     method: "PATCH",
   },
+  { adminPath: "children", backendPath: "/api/v1/admin/children", method: "GET" },
+  { adminPath: "children/c1", backendPath: "/api/v1/admin/children/c1", method: "GET" },
   { adminPath: "doctors", backendPath: "/api/v1/admin/doctors" },
   { adminPath: "doctors/abc/verify", backendPath: "/api/v1/admin/doctors/abc/verify" },
   { adminPath: "doctors/abc", backendPath: "__doctor_detail__", method: "GET" },

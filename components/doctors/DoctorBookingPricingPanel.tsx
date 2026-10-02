@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import DoctorServiceThumbnail from "@/components/doctors/DoctorServiceThumbnail";
 import { formatMoney } from "@/lib/appointments/display";
-import { isBackendApiEnabled } from "@/lib/backend/config";
 import type { DoctorProfile } from "@/lib/types/doctors";
 
 type DraftService = {

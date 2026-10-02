@@ -65,6 +65,10 @@ describe("staging capabilities", () => {
     assert.equal(isStagingFeatureAvailable("/admin/doctors"), true);
   });
 
+  it("marks children available", () => {
+    assert.equal(isStagingFeatureAvailable("/admin/children"), true);
+  });
+
   it("marks about and app-version available", () => {
     assert.equal(isStagingFeatureAvailable("/admin/about"), true);
     assert.equal(isStagingFeatureAvailable("/admin/app-version"), true);

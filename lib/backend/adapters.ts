@@ -262,6 +262,13 @@ export function adaptBackendResponse(
   }
 
   if (head === "appointments" && rest.length === 1 && rest[0] !== "stats" && upper === "GET") {
+    if (isPlainObject(body) && "appointment" in body) {
+      return {
+        appointment: body.appointment,
+        conversation: body.conversation ?? null,
+        messages: Array.isArray(body.messages) ? body.messages : [],
+      };
+    }
     if (!Array.isArray(body)) {
       return isPlainObject(body)
         ? { appointment: body, conversation: null, messages: [] }
@@ -291,6 +298,15 @@ export function adaptBackendResponse(
     const request = findById(body, rest[0]);
     if (!request) return { error: "Payout request not found", stagingNotFound: true };
     return { request, context: null };
+  }
+
+  if (head === "children" && rest.length === 1 && upper === "GET") {
+    if (!Array.isArray(body)) {
+      return isPlainObject(body) ? { child: body } : body;
+    }
+    const child = findById(body, rest[0]);
+    if (!child) return { error: "Child not found", stagingNotFound: true };
+    return { child };
   }
 
   if (Array.isArray(body)) {
@@ -347,6 +363,8 @@ export function adaptBackendResponse(
         const mapped = body.filter(isPlainObject).map(mapCommissionRow);
         return { commissions: filterByAdminParams(mapped, options.searchParams) };
       }
+      case "children":
+        return { children: body, items: body };
       default:
         return { items: body, data: body };
     }
