@@ -38,6 +38,7 @@ Admin staging mode (`NEXT_PUBLIC_USE_BACKEND_API=true`) proxies `/api/admin/*` t
 | Appointment status | `/admin/appointments/[id]` | `PATCH /api/v1/admin/appointments/{id}` | Pending backend PR #3 |
 | Portal admin edit | `/admin/admins` | `PATCH /api/v1/admin/admins/{id}` | Pending backend PR #3 |
 | Document create + delivery history | `/admin/documents`, doctor docs panel | `POST /documents`, `GET …/doctors/{id}/document-deliveries` | Multipart PDF upload still limited (uploads API is image-only) |
+| Doctor booking / services write | `/admin/doctors/[id]` | `PATCH /api/v1/admin/doctors/{id}/booking` | Pending backend PR #4 |
 
 ---
 
@@ -47,7 +48,7 @@ These production-admin features have **no matching admin endpoint** on [api.icar
 
 | Admin area | Why blocked | Closest OpenAPI (unusable for admin) |
 |---|---|---|
-| **Edit doctor services / booking** | No admin booking/services write API | `/api/v1/doctor/services*` (doctor token only) |
+| **Children** | No admin children list/detail API | Patient `/api/v1/children*` |
 | **Children** | No admin children API | Patient `/api/v1/children*` |
 | **Content CMS** (`/admin/content/*`) | No admin CMS write/list for tips/symptoms/etc. | Public `GET /api/v1/cms/*` only |
 | **Broadcast push** (`/admin/push`) | No broadcast admin API | `POST /api/v1/push/notify` is per-user only (already used for doctor/parent push) |
@@ -62,10 +63,9 @@ These production-admin features have **no matching admin endpoint** on [api.icar
 
 Add **admin** routes (not doctor-scoped), for example:
 
-1. `GET/PATCH /api/v1/admin/doctors/{id}/services` (or booking)
-2. Admin children / health-logs / CMS mutations (if those stay in this portal)
-3. Multipart / non-image document upload support on staging uploads API
-4. Child milestone / follow-up write APIs
+1. Admin children / health-logs / CMS mutations (if those stay in this portal)
+2. Multipart / non-image document upload support on staging uploads API
+3. Child milestone / follow-up write APIs
 
 Until those land, the admin bridge correctly returns 501 / gates the UI.
 

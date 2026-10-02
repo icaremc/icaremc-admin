@@ -22,7 +22,7 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     pathPrefix: "/admin/doctors",
     label: "Doctors",
     backendHint:
-      "GET /api/v1/admin/doctors + services + wallet + verify/push; booking writes not on admin API",
+      "GET /api/v1/admin/doctors + services + wallet + booking write + verify/push",
   },
   {
     pathPrefix: "/admin/doctor-categories",
@@ -195,6 +195,9 @@ export function mapAdminApiToBackend(
         return null;
       }
       if (rest.length === 2 && rest[1] === "booking") {
+        if (method === "PATCH" || method === "PUT") {
+          return `/api/v1/admin/doctors/${rest[0]}/booking`;
+        }
         return null;
       }
       if (rest.length === 1) {
@@ -360,7 +363,7 @@ export const ADMIN_API_MAPPING_CASES: Array<{
   },
   {
     adminPath: "doctors/abc/booking",
-    backendPath: null,
+    backendPath: "/api/v1/admin/doctors/abc/booking",
     method: "PATCH",
   },
   { adminPath: "doctor-categories", backendPath: "/api/v1/admin/doctor-categories" },

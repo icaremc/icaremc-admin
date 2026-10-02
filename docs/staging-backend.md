@@ -52,7 +52,7 @@ Full matrix (integrated vs blocked, with OpenAPI paths):
 
 → **[staging-api-coverage.md](./staging-api-coverage.md)**
 
-**Blocked on staging (no admin OpenAPI):** children, content CMS, broadcast push, health logs, doctor booking/service writes, multipart PDF document upload, and a few write-only prod flows (see coverage doc). Referrals, doctor wallet, appointment status, admin patch, and document metadata/delivery history are wired pending backend PR deploy.
+**Blocked on staging (no admin OpenAPI):** children, content CMS, broadcast push, health logs, multipart PDF document upload, and a few write-only prod flows (see coverage doc). Referrals, wallet, appointment status, admins, documents, and doctor booking writes are wired pending backend PR deploy.
 
 **Integrated when signed in:** dashboard, appointments, doctors (incl. services read), categories, hospitals, users, documents list/deliver, membership, payouts, wallet ledger, settings, admins, activity, legal/about, app version, pregnancy weeks, child-growth/followup lists.
 

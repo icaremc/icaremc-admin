@@ -181,6 +181,22 @@ export function adaptBackendResponse(
     };
   }
 
+  if (head === "doctors" && rest.length === 2 && rest[1] === "booking" && upper === "PATCH") {
+    if (!isPlainObject(body)) return body;
+    const doctor = isPlainObject(body.doctor) ? body.doctor : body;
+    const services = Array.isArray(body.services)
+      ? body.services
+      : Array.isArray(doctor.doctor_services)
+        ? doctor.doctor_services
+        : [];
+    return {
+      doctor: {
+        ...doctor,
+        doctor_services: services,
+      },
+    };
+  }
+
   if (head === "doctors" && rest.length === 2 && rest[1] === "document-deliveries" && upper === "GET") {
     const rows = Array.isArray(body) ? body.filter(isPlainObject) : [];
     return {

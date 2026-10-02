@@ -78,41 +78,6 @@ export default function DoctorBookingPricingPanel({
     setEditSnapshot(null);
   }, [initialServices]);
 
-  if (isBackendApiEnabled()) {
-    const hasServices = (doctor.doctor_services?.length ?? 0) > 0;
-    return (
-      <div className="space-y-4">
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-          Staging loads doctor services from{" "}
-          <code className="font-mono text-xs">GET /api/v1/admin/doctors/&#123;id&#125;/services</code>
-          , but creating or editing services is not on the admin API yet.
-        </div>
-        {hasServices ? (
-          <ul className="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white">
-            {(doctor.doctor_services ?? []).map((service) => (
-              <li
-                key={service.id}
-                className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
-              >
-                <div>
-                  <p className="font-medium text-gray-900">{service.name}</p>
-                  {service.description ? (
-                    <p className="text-gray-500">{service.description}</p>
-                  ) : null}
-                </div>
-                <p className="shrink-0 font-medium text-gray-900">
-                  {formatMoney(service.price, service.currency || currency)}
-                </p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-gray-500">No services returned for this doctor.</p>
-        )}
-      </div>
-    );
-  }
-
   const visibleCount = services.filter(
     (service) => isComplete(service) && service.is_active,
   ).length;
