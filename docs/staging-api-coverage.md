@@ -8,83 +8,50 @@ Admin staging mode (`NEXT_PUBLIC_USE_BACKEND_API=true`) proxies `/api/admin/*` t
 
 ---
 
-## Integrated (exists in OpenAPI + wired in admin)
+## Integrated (wired in admin; some pending backend PR deploy)
 
 | Admin area | Admin UI | Backend | Notes |
 |---|---|---|---|
 | Dashboard | `/admin/dashboard` | `GET /api/v1/admin/dashboard` | |
-| Appointments | `/admin/appointments` | `GET /api/v1/admin/appointments` | Detail synthesized from list |
-| Doctors list / verify / push | `/admin/doctors` | `GET /api/v1/admin/doctors`, `POST …/verify`, `POST /api/v1/push/notify` | |
-| Doctor detail + **services** (read) | `/admin/doctors/[id]` | `GET /api/v1/admin/doctors` + `GET /api/v1/admin/doctors/{id}/services` | Bridge merges list row + services |
-| Speciality | `/admin/doctor-categories` | `GET\|POST\|PATCH\|DELETE /api/v1/admin/doctor-categories` | |
-| Hospitals | `/admin/hospitals` | `GET\|POST\|PATCH\|DELETE /api/v1/admin/hospitals` | Multipart → JSON + slug; image via `POST /api/v1/uploads/` |
-| Parents | `/admin/users` | `GET /api/v1/admin/users`, `GET …/users/{id}` | Per-user push via `/push/notify` |
-| Internal docs (list + deliver) | `/admin/documents`, doctor shared docs | `GET /api/v1/admin/documents`, `POST …/documents/{id}/deliver?recipient_id=` | Upload + delivery history not in OpenAPI |
-| Payout requests | `/admin/finance/payout-request` | `GET /api/v1/admin/payout-requests`, `POST …/{id}` | |
-| Wallet transactions | `/admin/finance/wallet-transactions` | `GET /api/v1/admin/wallet-transactions` | Global ledger, not per-doctor wallet |
-| App membership | `/admin/finance/app-membership` | `GET\|grant\|revoke /api/v1/admin/membership`, `GET\|PUT …/settings/subscription` | Revoke uses **subscription id** |
-| Finance / payment settings | `/admin/finance/settings` | `GET\|PUT …/settings/finance`, `…/payment` | |
-| Appointment payments | `/admin/finance/payment` | Appointments list | No separate payments admin API |
-| Portal admins | `/admin/admins` | `GET\|POST /api/v1/admin/admins` | Create/list only (no PATCH in OpenAPI) |
-| Activity log | `/admin/activity` | `GET …/activity/admin`, `…/platform` | `source=all` merges both |
-| Policies / About | `/admin/legal`, `/admin/about` | `GET\|PUT /api/v1/admin/legal-documents` | UI PATCH rewritten to PUT |
-| App release | `/admin/app-version` | `GET\|PUT …/settings/app_version*` | |
-| Pregnancy weeks | `/admin/pregnancy-weeks` | `GET\|POST /api/v1/admin/pregnancy-weeks` (+ translations) | Update/delete/image limited vs prod |
-| Child milestones | `/admin/child-growth` | `GET /api/v1/admin/child-growth-periods` | **List only** |
-| Follow-up visits | `/admin/followup-visits` | `GET /api/v1/admin/followup-templates` | **List only** |
-| Auth | Login | `POST /api/v1/auth/admin/login` | |
-| **Referrals** | `/admin/referrals` | `GET /api/v1/admin/referrals`, `…/referral-commissions`, `GET\|PUT …/settings/referral`, `GET …/doctors/{id}/referral-stats` | Pending backend PR merge + deploy; bridge already wired |
-| **Doctor wallet** | `/admin/doctors/[id]` wallet tab | `GET /api/v1/admin/doctors/{id}/wallet` | Pending backend PR #2 merge + deploy; bridge already wired |
-| Appointment status | `/admin/appointments/[id]` | `PATCH /api/v1/admin/appointments/{id}` | Pending backend PR #3 |
-| Portal admin edit | `/admin/admins` | `PATCH /api/v1/admin/admins/{id}` | Pending backend PR #3 |
-| Document create + delivery history | `/admin/documents`, doctor docs panel | `POST /documents`, `GET …/doctors/{id}/document-deliveries` | Multipart PDF upload still limited (uploads API is image-only) |
-| Doctor booking / services write | `/admin/doctors/[id]` | `PATCH /api/v1/admin/doctors/{id}/booking` | Pending backend PR #4 |
-| Children | `/admin/children` | `GET /api/v1/admin/children`, `GET …/children/{id}` | Pending backend PR #5 |
-| Appointment detail by id | `/admin/appointments/[id]` | `GET /api/v1/admin/appointments/{id}` | Pending backend PR #5 |
+| Appointments | `/admin/appointments` | `GET\|PATCH /api/v1/admin/appointments` (+ detail by id) | PR #3 / #5 |
+| Doctors | `/admin/doctors` | list, services, wallet, booking write, verify, push, referral-stats | PRs #1–#4 |
+| Speciality | `/admin/doctor-categories` | full CRUD | |
+| Hospitals | `/admin/hospitals` | full CRUD | Multipart → JSON + slug |
+| Parents | `/admin/users` | list + detail + push | |
+| Children | `/admin/children` | `GET` list + detail | PR #5; growth/vaccines/edit not on staging |
+| Referrals | `/admin/referrals` | referrals, commissions, settings, doctor stats | PR #1 |
+| Internal docs | `/admin/documents` | list, create metadata, deliver, delivery history | PR #3; multipart PDF limited |
+| Payouts / wallet ledger | `/admin/finance/*` | payouts + wallet-transactions | |
+| App membership | `/admin/finance/app-membership` | membership + subscription settings | |
+| Finance / payment settings | `/admin/finance/settings` | settings/finance + payment | |
+| Portal admins | `/admin/admins` | list, create, patch | PR #3 |
+| Activity / legal / about / app version | corresponding pages | as before | |
+| Pregnancy weeks / child growth / follow-ups | corresponding pages | list (+ limited writes) | |
 
 ---
 
-## Not in OpenAPI admin API (cannot integrate)
+## Still blocked (no admin API)
 
-These production-admin features have **no matching admin endpoint** on [api.icaremchealth.com](https://api.icaremchealth.com/docs#/). Staging shows “Not on staging API yet” and hides them from the sidebar.
-
-| Admin area | Why blocked | Closest OpenAPI (unusable for admin) |
-|---|---|---|
-| **Content CMS** (`/admin/content/*`) | No admin CMS write/list for tips/symptoms/etc. | Public `GET /api/v1/cms/*` only |
-| **Children** | No admin children API | Patient `/api/v1/children*` |
-| **Content CMS** (`/admin/content/*`) | No admin CMS write/list for tips/symptoms/etc. | Public `GET /api/v1/cms/*` only |
-| **Broadcast push** (`/admin/push`) | No broadcast admin API | `POST /api/v1/push/notify` is per-user only (already used for doctor/parent push) |
-| **Health logs** | No admin health-log API | — |
-| **Document upload** | Admin documents are GET + deliver only | — |
-| **Document delivery history** | No list-deliveries admin route | Deliver exists; history does not |
-| **Appointment status change** | Appointments are GET-only | — |
-| **Admin user edit/deactivate** | Admins are GET + POST create only | — |
-| **Child milestone / follow-up writes** | List-only admin routes | — |
-
-### Backend asks (to unlock the gaps)
-
-Add **admin** routes (not doctor-scoped), for example:
-
-1. Admin children / health-logs / CMS mutations (if those stay in this portal)
-2. Multipart / non-image document upload support on staging uploads API
-3. Child milestone / follow-up write APIs
-
-Until those land, the admin bridge correctly returns 501 / gates the UI.
-
----
-
-## OpenAPI admin endpoints not exposed as product UI
-
-| Backend | Notes |
+| Admin area | Why |
 |---|---|
-| `POST /api/v1/admin/bootstrap-super-admin` | One-shot ops; not a portal page |
+| Content CMS (`/admin/content/*`) | Public CMS GET only; no admin write API |
+| Broadcast push (`/admin/push`) | Only per-user `/push/notify` exists |
+| Health logs | No admin health-log API |
+| Child growth / follow-up **writes** | List-only admin routes |
+| Multipart PDF document upload | Staging uploads API is image-only |
+
+### Backend asks (remaining)
+
+1. CMS admin mutations (if CMS stays in this portal)
+2. Non-image upload support for admin documents
+3. Child milestone / vaccine / growth write + nested detail joins
+4. Health-log / broadcast push admin APIs (if needed)
 
 ---
 
 ## How to re-check
 
 ```bash
-# Diff OpenAPI vs mapAdminApiToBackend cases
 curl -s https://api.icaremchealth.com/openapi.json | python3 -c "import json,sys; p=json.load(sys.stdin)['paths'];
 print('\n'.join(sorted(f'{m.upper()} {path}' for path,ops in p.items() for m in ops if path.startswith('/api/v1/admin'))))"
 

@@ -275,6 +275,22 @@ describe("adaptBackendResponse", () => {
       },
     );
   });
+
+  it("adapts child detail row into empty-extras envelope", () => {
+    const out = adaptBackendResponse("children/c1", "GET", 200, {
+      id: "c1",
+      name: "Amina",
+      gender: "female",
+    });
+    assert.deepEqual(out, {
+      child: { id: "c1", name: "Amina", gender: "female" },
+      milestoneChecks: [],
+      measurements: [],
+      vaccineRecords: [],
+      vaccineSchedule: [],
+      growthPeriods: [],
+    });
+  });
 });
 
 describe("staging route catalog", () => {

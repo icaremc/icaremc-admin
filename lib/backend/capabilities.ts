@@ -344,6 +344,7 @@ export const ADMIN_API_MAPPING_CASES: Array<{
   },
   { adminPath: "children", backendPath: "/api/v1/admin/children", method: "GET" },
   { adminPath: "children/c1", backendPath: "/api/v1/admin/children/c1", method: "GET" },
+  { adminPath: "children/c1", backendPath: null, method: "PATCH" },
   { adminPath: "doctors", backendPath: "/api/v1/admin/doctors" },
   { adminPath: "doctors/abc/verify", backendPath: "/api/v1/admin/doctors/abc/verify" },
   { adminPath: "doctors/abc", backendPath: "__doctor_detail__", method: "GET" },

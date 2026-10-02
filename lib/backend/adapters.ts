@@ -301,12 +301,40 @@ export function adaptBackendResponse(
   }
 
   if (head === "children" && rest.length === 1 && upper === "GET") {
-    if (!Array.isArray(body)) {
-      return isPlainObject(body) ? { child: body } : body;
+    // Staging returns a bare child row; prod API returns the full detail envelope.
+    if (isPlainObject(body) && isPlainObject(body.child)) {
+      return {
+        child: body.child,
+        milestoneChecks: Array.isArray(body.milestoneChecks) ? body.milestoneChecks : [],
+        measurements: Array.isArray(body.measurements) ? body.measurements : [],
+        vaccineRecords: Array.isArray(body.vaccineRecords) ? body.vaccineRecords : [],
+        vaccineSchedule: Array.isArray(body.vaccineSchedule) ? body.vaccineSchedule : [],
+        growthPeriods: Array.isArray(body.growthPeriods) ? body.growthPeriods : [],
+      };
     }
-    const child = findById(body, rest[0]);
-    if (!child) return { error: "Child not found", stagingNotFound: true };
-    return { child };
+    if (isPlainObject(body) && body.id != null) {
+      return {
+        child: body,
+        milestoneChecks: [],
+        measurements: [],
+        vaccineRecords: [],
+        vaccineSchedule: [],
+        growthPeriods: [],
+      };
+    }
+    if (Array.isArray(body)) {
+      const child = findById(body, rest[0]);
+      if (!child) return { error: "Child not found", stagingNotFound: true };
+      return {
+        child,
+        milestoneChecks: [],
+        measurements: [],
+        vaccineRecords: [],
+        vaccineSchedule: [],
+        growthPeriods: [],
+      };
+    }
+    return body;
   }
 
   if (Array.isArray(body)) {
