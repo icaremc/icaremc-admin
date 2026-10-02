@@ -2,6 +2,8 @@
  * Normalize Render staging responses into the shapes existing admin UI expects.
  */
 
+import { parseAppMembershipSettingsData } from "../appMembership/subscriptionSettings.ts";
+
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -113,12 +115,43 @@ export function adaptBackendResponse(
   }
 
   if (head === "doctors" && rest.length === 1 && upper === "GET") {
+    // Public DoctorDetailOut: { doctor, services, slots }
+    if (isPlainObject(body) && isPlainObject(body.doctor)) {
+      const services = Array.isArray(body.services) ? body.services : [];
+      const slots = Array.isArray(body.slots) ? body.slots : [];
+      return {
+        doctor: {
+          ...body.doctor,
+          doctor_services: body.doctor.doctor_services ?? services,
+          doctor_availability_slots:
+            body.doctor.doctor_availability_slots ?? slots,
+        },
+      };
+    }
     if (!Array.isArray(body)) {
       return isPlainObject(body) ? { doctor: body } : body;
     }
     const doctor = findById(body, rest[0]);
     if (!doctor) return { error: "Doctor not found", stagingNotFound: true };
     return { doctor };
+  }
+
+  if (
+    head === "doctors" &&
+    rest.length === 2 &&
+    rest[1] === "document-deliveries" &&
+    upper === "POST"
+  ) {
+    return { ok: true, delivery: body, ...(isPlainObject(body) ? body : {}) };
+  }
+
+  if (head === "activity-logs" && rest.length === 2 && upper === "GET") {
+    if (!Array.isArray(body)) {
+      return isPlainObject(body) ? { log: body } : body;
+    }
+    const log = findById(body, rest[1]);
+    if (!log) return { error: "Activity log not found", stagingNotFound: true };
+    return { log: { ...log, source: rest[0] } };
   }
 
   if (head === "appointments" && rest.length === 1 && rest[0] !== "stats" && upper === "GET") {
@@ -187,7 +220,7 @@ export function adaptBackendResponse(
     if (head === "doctors" && (rest[1] === "verify" || rest.length === 1)) {
       return { doctor: body, ...body };
     }
-    if (head === "hospitals" && rest.length === 1) {
+    if (head === "hospitals" && (upper === "POST" || rest.length === 1)) {
       return { hospital: body };
     }
     if (head === "users" && rest.length === 1) {
@@ -211,8 +244,20 @@ export function adaptBackendResponse(
     if (head === "doctor-categories" && (upper === "POST" || rest.length === 1)) {
       return { category: body };
     }
-    if (head === "finance-settings" || head === "app-membership-settings") {
+    if (head === "app-membership-settings") {
+      return {
+        appMembershipSettings: parseAppMembershipSettingsData(body.data ?? body),
+        updatedAt: body.updated_at ?? null,
+      };
+    }
+    if (head === "finance-settings") {
       return { financeSettings: body.data ?? body, ...body };
+    }
+    if (head === "legal-documents" && (upper === "PATCH" || upper === "PUT")) {
+      return { document: body };
+    }
+    if (head === "documents" && rest[1] === "deliver" && upper === "POST") {
+      return { ok: true, delivery: body, ...(isPlainObject(body) ? body : {}) };
     }
     if (head === "payment-settings") {
       return { paymentSettings: body.data ?? body, ...body };

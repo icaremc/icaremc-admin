@@ -142,6 +142,68 @@ describe("adaptBackendResponse", () => {
     const out = adaptBackendResponse("doctors", "GET", 501, { error: "nope" });
     assert.deepEqual(out, { error: "nope" });
   });
+
+  it("wraps hospital POST object", () => {
+    const out = adaptBackendResponse("hospitals", "POST", 200, {
+      id: "h1",
+      name: "St Paul",
+      slug: "st-paul",
+    });
+    assert.deepEqual(out, {
+      hospital: { id: "h1", name: "St Paul", slug: "st-paul" },
+    });
+  });
+
+  it("adapts app-membership-settings as appMembershipSettings", () => {
+    const out = adaptBackendResponse("app-membership-settings", "GET", 200, {
+      data: {
+        enabled: true,
+        yearlyPrice: 1500,
+        currency: "ETB",
+        durationDays: 365,
+        requireForAppAccess: true,
+      },
+      updated_at: "2026-01-01T00:00:00Z",
+    });
+    assert.deepEqual(out, {
+      appMembershipSettings: {
+        enabled: true,
+        yearlyPrice: 1500,
+        currency: "ETB",
+        durationDays: 365,
+        requireForAppAccess: true,
+      },
+      updatedAt: "2026-01-01T00:00:00Z",
+    });
+  });
+
+  it("adapts public doctor detail with services", () => {
+    const out = adaptBackendResponse("doctors/d1", "GET", 200, {
+      doctor: { id: "d1", first_name: "A" },
+      services: [{ id: "s1", name: "Consult", price: 100, currency: "ETB" }],
+      slots: [],
+    });
+    assert.deepEqual(out, {
+      doctor: {
+        id: "d1",
+        first_name: "A",
+        doctor_services: [{ id: "s1", name: "Consult", price: 100, currency: "ETB" }],
+        doctor_availability_slots: [],
+      },
+    });
+  });
+
+  it("wraps legal-document save", () => {
+    const out = adaptBackendResponse(
+      "legal-documents",
+      "PATCH",
+      200,
+      { slug: "privacy", title: "Privacy", locale: "en", sections: [] },
+    );
+    assert.deepEqual(out, {
+      document: { slug: "privacy", title: "Privacy", locale: "en", sections: [] },
+    });
+  });
 });
 
 describe("staging route catalog", () => {
