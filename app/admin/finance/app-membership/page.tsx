@@ -182,16 +182,17 @@ export default function FinanceAppMembershipPage() {
   };
 
   const runMemberAction = async (
-    patientId: string,
+    subscriptionId: string,
     action: "revoke",
   ) => {
     if (!canManage) return;
-    setActingPatientId(patientId);
+    setActingPatientId(subscriptionId);
     setError(null);
     setMessage(null);
     try {
+      // OpenAPI: POST /membership/{subscription_id}/revoke (not patient id)
       const res = await fetch(
-        `/api/admin/app-membership-members/${patientId}/${action}`,
+        `/api/admin/app-membership-members/${subscriptionId}/${action}`,
         { method: "POST" },
       );
       const payload = (await res.json()) as { error?: string };
@@ -214,6 +215,10 @@ export default function FinanceAppMembershipPage() {
       const formData = new FormData();
       formData.set("receipt", input.receipt);
       formData.set("amountPaid", String(input.amountPaid));
+      formData.set(
+        "durationDays",
+        String(settings?.durationDays ?? 365),
+      );
 
       const res = await fetch(
         `/api/admin/app-membership-members/${extendTarget.patient_id}/grant`,
@@ -506,11 +511,12 @@ export default function FinanceAppMembershipPage() {
                                   variant="ghost"
                                   className="text-red-700 hover:bg-red-50 hover:text-red-800"
                                   disabled={
+                                    actingPatientId === member.id ||
                                     actingPatientId === member.patient_id ||
                                     member.status !== "active"
                                   }
                                   onClick={() =>
-                                    void runMemberAction(member.patient_id, "revoke")
+                                    void runMemberAction(member.id, "revoke")
                                   }
                                 >
                                   Revoke
@@ -542,8 +548,12 @@ export default function FinanceAppMembershipPage() {
               ) : null}
             </div>
 
-            {loadingSettings || !settings ? (
+            {loadingSettings ? (
               <p className="text-sm text-gray-600">Loading pricing…</p>
+            ) : !settings ? (
+              <p className="text-sm text-red-600">
+                {error ?? "Could not load membership pricing settings."}
+              </p>
             ) : (
               <>
                 <label className="flex items-start gap-3 rounded-lg border border-gray-200 p-4">

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { formatMoney } from "@/lib/appointments/display";
 import { formatAppointmentDate } from "@/lib/appointments/status";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 import { formatDateTime } from "@/lib/format";
 import type { DoctorWalletHistory } from "@/lib/finance/doctorWalletHistory";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,16 @@ export default function DoctorWalletPanel({
   loading,
   error,
 }: DoctorWalletPanelProps) {
+  if (isBackendApiEnabled()) {
+    return (
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+        Doctor wallet and earnings are not available on the staging API yet.
+        There is no admin <code className="font-mono text-xs">/doctors/:id/wallet</code> endpoint
+        (only the doctor-app wallet API exists).
+      </div>
+    );
+  }
+
   const currency = history?.wallet?.currency ?? "ETB";
 
   if (loading && !history) {
