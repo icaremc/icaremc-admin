@@ -434,6 +434,66 @@ export async function proxyAdminRequestToBackend(
     }
   }
 
+  // Doctor detail = admin doctor list row + admin services endpoint
+  if (backendPath === "__doctor_detail__") {
+    const doctorId = rest[0] ?? "";
+    const base = getBackendApiBaseUrl();
+    const headers = { Authorization: `Bearer ${token}` };
+    try {
+      const [doctorsRes, servicesRes] = await Promise.all([
+        fetch(`${base}/api/v1/admin/doctors`, { headers, cache: "no-store" }),
+        fetch(`${base}/api/v1/admin/doctors/${doctorId}/services`, {
+          headers,
+          cache: "no-store",
+        }),
+      ]);
+      if (!doctorsRes.ok) {
+        const text = await doctorsRes.text();
+        try {
+          return NextResponse.json(text ? JSON.parse(text) : null, {
+            status: doctorsRes.status,
+          });
+        } catch {
+          return new NextResponse(text, { status: doctorsRes.status });
+        }
+      }
+      const doctorsBody = (await doctorsRes.json()) as unknown;
+      const servicesBody = servicesRes.ok ? await servicesRes.json() : [];
+      const doctors = Array.isArray(doctorsBody) ? doctorsBody : [];
+      const doctor =
+        doctors.find(
+          (row) =>
+            typeof row === "object" &&
+            row !== null &&
+            String((row as { id?: unknown }).id) === doctorId,
+        ) ?? null;
+      if (!doctor) {
+        return NextResponse.json({ error: "Doctor not found" }, { status: 404 });
+      }
+      const adapted = adaptBackendResponse(
+        adminPath,
+        method,
+        200,
+        {
+          doctor,
+          services: Array.isArray(servicesBody) ? servicesBody : [],
+          slots: [],
+        },
+        { searchParams: incomingUrl.searchParams },
+      );
+      return NextResponse.json(adapted, { status: 200 });
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error:
+            error instanceof Error ? error.message : "Failed to reach staging backend",
+          stagingUnavailable: true,
+        },
+        { status: 502 },
+      );
+    }
+  }
+
   const target = new URL(`${getBackendApiBaseUrl()}${backendPath}`);
   incomingUrl.searchParams.forEach((value, key) => {
     if (key === "app" && adminPath.replace(/^\/+/, "").startsWith("app-version-settings")) {

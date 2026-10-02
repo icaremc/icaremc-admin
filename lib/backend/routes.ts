@@ -3,6 +3,7 @@ export const STAGING_BACKEND_ADMIN_ROUTES = [
   { method: "GET", path: "/api/v1/admin/dashboard", label: "dashboard" },
   { method: "GET", path: "/api/v1/admin/appointments", label: "appointments" },
   { method: "GET", path: "/api/v1/admin/doctors", label: "doctors" },
+  { method: "GET", path: "/api/v1/admin/doctors/{id}/services", label: "doctor-services" },
   { method: "GET", path: "/api/v1/admin/doctor-categories", label: "doctor-categories" },
   { method: "GET", path: "/api/v1/admin/hospitals", label: "hospitals" },
   { method: "GET", path: "/api/v1/admin/users", label: "users" },

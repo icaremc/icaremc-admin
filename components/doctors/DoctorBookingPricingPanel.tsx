@@ -83,9 +83,9 @@ export default function DoctorBookingPricingPanel({
     return (
       <div className="space-y-4">
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-          Staging can show doctor services from{" "}
-          <code className="font-mono text-xs">GET /api/v1/doctors/&#123;id&#125;</code>, but
-          creating or editing services is doctor-app only (no admin booking API).
+          Staging loads doctor services from{" "}
+          <code className="font-mono text-xs">GET /api/v1/admin/doctors/&#123;id&#125;/services</code>
+          , but creating or editing services is not on the admin API yet.
         </div>
         {hasServices ? (
           <ul className="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white">

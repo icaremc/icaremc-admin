@@ -15,7 +15,7 @@ Admin staging mode (`NEXT_PUBLIC_USE_BACKEND_API=true`) proxies `/api/admin/*` t
 | Dashboard | `/admin/dashboard` | `GET /api/v1/admin/dashboard` | |
 | Appointments | `/admin/appointments` | `GET /api/v1/admin/appointments` | Detail synthesized from list |
 | Doctors list / verify / push | `/admin/doctors` | `GET /api/v1/admin/doctors`, `POST …/verify`, `POST /api/v1/push/notify` | |
-| Doctor detail + **services** (read) | `/admin/doctors/[id]` | `GET /api/v1/doctors/{id}` | Public detail includes `services` + `slots` |
+| Doctor detail + **services** (read) | `/admin/doctors/[id]` | `GET /api/v1/admin/doctors` + `GET /api/v1/admin/doctors/{id}/services` | Bridge merges list row + services |
 | Speciality | `/admin/doctor-categories` | `GET\|POST\|PATCH\|DELETE /api/v1/admin/doctor-categories` | |
 | Hospitals | `/admin/hospitals` | `GET\|POST\|PATCH\|DELETE /api/v1/admin/hospitals` | Multipart → JSON + slug; image via `POST /api/v1/uploads/` |
 | Parents | `/admin/users` | `GET /api/v1/admin/users`, `GET …/users/{id}` | Per-user push via `/push/notify` |

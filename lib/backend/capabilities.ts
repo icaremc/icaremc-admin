@@ -22,7 +22,7 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     pathPrefix: "/admin/doctors",
     label: "Doctors",
     backendHint:
-      "GET /api/v1/admin/doctors + GET /api/v1/doctors/{id} (services) + verify/push; wallet/booking writes not on admin API",
+      "GET /api/v1/admin/doctors + GET /api/v1/admin/doctors/{id}/services + verify/push; wallet/booking writes not on admin API",
   },
   {
     pathPrefix: "/admin/doctor-categories",
@@ -176,12 +176,16 @@ export function mapAdminApiToBackend(
         if (method === "POST") return "__document_deliver__";
         return null;
       }
+      if (rest.length === 2 && rest[1] === "services") {
+        if (method === "GET") return `/api/v1/admin/doctors/${rest[0]}/services`;
+        return null;
+      }
       if (rest.length === 2 && (rest[1] === "wallet" || rest[1] === "booking" || rest[1] === "referral-stats")) {
         return null;
       }
       if (rest.length === 1) {
-        // Public doctor detail includes services + slots (admin list does not)
-        if (method === "GET") return `/api/v1/doctors/${rest[0]}`;
+        // Prefer admin list + admin services (added upstream) over public doctor detail
+        if (method === "GET") return "__doctor_detail__";
         if (method === "PATCH" || method === "POST") {
           return `/api/v1/admin/doctors/${rest[0]}/verify`;
         }
@@ -309,7 +313,12 @@ export const ADMIN_API_MAPPING_CASES: Array<{
   },
   { adminPath: "doctors", backendPath: "/api/v1/admin/doctors" },
   { adminPath: "doctors/abc/verify", backendPath: "/api/v1/admin/doctors/abc/verify" },
-  { adminPath: "doctors/abc", backendPath: "/api/v1/doctors/abc", method: "GET" },
+  { adminPath: "doctors/abc", backendPath: "__doctor_detail__", method: "GET" },
+  {
+    adminPath: "doctors/abc/services",
+    backendPath: "/api/v1/admin/doctors/abc/services",
+    method: "GET",
+  },
   {
     adminPath: "doctors/abc",
     backendPath: "/api/v1/admin/doctors/abc/verify",
