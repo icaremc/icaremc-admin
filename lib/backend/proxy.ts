@@ -4,6 +4,7 @@ import {
   BACKEND_ACCESS_COOKIE,
   getBackendApiBaseUrl,
   isBackendApiEnabled,
+  resolveBackendMediaUrl,
 } from "@/lib/backend/config";
 import { mapAdminApiToBackend } from "@/lib/backend/capabilities";
 import { slugifyHospitalName } from "@/lib/hospitals/storage";
@@ -89,7 +90,8 @@ async function rewriteHospitalMultipart(
             "Could not upload hospital image to staging. Try again without an image.",
         };
       }
-      payload.image_url = uploadBody.url;
+      payload.image_url =
+        resolveBackendMediaUrl(uploadBody.url) ?? uploadBody.url;
     } catch (error) {
       return {
         error:
@@ -173,7 +175,7 @@ async function uploadStagingImage(
       error: uploadBody?.error ?? "Could not upload image to staging.",
     };
   }
-  return { url: uploadBody.url };
+  return { url: resolveBackendMediaUrl(uploadBody.url) ?? uploadBody.url };
 }
 
 /** Rewrite admin request bodies/methods to match Render admin API shapes. */
