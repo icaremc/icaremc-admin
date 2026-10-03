@@ -2,8 +2,32 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-/** Refresh Supabase auth cookies so /api/admin Route Handlers can call getUser(). */
+/**
+ * When NEXT_PUBLIC_USE_BACKEND_API is true, rewrite /api/admin/* to the
+ * staging bridge. Production leaves the flag unset → refresh Supabase
+ * cookies so Route Handlers can call auth.getUser().
+ */
 export async function middleware(request: NextRequest) {
+  if (process.env.NEXT_PUBLIC_USE_BACKEND_API === "true") {
+    const { pathname } = request.nextUrl;
+    if (!pathname.startsWith("/api/admin/")) {
+      return NextResponse.next();
+    }
+
+    if (
+      pathname.startsWith("/api/admin/payout-requests/chapa-") ||
+      pathname === "/api/admin/activity/log" ||
+      pathname.startsWith("/api/admin/activity/log/")
+    ) {
+      return NextResponse.next();
+    }
+
+    const suffix = pathname.slice("/api/admin/".length);
+    const url = request.nextUrl.clone();
+    url.pathname = `/api/backend/bridge/${suffix}`;
+    return NextResponse.rewrite(url);
+  }
+
   let response = NextResponse.next({ request });
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

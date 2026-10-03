@@ -52,6 +52,7 @@ import {
 function DailyTipWeeksView() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  // ponytail: staging CMS writes are live via admin daily-tips API
   const canManageContent = useAdminCanManage("manage_content");
   const { tips, loading, error } = useAppSelector((state) => state.dailyTips);
   const [query, setQuery] = useState("");
@@ -274,7 +275,7 @@ function DailyTipWeeksView() {
                                   </li>
                                 ) : null}
                               </ul>
-                            ) : (
+                            ) : canManageContent ? (
                               <button
                                 type="button"
                                 className="mt-3 text-xs font-medium text-emerald-700 hover:underline"
@@ -282,6 +283,8 @@ function DailyTipWeeksView() {
                               >
                                 Add tips for this week
                               </button>
+                            ) : (
+                              <p className="mt-3 text-xs text-gray-400">No tips yet</p>
                             )}
                           </article>
                         );

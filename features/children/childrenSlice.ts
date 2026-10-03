@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { supabase } from "@/lib/supabaseClient";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 import type {
   Child,
   ChildGrowthMeasurement,
@@ -9,12 +9,6 @@ import type {
   ChildVaccineRecord,
   VaccineDoseSchedule,
 } from "@/lib/types/database";
-
-const CHILD_SELECT =
-  "*, profiles(id, full_name, phone, account_type, locale, onboarding_complete, notifications_enabled, created_at)";
-
-const PERIOD_SELECT =
-  "*, child_growth_period_translations(id, period_id, language_code, title, subtitle, milestones)";
 
 export type ChildDetailPayload = {
   child: Child;
@@ -43,103 +37,64 @@ const initialState: ChildrenState = {
   error: null,
 };
 
-const emptyDetailExtras = {
-  milestoneChecks: [] as ChildMilestoneCheck[],
-  measurements: [] as ChildGrowthMeasurement[],
-  vaccineRecords: [] as ChildVaccineRecord[],
-  vaccineSchedule: [] as VaccineDoseSchedule[],
-  growthPeriods: [] as ChildGrowthPeriod[],
-};
+async function readApiError(response: Response): Promise<string> {
+  try {
+    const body = (await response.json()) as { error?: string };
+    return body.error ?? response.statusText;
+  } catch {
+    return response.statusText || "Request failed";
+  }
+}
+
+function asDetailPayload(body: Record<string, unknown>): ChildDetailPayload | null {
+  const child = body.child;
+  if (!child || typeof child !== "object") return null;
+  return {
+    child: child as Child,
+    milestoneChecks: Array.isArray(body.milestoneChecks)
+      ? (body.milestoneChecks as ChildMilestoneCheck[])
+      : [],
+    measurements: Array.isArray(body.measurements)
+      ? (body.measurements as ChildGrowthMeasurement[])
+      : [],
+    vaccineRecords: Array.isArray(body.vaccineRecords)
+      ? (body.vaccineRecords as ChildVaccineRecord[])
+      : [],
+    vaccineSchedule: Array.isArray(body.vaccineSchedule)
+      ? (body.vaccineSchedule as VaccineDoseSchedule[])
+      : [],
+    growthPeriods: Array.isArray(body.growthPeriods)
+      ? (body.growthPeriods as ChildGrowthPeriod[])
+      : [],
+  };
+}
 
 export const fetchChildren = createAsyncThunk(
   "children/fetchAll",
   async (_, { rejectWithValue }) => {
-    const { data, error } = await supabase
-      .from("children")
-      .select(CHILD_SELECT)
-      .order("updated_at", { ascending: false });
-
-    if (error) return rejectWithValue(error.message);
-    return (data ?? []) as Child[];
+    const response = await fetch("/api/admin/children");
+    if (!response.ok) {
+      return rejectWithValue(await readApiError(response));
+    }
+    const body = (await response.json()) as {
+      children?: Child[];
+      items?: Child[];
+    };
+    return (body.children ?? body.items ?? []) as Child[];
   },
 );
 
 export const fetchChildDetail = createAsyncThunk(
   "children/fetchDetail",
   async (childId: string, { rejectWithValue }) => {
-    const childRes = await supabase
-      .from("children")
-      .select(CHILD_SELECT)
-      .eq("id", childId)
-      .single();
-
-    if (childRes.error) return rejectWithValue(childRes.error.message);
-
-    const child = childRes.data as Child;
-
-    const [periodsRes, scheduleRes] = await Promise.all([
-      supabase
-        .from("child_growth_periods")
-        .select(PERIOD_SELECT)
-        .eq("is_published", true)
-        .order("age_months", { ascending: true }),
-      supabase
-        .from("vaccine_dose_schedule")
-        .select("*")
-        .eq("is_published", true)
-        .order("sort_order", { ascending: true }),
-    ]);
-
-    if (periodsRes.error) return rejectWithValue(periodsRes.error.message);
-    if (scheduleRes.error) return rejectWithValue(scheduleRes.error.message);
-
-    const growthPeriods = (periodsRes.data ?? []) as ChildGrowthPeriod[];
-    const vaccineSchedule = (scheduleRes.data ?? []) as VaccineDoseSchedule[];
-
-    if (!child.local_id) {
-      return {
-        child,
-        ...emptyDetailExtras,
-        growthPeriods,
-        vaccineSchedule,
-      } satisfies ChildDetailPayload;
+    const response = await fetch(`/api/admin/children/${childId}`);
+    if (!response.ok) {
+      return rejectWithValue(await readApiError(response));
     }
-
-    const [checksRes, measurementsRes, vaccinesRes] = await Promise.all([
-      supabase
-        .from("child_milestone_checks")
-        .select("*")
-        .eq("user_id", child.user_id)
-        .eq("child_local_id", child.local_id)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("child_growth_measurements")
-        .select("*")
-        .eq("user_id", child.user_id)
-        .eq("child_local_id", child.local_id)
-        .order("measured_on", { ascending: true }),
-      supabase
-        .from("child_vaccine_records")
-        .select("*")
-        .eq("user_id", child.user_id)
-        .eq("child_local_id", child.local_id)
-        .order("age_months", { ascending: true }),
-    ]);
-
-    if (checksRes.error) return rejectWithValue(checksRes.error.message);
-    if (measurementsRes.error) {
-      return rejectWithValue(measurementsRes.error.message);
-    }
-    if (vaccinesRes.error) return rejectWithValue(vaccinesRes.error.message);
-
-    return {
-      child,
-      milestoneChecks: (checksRes.data ?? []) as ChildMilestoneCheck[],
-      measurements: (measurementsRes.data ?? []) as ChildGrowthMeasurement[],
-      vaccineRecords: (vaccinesRes.data ?? []) as ChildVaccineRecord[],
-      vaccineSchedule,
-      growthPeriods,
-    } satisfies ChildDetailPayload;
+    const body = (await response.json()) as Record<string, unknown>;
+    const detail = asDetailPayload(body);
+    if (!detail) return rejectWithValue("Child not found");
+    return detail;
   },
 );
 
@@ -149,15 +104,23 @@ export const updateChild = createAsyncThunk(
     { childId, patch }: { childId: string; patch: ChildUpdatePayload },
     { rejectWithValue },
   ) => {
-    const { data, error } = await supabase
-      .from("children")
-      .update({ ...patch, updated_at: new Date().toISOString() })
-      .eq("id", childId)
-      .select(CHILD_SELECT)
-      .single();
+    if (isBackendApiEnabled()) {
+      return rejectWithValue(
+        "Editing children is not available on the staging API yet.",
+      );
+    }
 
-    if (error) return rejectWithValue(error.message);
-    return data as Child;
+    const response = await fetch(`/api/admin/children/${childId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    });
+    if (!response.ok) {
+      return rejectWithValue(await readApiError(response));
+    }
+    const body = (await response.json()) as { child?: Child };
+    if (!body.child) return rejectWithValue("Child update failed");
+    return body.child;
   },
 );
 

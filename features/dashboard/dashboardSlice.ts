@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 import { supabase } from "@/lib/supabaseClient";
 import type { DashboardStats } from "@/lib/types/database";
 
@@ -107,6 +108,34 @@ export const fetchDashboardStats = createAsyncThunk(
   "dashboard/fetchStats",
   async (_, { rejectWithValue }) => {
     try {
+      if (isBackendApiEnabled()) {
+        const response = await fetch("/api/admin/dashboard/analytics");
+        if (!response.ok) {
+          const body = (await response.json().catch(() => ({}))) as { error?: string };
+          return rejectWithValue(body.error ?? "Failed to load staging dashboard");
+        }
+        const payload = (await response.json()) as {
+          analytics?: Record<string, unknown>;
+        } & Record<string, unknown>;
+        const a = (payload.analytics ?? payload) as Record<string, unknown>;
+        const num = (key: string) =>
+          typeof a[key] === "number" ? (a[key] as number) : 0;
+
+        return {
+          profiles: num("profiles"),
+          contentItems: 0,
+          pregnancyWeeks: 0,
+          pregnancies: num("pregnancies"),
+          pregnancyLogs: 0,
+          children: num("children"),
+          adminUsers: num("admin_users"),
+          recentLogs: 0,
+          appointments: num("appointments"),
+          pendingAppointments: num("pending_appointments"),
+          doctors: num("doctors"),
+        } satisfies DashboardStats;
+      }
+
       const [
         profiles,
         milestones,

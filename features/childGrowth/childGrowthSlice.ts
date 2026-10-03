@@ -25,6 +25,7 @@ import {
   ageGroupForMonths,
   type ChildAgeGroup,
 } from "@/lib/childGrowth/periods";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 import { supabase } from "@/lib/supabaseClient";
 import { logContentDeleted, logContentSaved } from "@/lib/client/adminActivityEvents";
 import type {
@@ -510,6 +511,19 @@ const initialState: ChildGrowthState = {
 export const fetchChildGrowthPeriods = createAsyncThunk(
   "childGrowth/fetchAll",
   async (_, { rejectWithValue }) => {
+    if (isBackendApiEnabled()) {
+      const response = await fetch("/api/admin/child-growth");
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(body.error ?? "Failed to load child growth periods");
+      }
+      const body = (await response.json()) as {
+        periods?: ChildGrowthPeriod[];
+        items?: ChildGrowthPeriod[];
+      };
+      return (body.periods ?? body.items ?? []) as ChildGrowthPeriod[];
+    }
+
     const { data, error } = await supabase
       .from("child_growth_periods")
       .select(PERIOD_SELECT)
@@ -523,6 +537,22 @@ export const fetchChildGrowthPeriods = createAsyncThunk(
 export const fetchChildGrowthPeriod = createAsyncThunk(
   "childGrowth/fetchOne",
   async (ageMonths: number, { rejectWithValue }) => {
+    if (isBackendApiEnabled()) {
+      const response = await fetch("/api/admin/child-growth");
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(body.error ?? "Failed to load child growth period");
+      }
+      const body = (await response.json()) as {
+        periods?: ChildGrowthPeriod[];
+        items?: ChildGrowthPeriod[];
+      };
+      const periods = body.periods ?? body.items ?? [];
+      const found = periods.find((period) => period.age_months === ageMonths);
+      if (!found) return rejectWithValue("Child growth period not found.");
+      return found;
+    }
+
     const { data, error } = await supabase
       .from("child_growth_periods")
       .select(PERIOD_SELECT)
@@ -562,6 +592,53 @@ export const saveChildGrowthPeriod = createAsyncThunk(
       growth_metrics: serializeMetrics(form.growth_metrics),
       is_published: form.is_published,
     };
+
+    if (isBackendApiEnabled()) {
+      const listRes = await fetch("/api/admin/child-growth");
+      if (!listRes.ok) {
+        const err = (await listRes.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(err.error ?? "Failed to load child growth periods");
+      }
+      const listBody = (await listRes.json()) as {
+        periods?: ChildGrowthPeriod[];
+        items?: ChildGrowthPeriod[];
+      };
+      const existing = (listBody.periods ?? listBody.items ?? []).find(
+        (period) => period.age_months === form.age_months,
+      );
+      const translations = formToTranslationRows("pending", form).map(
+        ({ language_code, title, subtitle, growth, vaccines, milestones, red_flags, nutrition, visit_reminders }) => ({
+          language_code,
+          title,
+          subtitle,
+          growth,
+          vaccines,
+          milestones,
+          red_flags,
+          nutrition,
+          visit_reminders,
+        }),
+      );
+      const response = await fetch(
+        existing ? `/api/admin/child-growth/${existing.id}` : "/api/admin/child-growth",
+        {
+          method: existing ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...periodPayload, translations }),
+        },
+      );
+      if (!response.ok) {
+        const err = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(err.error ?? "Failed to save child growth period");
+      }
+      const result = (await response.json()) as {
+        period?: ChildGrowthPeriod;
+        periods?: ChildGrowthPeriod[];
+      };
+      const period = result.period ?? result.periods?.[0];
+      if (!period) return rejectWithValue("Saved, but period response was empty.");
+      return period;
+    }
 
     const existing = await supabase
       .from("child_growth_periods")
@@ -622,6 +699,15 @@ export const deleteChildGrowthPeriod = createAsyncThunk(
       "manage_content",
     );
     if (denied) return rejectWithValue(denied);
+
+    if (isBackendApiEnabled()) {
+      const response = await fetch(`/api/admin/child-growth/${id}`, { method: "DELETE" });
+      if (!response.ok) {
+        const err = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(err.error ?? "Failed to delete child growth period");
+      }
+      return id;
+    }
 
     const { error } = await supabase
       .from("child_growth_periods")

@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 import { supabase } from "@/lib/supabaseClient";
 import type { CreateAdminInput, UpdateAdminInput } from "@/lib/adminRoles";
 import type { AdminUser } from "@/lib/types/database";
@@ -31,6 +32,16 @@ async function readApiError(response: Response): Promise<string> {
 export const fetchAdmins = createAsyncThunk(
   "admins/fetchAll",
   async (_, { rejectWithValue }) => {
+    if (isBackendApiEnabled()) {
+      const response = await fetch("/api/admin/admins");
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(body.error ?? "Failed to load admins from staging API");
+      }
+      const body = (await response.json()) as { admins?: AdminUser[]; items?: AdminUser[] };
+      return (body.admins ?? body.items ?? []) as AdminUser[];
+    }
+
     const { data, error } = await supabase
       .from("admin_users")
       .select("*")

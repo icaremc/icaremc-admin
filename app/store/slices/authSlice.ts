@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { fetchAdminAccess } from "@/lib/adminAccess";
 import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
 import { logAdminPortalEvent } from "@/lib/client/logAdminActivity";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 import type { AdminRole } from "@/lib/types/database";
 
 type AuthUser = {
@@ -28,6 +29,19 @@ const initialState: AuthState = {
 
 const UNAUTHORIZED_MESSAGE =
   "This account is not authorized for admin access.";
+
+function asAdminRole(value: string | null | undefined): AdminRole | null {
+  if (
+    value === "super_admin" ||
+    value === "content_admin" ||
+    value === "support" ||
+    value === "viewer"
+  ) {
+    return value;
+  }
+  if (value === "admin" || value === "content_editor") return "support";
+  return value ? "support" : null;
+}
 
 function authUserFromSession(
   user: { id: string; email?: string | null; user_metadata?: Record<string, unknown> },
@@ -57,6 +71,31 @@ export const login = createAsyncThunk<
 
   if (!trimmed || !password) {
     return rejectWithValue("Email and password are required.");
+  }
+
+  if (isBackendApiEnabled()) {
+    const response = await fetch("/api/backend/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: trimmed, password }),
+    });
+    const payload = (await response.json()) as {
+      error?: string;
+      token?: string;
+      user?: { id: string; email: string; name: string; adminRole: string | null };
+    };
+    if (!response.ok || !payload.token || !payload.user) {
+      return rejectWithValue(payload.error ?? "Staging login failed.");
+    }
+    return {
+      token: payload.token,
+      user: {
+        id: payload.user.id,
+        email: payload.user.email,
+        name: payload.user.name,
+        adminRole: asAdminRole(payload.user.adminRole),
+      },
+    };
   }
 
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -99,6 +138,30 @@ export const restoreSession = createAsyncThunk<
   void,
   { rejectValue: string }
 >("auth/restoreSession", async (_, { rejectWithValue }) => {
+  if (isBackendApiEnabled()) {
+    try {
+      const response = await fetch("/api/backend/auth/session", { cache: "no-store" });
+      const payload = (await response.json()) as {
+        token?: string;
+        user?: { id: string; email: string; name: string; adminRole: string | null };
+      };
+      if (!payload.token || !payload.user) return null;
+      return {
+        token: payload.token,
+        user: {
+          id: payload.user.id,
+          email: payload.user.email,
+          name: payload.user.name,
+          adminRole: asAdminRole(payload.user.adminRole),
+        },
+      };
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error.message : "Failed to restore staging session",
+      );
+    }
+  }
+
   const { data, error } = await supabase.auth.getSession();
 
   if (error) {

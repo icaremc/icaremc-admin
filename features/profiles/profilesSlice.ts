@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "@/app/store/store";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
 import { supabase } from "@/lib/supabaseClient";
 import { accountTypeForRole, type CreateUserInput, type AppUserRole } from "@/lib/roles";
@@ -33,6 +34,16 @@ async function readApiError(response: Response): Promise<string> {
 export const fetchProfiles = createAsyncThunk(
   "profiles/fetchAll",
   async (_, { rejectWithValue }) => {
+    if (isBackendApiEnabled()) {
+      const response = await fetch("/api/admin/users");
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(body.error ?? "Failed to load users from staging API");
+      }
+      const body = (await response.json()) as { profiles?: Profile[]; items?: Profile[] };
+      return (body.profiles ?? body.items ?? []) as Profile[];
+    }
+
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
       .select("*")

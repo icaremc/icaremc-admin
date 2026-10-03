@@ -1,10 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import AuthGuard from "@/components/AuthGuard";
 import RoleGuard from "@/components/RoleGuard";
 import Sidebar from "@/components/Sidebar";
+import {
+  StagingModeBanner,
+  StagingRouteGate,
+} from "@/components/backend/StagingModeBanner";
 
 export default function AdminPageShell({
   children,
@@ -12,6 +17,7 @@ export default function AdminPageShell({
   children: React.ReactNode;
 }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const pathname = usePathname() || "/admin/dashboard";
 
   return (
     <AuthGuard>
@@ -22,6 +28,7 @@ export default function AdminPageShell({
         />
 
         <div className="flex min-w-0 flex-1 flex-col lg:ml-[260px]">
+          <StagingModeBanner />
           <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-gray-200 bg-white px-4 lg:hidden">
             <button
               type="button"
@@ -37,7 +44,9 @@ export default function AdminPageShell({
           </header>
 
           <main className="min-w-0 flex-1 overflow-y-auto">
-            <RoleGuard>{children}</RoleGuard>
+            <RoleGuard>
+              <StagingRouteGate pathname={pathname}>{children}</StagingRouteGate>
+            </RoleGuard>
           </main>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "@/app/store/store";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
 import { supabase } from "@/lib/supabaseClient";
 import { logContentDeleted, logContentSaved } from "@/lib/client/adminActivityEvents";
@@ -142,6 +143,16 @@ const initialState: DailyTipsState = {
 export const fetchDailyTips = createAsyncThunk(
   "dailyTips/fetchAll",
   async (_, { rejectWithValue }) => {
+    if (isBackendApiEnabled()) {
+      const response = await fetch("/api/admin/daily-tips");
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(body.error ?? "Failed to load daily tips");
+      }
+      const body = (await response.json()) as { tips?: DailyTip[]; items?: DailyTip[] };
+      return sortTips((body.tips ?? body.items ?? []).map(normalizeDailyTip));
+    }
+
     const { data, error } = await supabase
       .from("daily_tips")
       .select(TIP_SELECT)
@@ -156,6 +167,19 @@ export const fetchDailyTips = createAsyncThunk(
 export const fetchDailyTip = createAsyncThunk(
   "dailyTips/fetchOne",
   async (id: string, { rejectWithValue }) => {
+    if (isBackendApiEnabled()) {
+      const response = await fetch("/api/admin/daily-tips");
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(body.error ?? "Failed to load daily tip");
+      }
+      const body = (await response.json()) as { tips?: DailyTip[]; items?: DailyTip[] };
+      const tips = (body.tips ?? body.items ?? []).map(normalizeDailyTip);
+      const found = tips.find((tip) => tip.id === id);
+      if (!found) return rejectWithValue("Daily tip not found.");
+      return found;
+    }
+
     const { data, error } = await supabase
       .from("daily_tips")
       .select(TIP_SELECT)
@@ -182,6 +206,36 @@ export const saveDailyTip = createAsyncThunk(
 
     const validationError = validateDailyTipForm(payload.form);
     if (validationError) return rejectWithValue(validationError);
+
+    const translations = formToTranslationRows("pending", payload.form).map(
+      ({ language_code, title, content }) => ({ language_code, title, content }),
+    );
+
+    if (isBackendApiEnabled()) {
+      const body = {
+        week_number: payload.form.week_number,
+        day_number: payload.form.day_number,
+        category: payload.form.category.trim() || null,
+        is_active: payload.form.is_active,
+        translations,
+      };
+      const response = await fetch(
+        payload.id ? `/api/admin/daily-tips/${payload.id}` : "/api/admin/daily-tips",
+        {
+          method: payload.id ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
+      );
+      if (!response.ok) {
+        const err = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(err.error ?? "Failed to save daily tip");
+      }
+      const result = (await response.json()) as { tip?: DailyTip; tips?: DailyTip[] };
+      const tip = result.tip ?? result.tips?.[0];
+      if (!tip) return rejectWithValue("Saved, but tip response was empty.");
+      return normalizeDailyTip(tip);
+    }
 
     const tipPayload = {
       week_number: payload.form.week_number,
@@ -246,6 +300,15 @@ export const deleteDailyTip = createAsyncThunk(
       "manage_content",
     );
     if (denied) return rejectWithValue(denied);
+
+    if (isBackendApiEnabled()) {
+      const response = await fetch(`/api/admin/daily-tips/${id}`, { method: "DELETE" });
+      if (!response.ok) {
+        const err = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(err.error ?? "Failed to delete daily tip");
+      }
+      return id;
+    }
 
     const { error } = await supabase.from("daily_tips").delete().eq("id", id);
     if (error) return rejectWithValue(error.message);

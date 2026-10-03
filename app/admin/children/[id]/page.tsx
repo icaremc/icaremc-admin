@@ -25,6 +25,7 @@ import {
   parseMilestoneItemKey,
 } from "@/lib/children/childUi";
 import { formatDate, formatDateTime } from "@/lib/format";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 import { cn } from "@/lib/utils";
 import type { ChildUpdatePayload } from "@/lib/types/database";
 
@@ -94,6 +95,7 @@ export default function ChildDetailPage() {
   );
   const [activeTab, setActiveTab] = useState<DetailTab>("child");
   const [editOpen, setEditOpen] = useState(false);
+  const stagingMode = isBackendApiEnabled();
 
   useEffect(() => {
     if (!childId) return;
@@ -146,6 +148,13 @@ export default function ChildDetailPage() {
             : undefined
         }
       />
+
+      {stagingMode ? (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          Staging shows the birth record only. Growth, vaccines, milestones, and
+          edits need admin child write APIs that are not deployed yet.
+        </div>
+      ) : null}
 
       {!detailLoading && child ? (
         <div className="border-b border-gray-200 bg-white">
@@ -231,14 +240,16 @@ export default function ChildDetailPage() {
                     </p>
                   </div>
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setEditOpen(true)}
-                >
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit birth record
-                </Button>
+                {!stagingMode ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setEditOpen(true)}
+                  >
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Edit birth record
+                  </Button>
+                ) : null}
               </div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <MetaItem
