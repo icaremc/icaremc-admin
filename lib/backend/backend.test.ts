@@ -11,7 +11,11 @@ import {
   isStagingFeatureAvailable,
   mapAdminApiToBackend,
 } from "./capabilities.ts";
-import { isBackendApiEnabled, getBackendApiBaseUrl } from "./config.ts";
+import {
+  isBackendApiEnabled,
+  getBackendApiBaseUrl,
+  resolveBackendMediaUrl,
+} from "./config.ts";
 import { STAGING_BACKEND_ADMIN_ROUTES } from "./routes.ts";
 
 describe("backend config", () => {
@@ -21,6 +25,17 @@ describe("backend config", () => {
     delete process.env.NEXT_PUBLIC_API_BASE_URL;
     assert.equal(getBackendApiBaseUrl(), "https://api.icaremchealth.com");
     if (previous !== undefined) process.env.API_BASE_URL = previous;
+  });
+
+  it("absolutizes relative backend media URLs", () => {
+    assert.equal(
+      resolveBackendMediaUrl("/static/uploads/pregnancy-weeks/x.jpg"),
+      "https://api.icaremchealth.com/static/uploads/pregnancy-weeks/x.jpg",
+    );
+    assert.equal(
+      resolveBackendMediaUrl("https://cdn.example/a.jpg"),
+      "https://cdn.example/a.jpg",
+    );
   });
 
   it("reads USE_BACKEND_API flag", () => {
@@ -166,7 +181,7 @@ describe("adaptBackendResponse", () => {
       slug: "st-paul",
     });
     assert.deepEqual(out, {
-      hospital: { id: "h1", name: "St Paul", slug: "st-paul" },
+      hospital: { id: "h1", name: "St Paul", slug: "st-paul", image_url: null },
     });
   });
 
@@ -309,6 +324,7 @@ describe("adaptBackendResponse", () => {
         id: "w1",
         week_number: 31,
         trimester: 3,
+        image_url: "/static/uploads/pregnancy-weeks/w1/week-31.jpg",
         pregnancy_week_translations: [
           {
             id: "t1",
@@ -319,8 +335,17 @@ describe("adaptBackendResponse", () => {
           },
         ],
       },
-    ]) as { weeks: Array<{ pregnancy_week_translations?: unknown[] }> };
+    ]) as {
+      weeks: Array<{
+        pregnancy_week_translations?: unknown[];
+        image_url?: string | null;
+      }>;
+    };
     assert.equal(out.weeks[0]?.pregnancy_week_translations?.length, 1);
+    assert.equal(
+      out.weeks[0]?.image_url,
+      "https://api.icaremchealth.com/static/uploads/pregnancy-weeks/w1/week-31.jpg",
+    );
   });
 
   it("maps clinical advice singular translation into nested rows", () => {

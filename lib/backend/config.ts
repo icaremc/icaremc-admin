@@ -28,5 +28,22 @@ export function getBackendApiBaseUrl(): string {
   return raw.replace(/\/$/, "");
 }
 
+/** Backend often returns `/static/uploads/...`; browsers would hit the admin host otherwise. */
+export function resolveBackendMediaUrl(
+  url: string | null | undefined,
+): string | null {
+  if (url == null) return null;
+  const trimmed = String(url).trim();
+  if (!trimmed) return null;
+  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("data:")) {
+    return trimmed;
+  }
+  if (trimmed.startsWith("//")) {
+    return `https:${trimmed}`;
+  }
+  const base = getBackendApiBaseUrl();
+  return trimmed.startsWith("/") ? `${base}${trimmed}` : `${base}/${trimmed}`;
+}
+
 export const BACKEND_ACCESS_COOKIE = "icare_be_access";
 export const BACKEND_REFRESH_COOKIE = "icare_be_refresh";

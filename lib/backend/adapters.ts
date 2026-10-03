@@ -3,6 +3,7 @@
  */
 
 import { parseAppMembershipSettingsData } from "../appMembership/subscriptionSettings.ts";
+import { resolveBackendMediaUrl } from "./config.ts";
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -141,7 +142,9 @@ function mapPregnancyWeekRow(row: Record<string, unknown>) {
     week_number: num(row.week_number ?? row.weekNumber),
     trimester: num(row.trimester),
     image_note: (row.image_note ?? row.imageNote ?? null) as string | null,
-    image_url: (row.image_url ?? row.imageUrl ?? null) as string | null,
+    image_url: resolveBackendMediaUrl(
+      (row.image_url ?? row.imageUrl ?? null) as string | null,
+    ),
     is_published: Boolean(row.is_published ?? row.isPublished ?? false),
     created_at: str(row.created_at ?? row.createdAt),
     updated_at: str(row.updated_at ?? row.updatedAt),
@@ -493,8 +496,17 @@ export function adaptBackendResponse(
           return deriveAppointmentStats(body);
         }
         return { appointments: body };
-      case "hospitals":
-        return upper === "POST" ? { hospital: body[0] ?? body } : { hospitals: body };
+      case "hospitals": {
+        const hospitals = body.filter(isPlainObject).map((row) => ({
+          ...row,
+          image_url: resolveBackendMediaUrl(
+            (row.image_url ?? row.imageUrl ?? null) as string | null,
+          ),
+        }));
+        return upper === "POST"
+          ? { hospital: hospitals[0] ?? body }
+          : { hospitals };
+      }
       case "doctor-categories":
         return { categories: body };
       case "users":
@@ -562,7 +574,14 @@ export function adaptBackendResponse(
       return { doctor: body, ...body };
     }
     if (head === "hospitals" && (upper === "POST" || rest.length === 1)) {
-      return { hospital: body };
+      return {
+        hospital: {
+          ...body,
+          image_url: resolveBackendMediaUrl(
+            (body.image_url ?? body.imageUrl ?? null) as string | null,
+          ),
+        },
+      };
     }
     if (head === "users" && rest.length === 1) {
       if ("profile" in body || "pregnancies" in body || "children" in body) {
