@@ -228,8 +228,13 @@ export const fetchPregnancyWeeks = createAsyncThunk(
 
 export const fetchPregnancyWeek = createAsyncThunk(
   "pregnancyWeeks/fetchOne",
-  async (weekNumber: number, { rejectWithValue }) => {
+  async (weekNumber: number, { rejectWithValue, getState }) => {
     if (isBackendApiEnabled()) {
+      const cached = (getState() as RootState).pregnancyWeeks.weeks.find(
+        (week) => week.week_number === weekNumber,
+      );
+      if (cached) return cached;
+
       const response = await fetch("/api/admin/pregnancy-weeks");
       if (!response.ok) {
         const body = (await response.json().catch(() => ({}))) as { error?: string };
@@ -278,18 +283,23 @@ export const savePregnancyWeek = createAsyncThunk(
     };
 
     if (isBackendApiEnabled()) {
-      const listRes = await fetch("/api/admin/pregnancy-weeks");
-      if (!listRes.ok) {
-        const err = (await listRes.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(err.error ?? "Failed to load pregnancy weeks");
-      }
-      const listBody = (await listRes.json()) as {
-        weeks?: PregnancyWeek[];
-        items?: PregnancyWeek[];
-      };
-      const existing = (listBody.weeks ?? listBody.items ?? []).find(
+      let existing = (getState() as RootState).pregnancyWeeks.weeks.find(
         (week) => week.week_number === form.week_number,
       );
+      if (!existing) {
+        const listRes = await fetch("/api/admin/pregnancy-weeks");
+        if (!listRes.ok) {
+          const err = (await listRes.json().catch(() => ({}))) as { error?: string };
+          return rejectWithValue(err.error ?? "Failed to load pregnancy weeks");
+        }
+        const listBody = (await listRes.json()) as {
+          weeks?: PregnancyWeek[];
+          items?: PregnancyWeek[];
+        };
+        existing = (listBody.weeks ?? listBody.items ?? []).find(
+          (week) => week.week_number === form.week_number,
+        );
+      }
 
       const saveRes = await fetch(
         existing ? `/api/admin/pregnancy-weeks/${existing.id}` : "/api/admin/pregnancy-weeks",
@@ -312,22 +322,26 @@ export const savePregnancyWeek = createAsyncThunk(
       if (!weekId) return rejectWithValue("Saved, but week id was missing.");
 
       const rows = formToTranslationRows(weekId, form);
-      for (const row of rows) {
-        const trRes = await fetch(`/api/admin/pregnancy-weeks/${weekId}/translations`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            language_code: row.language_code,
-            title: row.title,
-            subtitle: row.subtitle,
-            baby: row.baby,
-            stage: row.stage,
-            mother_changes: row.mother_changes,
-            recommendations: row.recommendations,
-            warning_signs: row.warning_signs,
-            sections: row.sections,
+      const translationResults = await Promise.all(
+        rows.map((row) =>
+          fetch(`/api/admin/pregnancy-weeks/${weekId}/translations`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              language_code: row.language_code,
+              title: row.title,
+              subtitle: row.subtitle,
+              baby: row.baby,
+              stage: row.stage,
+              mother_changes: row.mother_changes,
+              recommendations: row.recommendations,
+              warning_signs: row.warning_signs,
+              sections: row.sections,
+            }),
           }),
-        });
+        ),
+      );
+      for (const trRes of translationResults) {
         if (!trRes.ok) {
           const err = (await trRes.json().catch(() => ({}))) as { error?: string };
           return rejectWithValue(err.error ?? "Failed to save week translation");
@@ -338,6 +352,8 @@ export const savePregnancyWeek = createAsyncThunk(
         ...(week as PregnancyWeek),
         id: weekId,
         ...weekPayload,
+        image_url:
+          (week?.image_url ?? existing?.image_url ?? form.image_url) || null,
         pregnancy_week_translations: rows.map((row) => ({
           id: "",
           created_at: "",
