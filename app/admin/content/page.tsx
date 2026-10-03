@@ -96,7 +96,7 @@ async function fetchContentStats(): Promise<ContentOverviewStats> {
       dailyTips: {
         total: tips.length,
         active: activeTips.length,
-        detail: `${weeksWithTips} week${weeksWithTips === 1 ? "" : "s"} with tips (read-only)`,
+        detail: `${weeksWithTips} week${weeksWithTips === 1 ? "" : "s"} with tips`,
       },
     };
   }

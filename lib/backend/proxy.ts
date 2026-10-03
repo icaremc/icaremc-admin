@@ -564,10 +564,17 @@ export async function proxyAdminRequestToBackend(
 
   try {
     const upstream = await fetch(target, init);
+    // ponytail: DELETE 204 has empty body; NextResponse.json(null) breaks clients
+    if (upstream.status === 204 || upstream.status === 205) {
+      return new NextResponse(null, { status: upstream.status });
+    }
     const text = await upstream.text();
+    if (!text) {
+      return new NextResponse(null, { status: upstream.status });
+    }
     let parsed: unknown = text;
     try {
-      parsed = text ? JSON.parse(text) : null;
+      parsed = JSON.parse(text);
     } catch {
       return new NextResponse(text, {
         status: upstream.status,
