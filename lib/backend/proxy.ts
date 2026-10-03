@@ -111,6 +111,71 @@ async function rewriteHospitalMultipart(
   };
 }
 
+/** ponytail: until BE nests pregnancy translations on admin GET, merge public CMS langs */
+async function enrichPregnancyWeeksFromPublicCms(
+  weeks: Record<string, unknown>[],
+): Promise<Record<string, unknown>[]> {
+  if (weeks.length === 0) return weeks;
+  const alreadyNested = weeks.some((week) => {
+    const nested = week.pregnancy_week_translations;
+    return Array.isArray(nested) && nested.length > 0;
+  });
+  if (alreadyNested) return weeks;
+
+  const base = getBackendApiBaseUrl();
+  const byId = new Map<string, Record<string, unknown>[]>();
+  for (const lang of ["en", "am", "om"] as const) {
+    try {
+      const res = await fetch(`${base}/api/v1/cms/pregnancy-weeks?lang=${lang}`, {
+        cache: "no-store",
+      });
+      if (!res.ok) continue;
+      const rows = (await res.json()) as unknown;
+      if (!Array.isArray(rows)) continue;
+      for (const row of rows) {
+        if (!isPlainObject(row) || !isPlainObject(row.translation)) continue;
+        const id = String(row.id);
+        const list = byId.get(id) ?? [];
+        list.push({
+          ...row.translation,
+          pregnancy_week_id: id,
+        });
+        byId.set(id, list);
+      }
+    } catch {
+      // leave weeks unenriched for this locale
+    }
+  }
+
+  return weeks.map((week) => {
+    const translations = byId.get(String(week.id));
+    if (!translations?.length) return week;
+    return { ...week, pregnancy_week_translations: translations };
+  });
+}
+
+async function uploadStagingImage(
+  file: File,
+  accessToken: string,
+): Promise<{ url?: string; error?: string }> {
+  const uploadForm = new FormData();
+  uploadForm.set("file", file);
+  const uploadRes = await fetch(`${getBackendApiBaseUrl()}/api/v1/uploads/`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: uploadForm,
+  });
+  const uploadBody = (await uploadRes.json().catch(() => null)) as
+    | { url?: string; error?: string }
+    | null;
+  if (!uploadRes.ok || !uploadBody?.url) {
+    return {
+      error: uploadBody?.error ?? "Could not upload image to staging.",
+    };
+  }
+  return { url: uploadBody.url };
+}
+
 /** Rewrite admin request bodies/methods to match Render admin API shapes. */
 async function rewriteUpstreamRequest(
   adminPath: string,
@@ -527,6 +592,141 @@ export async function proxyAdminRequestToBackend(
     }
   }
 
+  // Pregnancy week image → staging uploads + PATCH week.image_url
+  if (backendPath === "__pregnancy_week_image__") {
+    const weekId = rest[0] ?? "";
+    if (!weekId) {
+      return NextResponse.json({ error: "Week id is required" }, { status: 400 });
+    }
+    let imageUrl: string | null = null;
+    if (method === "DELETE") {
+      imageUrl = null;
+    } else {
+      const contentType = request.headers.get("content-type") ?? "";
+      if (!contentType.includes("multipart/form-data") || !rawBody) {
+        return NextResponse.json(
+          { error: "Expected multipart/form-data with image" },
+          { status: 400 },
+        );
+      }
+      const form = await new Request("http://local", {
+        method,
+        headers: { "content-type": contentType },
+        body: rawBody,
+      }).formData();
+      if (readFormText(form, "remove_image") === "true") {
+        imageUrl = null;
+      } else {
+        const image = form.get("image");
+        if (!(image instanceof File) || image.size === 0) {
+          return NextResponse.json({ error: "Image file is required" }, { status: 400 });
+        }
+        try {
+          const uploaded = await uploadStagingImage(image, token);
+          if (!uploaded.url) {
+            return NextResponse.json(
+              { error: uploaded.error ?? "Image upload failed" },
+              { status: 502 },
+            );
+          }
+          imageUrl = uploaded.url;
+        } catch (error) {
+          return NextResponse.json(
+            {
+              error:
+                error instanceof Error ? error.message : "Image upload failed",
+            },
+            { status: 502 },
+          );
+        }
+      }
+    }
+    try {
+      const patchRes = await fetch(
+        `${getBackendApiBaseUrl()}/api/v1/admin/pregnancy-weeks/${weekId}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ image_url: imageUrl }),
+          cache: "no-store",
+        },
+      );
+      const text = await patchRes.text();
+      const parsed = text ? JSON.parse(text) : null;
+      if (!patchRes.ok) {
+        return NextResponse.json(
+          isPlainObject(parsed) ? parsed : { error: "Failed to update week image" },
+          { status: patchRes.status },
+        );
+      }
+      const adapted = adaptBackendResponse(
+        `pregnancy-weeks/${weekId}`,
+        "PATCH",
+        200,
+        parsed,
+      );
+      return NextResponse.json(adapted, { status: 200 });
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error:
+            error instanceof Error ? error.message : "Failed to update week image",
+        },
+        { status: 502 },
+      );
+    }
+  }
+
+  // Learning-path images → staging uploads API (returns URL list)
+  if (backendPath === "__learning_path_images__") {
+    const contentType = request.headers.get("content-type") ?? "";
+    if (!contentType.includes("multipart/form-data") || !rawBody) {
+      return NextResponse.json(
+        { error: "Expected multipart/form-data" },
+        { status: 400 },
+      );
+    }
+    try {
+      const form = await new Request("http://local", {
+        method,
+        headers: { "content-type": contentType },
+        body: rawBody,
+      }).formData();
+      const files = form
+        .getAll("images")
+        .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+      if (files.length === 0) {
+        return NextResponse.json(
+          { error: "Add at least one image file." },
+          { status: 400 },
+        );
+      }
+      const urls: string[] = [];
+      for (const file of files) {
+        const uploaded = await uploadStagingImage(file, token);
+        if (!uploaded.url) {
+          return NextResponse.json(
+            { error: uploaded.error ?? "Image upload failed" },
+            { status: 502 },
+          );
+        }
+        urls.push(uploaded.url);
+      }
+      return NextResponse.json({ urls }, { status: 200 });
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error:
+            error instanceof Error ? error.message : "Image upload failed",
+        },
+        { status: 502 },
+      );
+    }
+  }
+
   const target = new URL(`${getBackendApiBaseUrl()}${backendPath}`);
   incomingUrl.searchParams.forEach((value, key) => {
     if (key === "app" && adminPath.replace(/^\/+/, "").startsWith("app-version-settings")) {
@@ -582,11 +782,24 @@ export async function proxyAdminRequestToBackend(
       });
     }
 
+    let bodyForAdapt = parsed;
+    if (
+      upstream.ok &&
+      method === "GET" &&
+      head === "pregnancy-weeks" &&
+      rest.length === 0 &&
+      Array.isArray(parsed)
+    ) {
+      bodyForAdapt = await enrichPregnancyWeeksFromPublicCms(
+        parsed.filter(isPlainObject),
+      );
+    }
+
     const adapted = adaptBackendResponse(
       adminPath,
       method,
       upstream.status,
-      parsed,
+      bodyForAdapt,
       { searchParams: incomingUrl.searchParams },
     );
 

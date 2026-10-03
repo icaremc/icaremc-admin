@@ -78,7 +78,12 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     pathPrefix: "/admin/pregnancy-weeks",
     label: "Pregnancy weeks",
     backendHint:
-      "GET|POST|PATCH|DELETE /api/v1/admin/pregnancy-weeks (+ translations)",
+      "GET|POST|PATCH|DELETE /api/v1/admin/pregnancy-weeks (+ translations, image via uploads)",
+  },
+  {
+    pathPrefix: "/admin/child-growth/clinical-advice",
+    label: "Clinical advice",
+    backendHint: "GET /api/v1/cms/clinical-advice (read-only; no admin write API)",
   },
   {
     pathPrefix: "/admin/child-growth",
@@ -99,7 +104,11 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     backendHint: "GET|PUT /api/v1/admin/settings/referral",
   },
   { pathPrefix: "/admin/children", label: "Children", backendHint: "GET /api/v1/admin/children (+ detail)" },
-  { pathPrefix: "/admin/content", label: "Content CMS", backendHint: "GET|POST|PATCH|DELETE /api/v1/admin/daily-tips (+ translations)" },
+  {
+    pathPrefix: "/admin/content",
+    label: "Content CMS",
+    backendHint: "GET|POST|PATCH|DELETE /api/v1/admin/daily-tips (+ translations)",
+  },
   {
     pathPrefix: "/admin/push",
     label: "Broadcast push",
@@ -305,9 +314,15 @@ export function mapAdminApiToBackend(
       if (rest[1] === "translations" && method === "POST") {
         return `/api/v1/admin/pregnancy-weeks/${rest[0]}/translations`;
       }
+      if (rest[1] === "image" && (method === "PATCH" || method === "DELETE")) {
+        return "__pregnancy_week_image__";
+      }
       return null;
     case "child-growth":
-      if (rest[0] === "learning-path-images") return null;
+      if (rest[0] === "learning-path-images") {
+        if (method === "POST") return "__learning_path_images__";
+        return null;
+      }
       if (rest.length === 0) {
         if (method === "GET" || method === "POST") {
           return "/api/v1/admin/child-growth-periods";
@@ -324,6 +339,9 @@ export function mapAdminApiToBackend(
       if (rest[1] === "translations" && method === "POST") {
         return `/api/v1/admin/child-growth-periods/${rest[0]}/translations`;
       }
+      return null;
+    case "clinical-advice":
+      if (method === "GET") return "/api/v1/cms/clinical-advice";
       return null;
     case "followup-visits":
       if (rest.length === 0) {
@@ -509,4 +527,26 @@ export const ADMIN_API_MAPPING_CASES: Array<{
     backendPath: "/api/v1/admin/daily-tips/abc",
     method: "PATCH",
   },
+  {
+    adminPath: "pregnancy-weeks/abc/translations",
+    backendPath: "/api/v1/admin/pregnancy-weeks/abc/translations",
+    method: "POST",
+  },
+  {
+    adminPath: "pregnancy-weeks/abc/image",
+    backendPath: "__pregnancy_week_image__",
+    method: "PATCH",
+  },
+  {
+    adminPath: "child-growth/learning-path-images",
+    backendPath: "__learning_path_images__",
+    method: "POST",
+  },
+  {
+    adminPath: "child-growth/abc",
+    backendPath: "/api/v1/admin/child-growth-periods/abc",
+    method: "DELETE",
+  },
+  { adminPath: "clinical-advice", backendPath: "/api/v1/cms/clinical-advice", method: "GET" },
+  { adminPath: "clinical-advice", backendPath: null, method: "POST" },
 ];

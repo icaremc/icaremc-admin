@@ -67,35 +67,35 @@ function num(value: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function translationList(
+  row: Record<string, unknown>,
+  nestedKeys: string[],
+): Record<string, unknown>[] {
+  for (const key of nestedKeys) {
+    const nested = row[key];
+    if (Array.isArray(nested) && nested.some(isPlainObject)) {
+      return nested.filter(isPlainObject);
+    }
+  }
+  if (Array.isArray(row.translations) && row.translations.some(isPlainObject)) {
+    return row.translations.filter(isPlainObject);
+  }
+  if (isPlainObject(row.translation)) return [row.translation];
+  return [];
+}
+
 function mapDailyTipRow(row: Record<string, unknown>) {
-  const nested = Array.isArray(row.daily_tip_translations)
-    ? row.daily_tip_translations.filter(isPlainObject)
-    : [];
-  const tr = isPlainObject(row.translation) ? row.translation : null;
-  const translations =
-    nested.length > 0
-      ? nested.map((item) => ({
-          id: str(item.id),
-          tip_id: str(item.tip_id ?? item.tipId ?? row.id),
-          language_code: str(item.language_code ?? item.languageCode ?? "en"),
-          title: str(item.title),
-          content: str(item.content),
-          created_at: str(item.created_at ?? item.createdAt),
-          updated_at: str(item.updated_at ?? item.updatedAt),
-        }))
-      : tr
-        ? [
-            {
-              id: str(tr.id),
-              tip_id: str(tr.tip_id ?? tr.tipId ?? row.id),
-              language_code: str(tr.language_code ?? tr.languageCode ?? "en"),
-              title: str(tr.title),
-              content: str(tr.content),
-              created_at: str(tr.created_at ?? tr.createdAt),
-              updated_at: str(tr.updated_at ?? tr.updatedAt),
-            },
-          ]
-        : [];
+  const translations = translationList(row, ["daily_tip_translations"]).map(
+    (item) => ({
+      id: str(item.id),
+      tip_id: str(item.tip_id ?? item.tipId ?? row.id),
+      language_code: str(item.language_code ?? item.languageCode ?? "en"),
+      title: str(item.title),
+      content: str(item.content),
+      created_at: str(item.created_at ?? item.createdAt),
+      updated_at: str(item.updated_at ?? item.updatedAt),
+    }),
+  );
   return {
     id: str(row.id),
     week_number: num(row.week_number ?? row.weekNumber),
@@ -108,6 +108,109 @@ function mapDailyTipRow(row: Record<string, unknown>) {
     created_at: str(row.created_at ?? row.createdAt),
     updated_at: str(row.updated_at ?? row.updatedAt),
     daily_tip_translations: translations,
+  };
+}
+
+function mapPregnancyWeekRow(row: Record<string, unknown>) {
+  const translations = translationList(row, ["pregnancy_week_translations"]).map(
+    (item) => ({
+      id: str(item.id),
+      pregnancy_week_id: str(
+        item.pregnancy_week_id ?? item.pregnancyWeekId ?? row.id,
+      ),
+      language_code: str(item.language_code ?? item.languageCode ?? "en"),
+      title: str(item.title),
+      subtitle: (item.subtitle ?? null) as string | null,
+      baby: (item.baby ?? null) as string | null,
+      stage: (item.stage ?? null) as string | null,
+      mother_changes: (item.mother_changes ?? item.motherChanges ?? null) as
+        | string
+        | null,
+      recommendations: (item.recommendations ?? null) as string | null,
+      warning_signs: (item.warning_signs ?? item.warningSigns ?? null) as
+        | string
+        | null,
+      sections: Array.isArray(item.sections) ? item.sections : [],
+      created_at: str(item.created_at ?? item.createdAt),
+      updated_at: str(item.updated_at ?? item.updatedAt),
+    }),
+  );
+  return {
+    ...row,
+    id: str(row.id),
+    week_number: num(row.week_number ?? row.weekNumber),
+    trimester: num(row.trimester),
+    image_note: (row.image_note ?? row.imageNote ?? null) as string | null,
+    image_url: (row.image_url ?? row.imageUrl ?? null) as string | null,
+    is_published: Boolean(row.is_published ?? row.isPublished ?? false),
+    created_at: str(row.created_at ?? row.createdAt),
+    updated_at: str(row.updated_at ?? row.updatedAt),
+    pregnancy_week_translations: translations,
+  };
+}
+
+function mapChildGrowthPeriodRow(row: Record<string, unknown>) {
+  const translations = translationList(row, [
+    "child_growth_period_translations",
+  ]).map((item) => ({
+    id: str(item.id),
+    period_id: str(item.period_id ?? item.periodId ?? row.id),
+    language_code: str(item.language_code ?? item.languageCode ?? "en"),
+    title: str(item.title),
+    subtitle: (item.subtitle ?? null) as string | null,
+    growth: isPlainObject(item.growth) ? item.growth : {},
+    vaccines: Array.isArray(item.vaccines) ? item.vaccines : [],
+    milestones: Array.isArray(item.milestones) ? item.milestones : [],
+    red_flags: Array.isArray(item.red_flags) ? item.red_flags : [],
+    nutrition: Array.isArray(item.nutrition) ? item.nutrition : [],
+    visit_reminders: Array.isArray(item.visit_reminders)
+      ? item.visit_reminders
+      : [],
+    created_at: str(item.created_at ?? item.createdAt),
+    updated_at: str(item.updated_at ?? item.updatedAt),
+  }));
+  return {
+    ...row,
+    id: str(row.id),
+    age_months: num(row.age_months ?? row.ageMonths),
+    age_label: str(row.age_label ?? row.ageLabel),
+    age_group: str(row.age_group ?? row.ageGroup ?? "infant"),
+    image_note: (row.image_note ?? row.imageNote ?? null) as string | null,
+    growth_metrics: isPlainObject(row.growth_metrics)
+      ? row.growth_metrics
+      : isPlainObject(row.growthMetrics)
+        ? row.growthMetrics
+        : {},
+    is_published: Boolean(row.is_published ?? row.isPublished ?? false),
+    created_at: str(row.created_at ?? row.createdAt),
+    updated_at: str(row.updated_at ?? row.updatedAt),
+    child_growth_period_translations: translations,
+  };
+}
+
+function mapClinicalAdviceRow(row: Record<string, unknown>) {
+  const translations = translationList(row, [
+    "growth_clinical_advice_translations",
+  ]).map((item) => ({
+    id: str(item.id),
+    advice_id: str(item.advice_id ?? item.adviceId ?? row.id),
+    language_code: str(item.language_code ?? item.languageCode ?? "en"),
+    explain_text: str(item.explain_text ?? item.explainText),
+    causes: str(item.causes),
+    recommendations: str(item.recommendations),
+  }));
+  return {
+    id: str(row.id),
+    code: str(row.code),
+    metric: str(row.metric),
+    condition: str(row.condition),
+    min_age_months: num(row.min_age_months ?? row.minAgeMonths),
+    max_age_months: num(row.max_age_months ?? row.maxAgeMonths),
+    sort_order: num(row.sort_order ?? row.sortOrder),
+    is_active: Boolean(row.is_active ?? row.isActive ?? true),
+    created_at: str(row.created_at ?? row.createdAt),
+    updated_at: str(row.updated_at ?? row.updatedAt),
+    growth_clinical_advice_translations: translations,
   };
 }
 
@@ -412,10 +515,18 @@ export function adaptBackendResponse(
         return { logs: body };
       case "legal-documents":
         return { documents: body };
-      case "pregnancy-weeks":
-        return { weeks: body, items: body };
-      case "child-growth":
-        return { periods: body, items: body };
+      case "pregnancy-weeks": {
+        const weeks = body.filter(isPlainObject).map(mapPregnancyWeekRow);
+        return { weeks, items: weeks };
+      }
+      case "child-growth": {
+        const periods = body.filter(isPlainObject).map(mapChildGrowthPeriodRow);
+        return { periods, items: periods };
+      }
+      case "clinical-advice": {
+        const items = body.filter(isPlainObject).map(mapClinicalAdviceRow);
+        return { items, advice: items };
+      }
       case "followup-visits":
         return { templates: body, items: body };
       case "referrals": {
@@ -479,10 +590,16 @@ export function adaptBackendResponse(
       return { tip, tips: [tip], items: [tip] };
     }
     if (head === "pregnancy-weeks") {
-      return { week: body, weeks: [body], items: [body] };
+      const week = mapPregnancyWeekRow(body);
+      return { week, weeks: [week], items: [week] };
     }
     if (head === "child-growth") {
-      return { period: body, periods: [body], items: [body] };
+      const period = mapChildGrowthPeriodRow(body);
+      return { period, periods: [period], items: [period] };
+    }
+    if (head === "clinical-advice") {
+      const item = mapClinicalAdviceRow(body);
+      return { item, items: [item], advice: [item] };
     }
     if (head === "followup-visits") {
       return { template: body, templates: [body], items: [body] };

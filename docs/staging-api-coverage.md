@@ -8,26 +8,29 @@ Admin staging mode (`NEXT_PUBLIC_USE_BACKEND_API=true`) proxies `/api/admin/*` t
 
 ---
 
-## Integrated (wired in admin; some pending backend PR deploy)
+## Integrated (wired in admin)
 
 | Admin area | Admin UI | Backend | Notes |
 |---|---|---|---|
 | Dashboard | `/admin/dashboard` | `GET /api/v1/admin/dashboard` | |
-| Appointments | `/admin/appointments` | `GET\|PATCH /api/v1/admin/appointments` (+ detail by id) | PR #3 / #5 |
-| Doctors | `/admin/doctors` | list, services, wallet, booking write, verify, push, referral-stats | PRs #1–#4 |
-| Speciality | `/admin/doctor-categories` | full CRUD | |
-| Hospitals | `/admin/hospitals` | full CRUD | Multipart → JSON + slug |
+| Appointments | `/admin/appointments` | `GET\|PATCH /api/v1/admin/appointments` (+ detail by id) | |
+| Doctors | `/admin/doctors` | list, services, wallet, booking write, verify, push, referral-stats | |
+| Speciality | `/admin/doctor-categories` | full CRUD | Image upload not on staging |
+| Hospitals | `/admin/hospitals` | full CRUD | Multipart → JSON + uploads |
 | Parents | `/admin/users` | list + detail + push | |
-| Children | `/admin/children` | `GET` list + detail | PR #5; growth/vaccines/edit not on staging |
-| Referrals | `/admin/referrals` | referrals, commissions, settings, doctor stats | PR #1 |
-| Internal docs | `/admin/documents` | list, create metadata, deliver, delivery history | PR #3; multipart PDF limited |
+| Children | `/admin/children` | `GET` list + detail | Nested growth/vaccines/edit not on staging |
+| Referrals | `/admin/referrals` | referrals, commissions, settings, doctor stats | |
+| Internal docs | `/admin/documents` | list, create metadata, deliver, delivery history | Multipart PDF limited |
 | Payouts / wallet ledger | `/admin/finance/*` | payouts + wallet-transactions | |
-| App membership | `/admin/finance/app-membership` | membership + subscription settings | |
+| App membership | `/admin/finance/app-membership` | membership + subscription settings | Receipt file dropped on grant |
 | Finance / payment settings | `/admin/finance/settings` | settings/finance + payment | |
-| Portal admins | `/admin/admins` | list, create, patch | PR #3 |
+| Portal admins | `/admin/admins` | list, create, patch | |
 | Activity / legal / about / app version | corresponding pages | as before | |
-| Pregnancy weeks / child growth / follow-ups | corresponding pages | list + write routes in BE PR | Reads live; FE write wire after deploy |
-| Content CMS daily tips | `/admin/content/daily_tip` | `GET /api/v1/cms/daily-tips` (read) | Writes: backend `feat/admin-cms-writes` → `/api/v1/admin/daily-tips` |
+| Pregnancy weeks | `/admin/pregnancy-weeks` | admin CRUD + translations; image via `/uploads` | FE merges public CMS langs if admin list omits translations (until BE PR #8 deploys) |
+| Child milestones | `/admin/child-growth` | admin CRUD + translations; learning-path images via `/uploads` | |
+| Follow-up visits | `/admin/followup-visits` | admin followup-templates CRUD | |
+| Clinical advice | `/admin/child-growth/clinical-advice` | `GET /api/v1/cms/clinical-advice` | **Read-only** on staging |
+| Content CMS daily tips | `/admin/content/daily_tip` | admin daily-tips CRUD + translations | |
 
 ---
 
@@ -35,15 +38,17 @@ Admin staging mode (`NEXT_PUBLIC_USE_BACKEND_API=true`) proxies `/api/admin/*` t
 
 | Admin area | Why |
 |---|---|
-| Content CMS **writes** (until CMS PRs merge/deploy) | Daily tips + pregnancy/child write APIs pending |
+| Clinical advice **writes** | Public CMS GET only |
 | Broadcast push (`/admin/push`) | Only per-user `/push/notify` exists |
 | Health logs | No admin health-log API |
 | Multipart PDF document upload | Staging uploads API is image-only |
+| Children edit / nested growth detail | Admin GET returns bare child row |
+| Speciality image upload | No category image upload on staging |
 
 ### Backend asks (remaining)
 
-1. Merge/deploy admin daily-tip CMS writes (`feat/admin-cms-writes`)
-2. Merge/deploy pregnancy/child CMS writes (`feat/admin-cms-content-writes`)
+1. Merge/deploy pregnancy week nested translations on admin GET (PR #8) — FE already enriches from public CMS as a bridge
+2. Admin clinical-advice write APIs (if CMS stays in this portal)
 3. Non-image upload support for admin documents
 4. Child nested detail joins (growth/vaccines on children)
 5. Health-log / broadcast push admin APIs (if needed)

@@ -52,9 +52,9 @@ Full matrix (integrated vs blocked, with OpenAPI paths):
 
 → **[staging-api-coverage.md](./staging-api-coverage.md)**
 
-**Blocked on staging (no admin OpenAPI):** broadcast push, health logs, multipart PDF upload, child nested write data, and CMS **writes** until `feat/admin-cms-writes` deploys (daily tips are read-only via public CMS today). Most other admin areas are wired pending backend PR #1–#5 deploy.
+**Blocked on staging (no admin OpenAPI):** broadcast push, health logs, multipart PDF upload, clinical-advice writes, children nested edit data, speciality image upload.
 
-**Integrated when signed in:** dashboard, appointments, doctors (incl. services read), categories, hospitals, users, documents list/deliver, membership, payouts, wallet ledger, settings, admins, activity, legal/about, app version, pregnancy weeks, child-growth/followup lists, content CMS daily-tips **read**.
+**Integrated when signed in:** dashboard, appointments, doctors, categories, hospitals, users, documents list/deliver, membership, payouts, wallet ledger, settings, admins, activity, legal/about, app version, pregnancy weeks (CRUD + image), child-growth/followup CRUD, clinical-advice **read**, daily-tips CRUD.
 
 ## Tests
 

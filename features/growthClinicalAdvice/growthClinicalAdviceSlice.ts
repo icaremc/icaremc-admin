@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "@/app/store/store";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 import { logContentSaved } from "@/lib/client/adminActivityEvents";
 import { LOCALES } from "@/lib/constants";
 import { syncLocaleTranslationRows } from "@/lib/content/syncLocaleRows";
@@ -127,6 +128,20 @@ const initialState: GrowthClinicalAdviceState = {
 export const fetchGrowthClinicalAdvice = createAsyncThunk(
   "growthClinicalAdvice/fetchAll",
   async (_, { rejectWithValue }) => {
+    if (isBackendApiEnabled()) {
+      const response = await fetch("/api/admin/clinical-advice");
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(body.error ?? "Failed to load clinical advice");
+      }
+      const body = (await response.json()) as {
+        items?: GrowthClinicalAdvice[];
+        advice?: GrowthClinicalAdvice[];
+      };
+      const items = body.items ?? body.advice ?? [];
+      return [...items].sort((a, b) => a.sort_order - b.sort_order);
+    }
+
     const { data, error } = await supabase
       .from("growth_clinical_advice")
       .select(ADVICE_SELECT)
@@ -140,6 +155,21 @@ export const fetchGrowthClinicalAdvice = createAsyncThunk(
 export const fetchGrowthClinicalAdviceById = createAsyncThunk(
   "growthClinicalAdvice/fetchOne",
   async (id: string, { rejectWithValue }) => {
+    if (isBackendApiEnabled()) {
+      const response = await fetch("/api/admin/clinical-advice");
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(body.error ?? "Failed to load clinical advice");
+      }
+      const body = (await response.json()) as {
+        items?: GrowthClinicalAdvice[];
+        advice?: GrowthClinicalAdvice[];
+      };
+      const found = (body.items ?? body.advice ?? []).find((item) => item.id === id);
+      if (!found) return rejectWithValue("Clinical advice not found.");
+      return found;
+    }
+
     const { data, error } = await supabase
       .from("growth_clinical_advice")
       .select(ADVICE_SELECT)
@@ -160,6 +190,12 @@ export const saveGrowthClinicalAdvice = createAsyncThunk(
       "manage_content",
     );
     if (denied) return rejectWithValue(denied);
+
+    if (isBackendApiEnabled()) {
+      return rejectWithValue(
+        "Saving clinical advice is not available on the staging API yet.",
+      );
+    }
 
     if (!form.translations.en.explain_text.trim()) {
       return rejectWithValue("English explanation is required.");

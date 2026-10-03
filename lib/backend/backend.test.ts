@@ -46,6 +46,17 @@ describe("mapAdminApiToBackend", () => {
 });
 
 describe("staging capabilities", () => {
+  it("marks clinical advice available (read) under child-growth", () => {
+    assert.equal(
+      isStagingFeatureAvailable("/admin/child-growth/clinical-advice"),
+      true,
+    );
+    assert.equal(
+      getStagingCapability("/admin/child-growth/clinical-advice")?.label,
+      "Clinical advice",
+    );
+  });
+
   it("marks referrals available", () => {
     assert.equal(isStagingFeatureAvailable("/admin/referrals"), true);
     assert.ok(getStagingCapability("/admin/referrals")?.backendHint);
@@ -290,6 +301,52 @@ describe("adaptBackendResponse", () => {
       vaccineSchedule: [],
       growthPeriods: [],
     });
+  });
+
+  it("nests pregnancy week translations for admin UI", () => {
+    const out = adaptBackendResponse("pregnancy-weeks", "GET", 200, [
+      {
+        id: "w1",
+        week_number: 31,
+        trimester: 3,
+        pregnancy_week_translations: [
+          {
+            id: "t1",
+            pregnancy_week_id: "w1",
+            language_code: "en",
+            title: "31 weeks",
+            sections: [],
+          },
+        ],
+      },
+    ]) as { weeks: Array<{ pregnancy_week_translations?: unknown[] }> };
+    assert.equal(out.weeks[0]?.pregnancy_week_translations?.length, 1);
+  });
+
+  it("maps clinical advice singular translation into nested rows", () => {
+    const out = adaptBackendResponse("clinical-advice", "GET", 200, [
+      {
+        id: "a1",
+        code: "wfa_high",
+        metric: "weight",
+        condition: "high",
+        min_age_months: 6,
+        max_age_months: 240,
+        sort_order: 1,
+        is_active: true,
+        translation: {
+          id: "tr1",
+          advice_id: "a1",
+          language_code: "en",
+          explain_text: "Heavy",
+          causes: "Diet",
+          recommendations: "Play",
+        },
+      },
+    ]) as {
+      items: Array<{ growth_clinical_advice_translations?: unknown[] }>;
+    };
+    assert.equal(out.items[0]?.growth_clinical_advice_translations?.length, 1);
   });
 });
 
