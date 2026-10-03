@@ -191,12 +191,6 @@ export const saveGrowthClinicalAdvice = createAsyncThunk(
     );
     if (denied) return rejectWithValue(denied);
 
-    if (isBackendApiEnabled()) {
-      return rejectWithValue(
-        "Saving clinical advice is not available on the staging API yet.",
-      );
-    }
-
     if (!form.translations.en.explain_text.trim()) {
       return rejectWithValue("English explanation is required.");
     }
@@ -215,6 +209,46 @@ export const saveGrowthClinicalAdvice = createAsyncThunk(
     if (!code) return rejectWithValue("Code is required (e.g. wfa_low).");
     if (!metric) return rejectWithValue("Metric is required.");
     if (!condition) return rejectWithValue("Condition is required.");
+
+    if (isBackendApiEnabled()) {
+      const translations = formToTranslationRows(form.id || "pending", form).map(
+        ({ language_code, explain_text, causes, recommendations }) => ({
+          language_code,
+          explain_text,
+          causes,
+          recommendations,
+        }),
+      );
+      const payload = {
+        code,
+        metric,
+        condition,
+        min_age_months: form.min_age_months,
+        max_age_months: form.max_age_months,
+        sort_order: form.sort_order,
+        is_active: form.is_active,
+        translations,
+      };
+      const response = await fetch(
+        form.id
+          ? `/api/admin/clinical-advice/${form.id}`
+          : "/api/admin/clinical-advice",
+        {
+          method: form.id ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
+      if (!response.ok) {
+        const err = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(err.error ?? "Failed to save clinical advice");
+      }
+      const body = (await response.json()) as {
+        item?: GrowthClinicalAdvice;
+        items?: GrowthClinicalAdvice[];
+      };
+      return body.item ?? body.items?.[0] ?? (body as GrowthClinicalAdvice);
+    }
 
     let adviceId = form.id;
 

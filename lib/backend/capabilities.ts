@@ -83,7 +83,7 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
   {
     pathPrefix: "/admin/child-growth/clinical-advice",
     label: "Clinical advice",
-    backendHint: "GET /api/v1/cms/clinical-advice (read-only; no admin write API)",
+    backendHint: "GET|POST|PATCH|DELETE /api/v1/admin/clinical-advice (+ translations)",
   },
   {
     pathPrefix: "/admin/child-growth",
@@ -341,7 +341,22 @@ export function mapAdminApiToBackend(
       }
       return null;
     case "clinical-advice":
-      if (method === "GET") return "/api/v1/cms/clinical-advice";
+      if (rest.length === 0) {
+        if (method === "GET" || method === "POST") {
+          return "/api/v1/admin/clinical-advice";
+        }
+        return null;
+      }
+      if (rest.length === 1) {
+        if (method === "GET" || method === "PATCH") {
+          return `/api/v1/admin/clinical-advice/${rest[0]}`;
+        }
+        if (method === "DELETE") return `/api/v1/admin/clinical-advice/${rest[0]}`;
+        return null;
+      }
+      if (rest[1] === "translations" && method === "POST") {
+        return `/api/v1/admin/clinical-advice/${rest[0]}/translations`;
+      }
       return null;
     case "followup-visits":
       if (rest.length === 0) {
@@ -547,6 +562,11 @@ export const ADMIN_API_MAPPING_CASES: Array<{
     backendPath: "/api/v1/admin/child-growth-periods/abc",
     method: "DELETE",
   },
-  { adminPath: "clinical-advice", backendPath: "/api/v1/cms/clinical-advice", method: "GET" },
-  { adminPath: "clinical-advice", backendPath: null, method: "POST" },
+  { adminPath: "clinical-advice", backendPath: "/api/v1/admin/clinical-advice", method: "GET" },
+  { adminPath: "clinical-advice", backendPath: "/api/v1/admin/clinical-advice", method: "POST" },
+  {
+    adminPath: "clinical-advice/abc",
+    backendPath: "/api/v1/admin/clinical-advice/abc",
+    method: "PATCH",
+  },
 ];

@@ -26,7 +26,6 @@ import type {
   GrowthClinicalAdviceTranslation,
   Locale,
 } from "@/lib/types/database";
-import { isBackendApiEnabled } from "@/lib/backend/config";
 import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import { cn } from "@/lib/utils";
 
@@ -74,9 +73,7 @@ export default function GrowthClinicalAdvicePage() {
   const { items, loading, error } = useAppSelector(
     (state) => state.growthClinicalAdvice,
   );
-  // ponytail: staging has public CMS read only — no admin clinical-advice writes
-  const canManageContent =
-    useAdminCanManage("manage_content") && !isBackendApiEnabled();
+  const canManageContent = useAdminCanManage("manage_content");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const colSpan = canManageContent ? 7 : 6;
 
