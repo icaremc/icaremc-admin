@@ -67,6 +67,50 @@ function num(value: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function mapDailyTipRow(row: Record<string, unknown>) {
+  const nested = Array.isArray(row.daily_tip_translations)
+    ? row.daily_tip_translations.filter(isPlainObject)
+    : [];
+  const tr = isPlainObject(row.translation) ? row.translation : null;
+  const translations =
+    nested.length > 0
+      ? nested.map((item) => ({
+          id: str(item.id),
+          tip_id: str(item.tip_id ?? item.tipId ?? row.id),
+          language_code: str(item.language_code ?? item.languageCode ?? "en"),
+          title: str(item.title),
+          content: str(item.content),
+          created_at: str(item.created_at ?? item.createdAt),
+          updated_at: str(item.updated_at ?? item.updatedAt),
+        }))
+      : tr
+        ? [
+            {
+              id: str(tr.id),
+              tip_id: str(tr.tip_id ?? tr.tipId ?? row.id),
+              language_code: str(tr.language_code ?? tr.languageCode ?? "en"),
+              title: str(tr.title),
+              content: str(tr.content),
+              created_at: str(tr.created_at ?? tr.createdAt),
+              updated_at: str(tr.updated_at ?? tr.updatedAt),
+            },
+          ]
+        : [];
+  return {
+    id: str(row.id),
+    week_number: num(row.week_number ?? row.weekNumber),
+    day_number:
+      row.day_number == null && row.dayNumber == null
+        ? null
+        : num(row.day_number ?? row.dayNumber),
+    category: (row.category ?? null) as string | null,
+    is_active: Boolean(row.is_active ?? row.isActive ?? true),
+    created_at: str(row.created_at ?? row.createdAt),
+    updated_at: str(row.updated_at ?? row.updatedAt),
+    daily_tip_translations: translations,
+  };
+}
+
 function mapReferralRow(row: Record<string, unknown>) {
   return {
     id: str(row.id),
@@ -394,49 +438,7 @@ export function adaptBackendResponse(
       case "children":
         return { children: body, items: body };
       case "daily-tips": {
-        const tips = body.filter(isPlainObject).map((row) => {
-          const nested = Array.isArray(row.daily_tip_translations)
-            ? row.daily_tip_translations.filter(isPlainObject)
-            : [];
-          const tr = isPlainObject(row.translation) ? row.translation : null;
-          const translations =
-            nested.length > 0
-              ? nested.map((item) => ({
-                  id: str(item.id),
-                  tip_id: str(item.tip_id ?? item.tipId ?? row.id),
-                  language_code: str(item.language_code ?? item.languageCode ?? "en"),
-                  title: str(item.title),
-                  content: str(item.content),
-                  created_at: str(item.created_at ?? item.createdAt),
-                  updated_at: str(item.updated_at ?? item.updatedAt),
-                }))
-              : tr
-                ? [
-                    {
-                      id: str(tr.id),
-                      tip_id: str(tr.tip_id ?? tr.tipId ?? row.id),
-                      language_code: str(tr.language_code ?? tr.languageCode ?? "en"),
-                      title: str(tr.title),
-                      content: str(tr.content),
-                      created_at: str(tr.created_at ?? tr.createdAt),
-                      updated_at: str(tr.updated_at ?? tr.updatedAt),
-                    },
-                  ]
-                : [];
-          return {
-            id: str(row.id),
-            week_number: num(row.week_number ?? row.weekNumber),
-            day_number:
-              row.day_number == null && row.dayNumber == null
-                ? null
-                : num(row.day_number ?? row.dayNumber),
-            category: (row.category ?? null) as string | null,
-            is_active: Boolean(row.is_active ?? row.isActive ?? true),
-            created_at: str(row.created_at ?? row.createdAt),
-            updated_at: str(row.updated_at ?? row.updatedAt),
-            daily_tip_translations: translations,
-          };
-        });
+        const tips = body.filter(isPlainObject).map(mapDailyTipRow);
         return { tips, items: tips };
       }
       default:
@@ -471,6 +473,19 @@ export function adaptBackendResponse(
     }
     if (head === "doctor-categories" && (upper === "POST" || rest.length === 1)) {
       return { category: body };
+    }
+    if (head === "daily-tips") {
+      const tip = mapDailyTipRow(body);
+      return { tip, tips: [tip], items: [tip] };
+    }
+    if (head === "pregnancy-weeks") {
+      return { week: body, weeks: [body], items: [body] };
+    }
+    if (head === "child-growth") {
+      return { period: body, periods: [body], items: [body] };
+    }
+    if (head === "followup-visits") {
+      return { template: body, templates: [body], items: [body] };
     }
     if (head === "app-membership-settings") {
       return {

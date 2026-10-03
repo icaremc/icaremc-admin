@@ -198,12 +198,6 @@ export const saveDailyTip = createAsyncThunk(
     payload: { id?: string; form: DailyTipFormState },
     { rejectWithValue, getState },
   ) => {
-    if (isBackendApiEnabled()) {
-      return rejectWithValue(
-        "Creating or editing daily tips is not available on the staging API yet.",
-      );
-    }
-
     const denied = rejectUnlessCanManage(
       (getState() as RootState).auth.user?.adminRole,
       "manage_content",
@@ -212,6 +206,36 @@ export const saveDailyTip = createAsyncThunk(
 
     const validationError = validateDailyTipForm(payload.form);
     if (validationError) return rejectWithValue(validationError);
+
+    const translations = formToTranslationRows("pending", payload.form).map(
+      ({ language_code, title, content }) => ({ language_code, title, content }),
+    );
+
+    if (isBackendApiEnabled()) {
+      const body = {
+        week_number: payload.form.week_number,
+        day_number: payload.form.day_number,
+        category: payload.form.category.trim() || null,
+        is_active: payload.form.is_active,
+        translations,
+      };
+      const response = await fetch(
+        payload.id ? `/api/admin/daily-tips/${payload.id}` : "/api/admin/daily-tips",
+        {
+          method: payload.id ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        },
+      );
+      if (!response.ok) {
+        const err = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(err.error ?? "Failed to save daily tip");
+      }
+      const result = (await response.json()) as { tip?: DailyTip; tips?: DailyTip[] };
+      const tip = result.tip ?? result.tips?.[0];
+      if (!tip) return rejectWithValue("Saved, but tip response was empty.");
+      return normalizeDailyTip(tip);
+    }
 
     const tipPayload = {
       week_number: payload.form.week_number,
@@ -271,17 +295,20 @@ export const saveDailyTip = createAsyncThunk(
 export const deleteDailyTip = createAsyncThunk(
   "dailyTips/delete",
   async (id: string, { rejectWithValue, getState }) => {
-    if (isBackendApiEnabled()) {
-      return rejectWithValue(
-        "Creating or editing daily tips is not available on the staging API yet.",
-      );
-    }
-
     const denied = rejectUnlessCanManage(
       (getState() as RootState).auth.user?.adminRole,
       "manage_content",
     );
     if (denied) return rejectWithValue(denied);
+
+    if (isBackendApiEnabled()) {
+      const response = await fetch(`/api/admin/daily-tips/${id}`, { method: "DELETE" });
+      if (!response.ok) {
+        const err = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(err.error ?? "Failed to delete daily tip");
+      }
+      return id;
+    }
 
     const { error } = await supabase.from("daily_tips").delete().eq("id", id);
     if (error) return rejectWithValue(error.message);

@@ -296,14 +296,12 @@ export default function ContentIndexPage() {
                         <ArrowRight className="ml-2 h-4 w-4 opacity-60 transition-transform group-hover:translate-x-0.5" />
                       </Button>
                     </Link>
-                    {isBackendApiEnabled() && section.key === "daily_tips" ? null : (
-                      <Link href={section.addHref}>
-                        <Button>
-                          <Plus className="mr-2 h-4 w-4" />
-                          {section.addLabel}
-                        </Button>
-                      </Link>
-                    )}
+                    <Link href={section.addHref}>
+                      <Button>
+                        <Plus className="mr-2 h-4 w-4" />
+                        {section.addLabel}
+                      </Button>
+                    </Link>
                   </div>
                 </article>
               );

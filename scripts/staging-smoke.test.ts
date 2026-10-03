@@ -37,6 +37,7 @@ const ROUTES = [
   "/api/v1/admin/pregnancy-weeks",
   "/api/v1/admin/child-growth-periods",
   "/api/v1/admin/followup-templates",
+  "/api/v1/admin/daily-tips",
   "/api/v1/admin/settings/finance",
   "/api/v1/admin/settings/payment",
 ];

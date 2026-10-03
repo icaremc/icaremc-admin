@@ -78,19 +78,18 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     pathPrefix: "/admin/pregnancy-weeks",
     label: "Pregnancy weeks",
     backendHint:
-      "GET|POST|PATCH|DELETE /api/v1/admin/pregnancy-weeks (+ translations); FE write wire pending deploy",
+      "GET|POST|PATCH|DELETE /api/v1/admin/pregnancy-weeks (+ translations)",
   },
   {
     pathPrefix: "/admin/child-growth",
     label: "Child milestones",
     backendHint:
-      "GET|POST|PATCH|DELETE /api/v1/admin/child-growth-periods (+ translations); FE write wire pending deploy",
+      "GET|POST|PATCH|DELETE /api/v1/admin/child-growth-periods (+ translations)",
   },
   {
     pathPrefix: "/admin/followup-visits",
     label: "Follow-up visits",
-    backendHint:
-      "GET|POST|PATCH|DELETE /api/v1/admin/followup-templates; FE write wire pending deploy",
+    backendHint: "GET|POST|PATCH|DELETE /api/v1/admin/followup-templates",
   },
 
   { pathPrefix: "/admin/referrals", label: "Referrals", backendHint: "GET /api/v1/admin/referrals + commissions + settings/referral" },
@@ -100,7 +99,7 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     backendHint: "GET|PUT /api/v1/admin/settings/referral",
   },
   { pathPrefix: "/admin/children", label: "Children", backendHint: "GET /api/v1/admin/children (+ detail)" },
-  { pathPrefix: "/admin/content", label: "Content CMS", backendHint: "GET /api/v1/cms/daily-tips (read); writes via admin PR /api/v1/admin/daily-tips" },
+  { pathPrefix: "/admin/content", label: "Content CMS", backendHint: "GET|POST|PATCH|DELETE /api/v1/admin/daily-tips (+ translations)" },
   {
     pathPrefix: "/admin/push",
     label: "Broadcast push",
@@ -352,8 +351,20 @@ export function mapAdminApiToBackend(
       if (rest.length === 1 && method === "GET") return `/api/v1/admin/children/${rest[0]}`;
       return null;
     case "daily-tips":
-      if (rest.length === 0 && method === "GET") return "/api/v1/cms/daily-tips";
-      // Writes need admin CMS API (backend PR); staging public CMS is read-only
+      if (rest.length === 0) {
+        if (method === "GET" || method === "POST") return "/api/v1/admin/daily-tips";
+        return null;
+      }
+      if (rest.length === 1) {
+        if (method === "GET" || method === "PATCH") {
+          return `/api/v1/admin/daily-tips/${rest[0]}`;
+        }
+        if (method === "DELETE") return `/api/v1/admin/daily-tips/${rest[0]}`;
+        return null;
+      }
+      if (rest[1] === "translations" && method === "POST") {
+        return `/api/v1/admin/daily-tips/${rest[0]}/translations`;
+      }
       return null;
     default:
       return null;
@@ -491,6 +502,11 @@ export const ADMIN_API_MAPPING_CASES: Array<{
     backendPath: "/api/v1/admin/doctors/abc/referral-stats",
     method: "GET",
   },
-  { adminPath: "daily-tips", backendPath: "/api/v1/cms/daily-tips", method: "GET" },
-  { adminPath: "daily-tips", backendPath: null, method: "POST" },
+  { adminPath: "daily-tips", backendPath: "/api/v1/admin/daily-tips", method: "GET" },
+  { adminPath: "daily-tips", backendPath: "/api/v1/admin/daily-tips", method: "POST" },
+  {
+    adminPath: "daily-tips/abc",
+    backendPath: "/api/v1/admin/daily-tips/abc",
+    method: "PATCH",
+  },
 ];

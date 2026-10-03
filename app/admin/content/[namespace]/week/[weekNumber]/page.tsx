@@ -19,7 +19,6 @@ import {
   dailyTipWeekPath,
 } from "@/lib/content/contentLabels";
 import { dailyTipAdjacentWeek } from "@/lib/content/dailyTipUi";
-import { isBackendApiEnabled } from "@/lib/backend/config";
 import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import type { DailyTip } from "@/lib/types/database";
 
@@ -108,9 +107,7 @@ export default function DailyTipWeekPage() {
   const dispatch = useAppDispatch();
   const { tips, loading, error } = useAppSelector((state) => state.dailyTips);
 
-  // ponytail: staging CMS is read-only until admin daily-tips write PR lands
-  const canManageContent =
-    useAdminCanManage("manage_content") && !isBackendApiEnabled();
+  const canManageContent = useAdminCanManage("manage_content");
 
   const weekNumber = parseWeekNumber(params.weekNumber);
   const isValidWeek =

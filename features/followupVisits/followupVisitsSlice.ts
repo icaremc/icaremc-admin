@@ -194,13 +194,6 @@ export const fetchFollowupVisitTemplate = createAsyncThunk(
 export const createFollowupVisitTemplate = createAsyncThunk(
   "followupVisits/create",
   async (form: FollowupVisitTemplateFormState, { getState, rejectWithValue }) => {
-    if (isBackendApiEnabled()) {
-      // ponytail: admin write routes land in BE PR; wire save after deploy
-      return rejectWithValue(
-        "Creating follow-up templates is not available on the staging API yet.",
-      );
-    }
-
     const denied = rejectUnlessCanManage(
       (getState() as RootState).auth.user?.adminRole,
       "manage_content",
@@ -212,6 +205,23 @@ export const createFollowupVisitTemplate = createAsyncThunk(
     }
     if (!form.labelTranslations.en.name.trim()) {
       return rejectWithValue("English visit name is required.");
+    }
+
+    if (isBackendApiEnabled()) {
+      const response = await fetch("/api/admin/followup-visits", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formToPayload(form, { includeCode: true })),
+      });
+      if (!response.ok) {
+        const err = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(err.error ?? "Failed to create follow-up template");
+      }
+      const body = (await response.json()) as {
+        template?: ChildFollowupVisitTemplate;
+        templates?: ChildFollowupVisitTemplate[];
+      };
+      return body.template ?? body.templates?.[0] ?? (body as ChildFollowupVisitTemplate);
     }
 
     const { data: inserted, error: insertError } = await supabase
@@ -240,12 +250,6 @@ export const updateFollowupVisitTemplate = createAsyncThunk(
     payload: { id: string; form: FollowupVisitTemplateFormState },
     { getState, rejectWithValue },
   ) => {
-    if (isBackendApiEnabled()) {
-      return rejectWithValue(
-        "Updating follow-up templates is not available on the staging API yet.",
-      );
-    }
-
     const denied = rejectUnlessCanManage(
       (getState() as RootState).auth.user?.adminRole,
       "manage_content",
@@ -254,6 +258,23 @@ export const updateFollowupVisitTemplate = createAsyncThunk(
 
     if (!payload.form.labelTranslations.en.name.trim()) {
       return rejectWithValue("English visit name is required.");
+    }
+
+    if (isBackendApiEnabled()) {
+      const response = await fetch(`/api/admin/followup-visits/${payload.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formToPayload(payload.form, { includeCode: false })),
+      });
+      if (!response.ok) {
+        const err = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(err.error ?? "Failed to update follow-up template");
+      }
+      const body = (await response.json()) as {
+        template?: ChildFollowupVisitTemplate;
+        templates?: ChildFollowupVisitTemplate[];
+      };
+      return body.template ?? body.templates?.[0] ?? (body as ChildFollowupVisitTemplate);
     }
 
     // Update without nested embed + .single() (that caused the coerce error
@@ -282,17 +303,22 @@ export const updateFollowupVisitTemplate = createAsyncThunk(
 export const deleteFollowupVisitTemplate = createAsyncThunk(
   "followupVisits/delete",
   async (id: string, { getState, rejectWithValue }) => {
-    if (isBackendApiEnabled()) {
-      return rejectWithValue(
-        "Deleting follow-up templates is not available on the staging API yet.",
-      );
-    }
-
     const denied = rejectUnlessCanManage(
       (getState() as RootState).auth.user?.adminRole,
       "manage_content",
     );
     if (denied) return rejectWithValue(denied);
+
+    if (isBackendApiEnabled()) {
+      const response = await fetch(`/api/admin/followup-visits/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        const err = (await response.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(err.error ?? "Failed to delete follow-up template");
+      }
+      return id;
+    }
 
     const { error } = await supabase
       .from("child_followup_visit_templates")

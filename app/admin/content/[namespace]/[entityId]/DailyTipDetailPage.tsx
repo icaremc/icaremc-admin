@@ -19,7 +19,6 @@ import {
   dailyTipsActions,
   fetchDailyTip,
 } from "@/features/dailyTips/dailyTipsSlice";
-import { isBackendApiEnabled } from "@/lib/backend/config";
 import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import { formatDateTime } from "@/lib/format";
 import type { Locale } from "@/lib/types/database";
@@ -48,9 +47,7 @@ export default function DailyTipDetailPage() {
     dispatch(fetchDailyTip(tipId));
   }, [dispatch, tipId]);
 
-  // ponytail: staging CMS is read-only until admin daily-tips write PR lands
-  const canManageContent =
-    useAdminCanManage("manage_content") && !isBackendApiEnabled();
+  const canManageContent = useAdminCanManage("manage_content");
   const heroTitle = selected ? dailyTipHeroTitle(selected) : "Daily tip";
 
   return (
