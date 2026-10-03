@@ -113,7 +113,13 @@ async function rewriteHospitalMultipart(
   };
 }
 
-/** ponytail: until BE nests pregnancy translations on admin GET, merge public CMS langs */
+// ponytail: CMS enrichment is slow (~10s/lang); parallel + 60s cache until admin GET nests translations
+const PREGNANCY_CMS_ENRICH_TTL_MS = 60_000;
+let pregnancyCmsEnrichCache: {
+  at: number;
+  byId: Map<string, Record<string, unknown>[]>;
+} | null = null;
+
 async function enrichPregnancyWeeksFromPublicCms(
   weeks: Record<string, unknown>[],
 ): Promise<Record<string, unknown>[]> {
@@ -122,18 +128,36 @@ async function enrichPregnancyWeeksFromPublicCms(
     const nested = week.pregnancy_week_translations;
     return Array.isArray(nested) && nested.length > 0;
   });
-  if (alreadyNested) return weeks;
+  if (alreadyNested) {
+    pregnancyCmsEnrichCache = null;
+    return weeks;
+  }
 
-  const base = getBackendApiBaseUrl();
-  const byId = new Map<string, Record<string, unknown>[]>();
-  for (const lang of ["en", "am", "om"] as const) {
-    try {
-      const res = await fetch(`${base}/api/v1/cms/pregnancy-weeks?lang=${lang}`, {
-        cache: "no-store",
-      });
-      if (!res.ok) continue;
-      const rows = (await res.json()) as unknown;
-      if (!Array.isArray(rows)) continue;
+  const now = Date.now();
+  let byId = pregnancyCmsEnrichCache?.byId ?? null;
+  if (
+    !byId ||
+    !pregnancyCmsEnrichCache ||
+    now - pregnancyCmsEnrichCache.at > PREGNANCY_CMS_ENRICH_TTL_MS
+  ) {
+    const base = getBackendApiBaseUrl();
+    byId = new Map<string, Record<string, unknown>[]>();
+    const localeRows = await Promise.all(
+      (["en", "am", "om"] as const).map(async (lang) => {
+        try {
+          const res = await fetch(
+            `${base}/api/v1/cms/pregnancy-weeks?lang=${lang}`,
+            { cache: "no-store" },
+          );
+          if (!res.ok) return [] as unknown[];
+          const rows = (await res.json()) as unknown;
+          return Array.isArray(rows) ? rows : [];
+        } catch {
+          return [] as unknown[];
+        }
+      }),
+    );
+    for (const rows of localeRows) {
       for (const row of rows) {
         if (!isPlainObject(row) || !isPlainObject(row.translation)) continue;
         const id = String(row.id);
@@ -144,13 +168,12 @@ async function enrichPregnancyWeeksFromPublicCms(
         });
         byId.set(id, list);
       }
-    } catch {
-      // leave weeks unenriched for this locale
     }
+    pregnancyCmsEnrichCache = { at: now, byId };
   }
 
   return weeks.map((week) => {
-    const translations = byId.get(String(week.id));
+    const translations = byId!.get(String(week.id));
     if (!translations?.length) return week;
     return { ...week, pregnancy_week_translations: translations };
   });
