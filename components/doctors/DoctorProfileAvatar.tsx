@@ -5,6 +5,7 @@ import {
   doctorDisplayName,
   doctorHasProfilePhoto,
   doctorInitials,
+  doctorMediaUrl,
 } from "@/lib/doctors/display";
 
 type DoctorProfileAvatarProps = {
@@ -37,7 +38,8 @@ export default function DoctorProfileAvatar({
   className,
 }: DoctorProfileAvatarProps) {
   const initials = doctorInitials(firstName, lastName);
-  const hasPhoto = doctorHasProfilePhoto(photoUrl);
+  const resolvedPhoto = doctorMediaUrl(photoUrl);
+  const hasPhoto = doctorHasProfilePhoto(resolvedPhoto);
   const label = doctorDisplayName(firstName, lastName);
 
   return (
@@ -51,7 +53,7 @@ export default function DoctorProfileAvatar({
     >
       {hasPhoto ? (
         <Image
-          src={photoUrl!.trim()}
+          src={resolvedPhoto!}
           alt={label}
           width={imageSizes[size]}
           height={imageSizes[size]}

@@ -515,8 +515,7 @@ export async function proxyAdminRequestToBackend(
   if (!backendPath) {
     return NextResponse.json(
       {
-        error:
-          "This admin API is not available on the staging Render backend yet. Production still uses Supabase.",
+        error: `No staging backend mapping for /api/admin/${path} (${method}).`,
         stagingUnavailable: true,
         adminPath,
       },

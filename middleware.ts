@@ -1,14 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { isBackendApiEnabled } from "@/lib/backend/config";
 
 /**
- * When NEXT_PUBLIC_USE_BACKEND_API is true, rewrite /api/admin/* to the
- * staging bridge. Production leaves the flag unset → refresh Supabase
- * cookies so Route Handlers can call auth.getUser().
+ * When backend API mode is on, rewrite /api/admin/* to the staging bridge.
+ * Production leaves the flag unset → refresh Supabase cookies so Route
+ * Handlers can call auth.getUser().
  */
 export async function middleware(request: NextRequest) {
-  if (process.env.NEXT_PUBLIC_USE_BACKEND_API === "true") {
+  if (isBackendApiEnabled()) {
     const { pathname } = request.nextUrl;
     if (!pathname.startsWith("/api/admin/")) {
       return NextResponse.next();

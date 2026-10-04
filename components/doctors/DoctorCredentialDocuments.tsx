@@ -1,6 +1,9 @@
 import Image from "next/image";
 import { ExternalLink, FileImage, GraduationCap } from "lucide-react";
-import { doctorHasCredentialImage } from "@/lib/doctors/display";
+import {
+  doctorHasCredentialImage,
+  doctorMediaUrl,
+} from "@/lib/doctors/display";
 import type { DoctorProfile } from "@/lib/types/doctors";
 
 type DoctorCredentialDocumentsProps = {
@@ -15,7 +18,8 @@ type DocumentCardProps = {
 };
 
 function DocumentCard({ title, description, imageUrl, icon: Icon }: DocumentCardProps) {
-  const hasImage = doctorHasCredentialImage(imageUrl);
+  const resolved = doctorMediaUrl(imageUrl);
+  const hasImage = doctorHasCredentialImage(resolved);
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
@@ -29,14 +33,14 @@ function DocumentCard({ title, description, imageUrl, icon: Icon }: DocumentCard
       {hasImage ? (
         <div className="p-4">
           <a
-            href={imageUrl!.trim()}
+            href={resolved!}
             target="_blank"
             rel="noopener noreferrer"
             className="group block overflow-hidden rounded-lg border border-gray-200 bg-gray-50"
           >
             <div className="relative aspect-[4/3] w-full">
               <Image
-                src={imageUrl!.trim()}
+                src={resolved!}
                 alt={title}
                 fill
                 className="object-contain p-2 transition-transform group-hover:scale-[1.02]"
