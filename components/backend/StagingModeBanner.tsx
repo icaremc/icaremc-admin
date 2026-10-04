@@ -13,8 +13,8 @@ export function StagingModeBanner() {
   if (!isBackendApiEnabled()) return null;
 
   return (
-    <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-center text-sm text-amber-900">
-      Staging API mode — data from{" "}
+    <div className="border-b border-emerald-200 bg-emerald-50 px-4 py-2 text-center text-sm text-emerald-900">
+      Production admin — connected to{" "}
       <a
         href="https://api.icaremchealth.com/docs"
         target="_blank"
@@ -23,7 +23,7 @@ export function StagingModeBanner() {
       >
         api.icaremchealth.com
       </a>
-      . Production users are unaffected.
+      .
     </div>
   );
 }

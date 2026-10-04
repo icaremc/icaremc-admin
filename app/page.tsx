@@ -68,11 +68,11 @@ function LoginContent() {
           <h1 className="text-lg font-semibold text-gray-900">ICare MC Admin</h1>
           <p className="mt-1 text-sm text-gray-600">
             {stagingMode
-              ? "Staging mode — sign in with your Render staging admin account."
+              ? "Sign in with your production admin account."
               : "Sign in with your authorized admin account."}
           </p>
           {stagingMode ? (
-            <p className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-900">
+            <p className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs text-emerald-900">
               Connected to api.icaremchealth.com
             </p>
           ) : null}
