@@ -244,7 +244,10 @@ function DoctorPersonalDetails({
         <AvailabilityTable slots={doctor.doctor_availability_slots} />
       </div>
 
-      <DoctorReferralPanel doctorId={doctor.id} />
+      <DoctorReferralPanel
+        doctorId={doctor.id}
+        referralCode={doctor.referral_code}
+      />
     </div>
   );
 }

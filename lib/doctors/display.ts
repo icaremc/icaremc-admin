@@ -1,7 +1,13 @@
+import { resolveBackendMediaUrl } from "@/lib/backend/config";
 import type { DoctorCategory, DoctorProfile } from "@/lib/types/doctors";
 
 export function doctorDisplayName(first: string, last: string): string {
   return `Dr. ${first} ${last}`.trim();
+}
+
+/** Absolute URL for doctor/speciality media (relative `/static/uploads/...` → API host). */
+export function doctorMediaUrl(url: string | null | undefined): string | null {
+  return resolveBackendMediaUrl(url);
 }
 
 export function doctorInitials(first: string, last: string): string {
@@ -12,19 +18,19 @@ export function doctorInitials(first: string, last: string): string {
 }
 
 export function doctorHasProfilePhoto(url: string | null | undefined): boolean {
-  return Boolean(url?.trim());
+  return Boolean(doctorMediaUrl(url));
 }
 
 export function doctorHasCredentialImage(url: string | null | undefined): boolean {
-  return Boolean(url?.trim());
+  return Boolean(doctorMediaUrl(url));
 }
 
 export function specialityHasImage(url: string | null | undefined): boolean {
-  return Boolean(url?.trim());
+  return Boolean(doctorMediaUrl(url));
 }
 
 export function doctorHasServiceImage(url: string | null | undefined): boolean {
-  return Boolean(url?.trim());
+  return Boolean(doctorMediaUrl(url));
 }
 
 export function doctorCategoryLabel(doctor: DoctorProfile): string {
