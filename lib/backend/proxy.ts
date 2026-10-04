@@ -8,6 +8,32 @@ import {
 } from "@/lib/backend/config";
 import { mapAdminApiToBackend } from "@/lib/backend/capabilities";
 import { slugifyHospitalName } from "@/lib/hospitals/storage";
+import { saveNotification } from "@/lib/push/saveNotification";
+import { createServiceSupabaseClient } from "@/lib/supabase/service";
+
+/** Doctor/mother apps still read the Supabase `notifications` inbox. */
+async function mirrorPushToSupabaseInbox(input: {
+  userId: string;
+  title: string;
+  body: string;
+  route?: string;
+}) {
+  // ponytail: dual-write until doctor/mother apps read /api/v1/*/notifications
+  try {
+    const client = createServiceSupabaseClient();
+    await saveNotification(client, input.userId, {
+      title: input.title,
+      body: input.body,
+      route: input.route,
+      type: "chat",
+    });
+  } catch (error) {
+    console.error(
+      "[staging-push] supabase inbox mirror failed:",
+      error instanceof Error ? error.message : error,
+    );
+  }
+}
 
 export function readAccessToken(request: Request): string | null {
   const header = request.headers.get("authorization");
@@ -341,15 +367,23 @@ async function rewriteUpstreamRequest(
     upper === "POST"
   ) {
     if (isPlainObject(parsed)) {
+      const type =
+        typeof parsed.type === "string" && parsed.type.trim()
+          ? parsed.type.trim()
+          : "chat";
+      const route =
+        typeof parsed.route === "string" && parsed.route.trim()
+          ? parsed.route.trim()
+          : undefined;
       const rewritten = {
         user_id: rest[0],
         title: typeof parsed.title === "string" ? parsed.title : "",
         body: typeof parsed.body === "string" ? parsed.body : "",
-        type: "generic",
-        data:
-          typeof parsed.route === "string" && parsed.route
-            ? { route: parsed.route }
-            : {},
+        type,
+        data: {
+          type,
+          ...(route ? { route } : {}),
+        },
       };
       return {
         method: "POST",
@@ -835,6 +869,44 @@ export async function proxyAdminRequestToBackend(
         { error: typeof adapted.error === "string" ? adapted.error : "Not found" },
         { status: 404 },
       );
+    }
+
+    // Doctor/mother inbox still reads Supabase; new API only writes its own DB.
+    if (
+      upstream.ok &&
+      method === "POST" &&
+      (head === "doctors" || head === "users") &&
+      rest.length === 2 &&
+      rest[1] === "push" &&
+      rewritten.body
+    ) {
+      try {
+        const pushBody = JSON.parse(
+          new TextDecoder().decode(rewritten.body),
+        ) as {
+          user_id?: string;
+          title?: string;
+          body?: string;
+          type?: string;
+          data?: { route?: string };
+        };
+        const userId = String(pushBody.user_id ?? rest[0] ?? "").trim();
+        const title = String(pushBody.title ?? "").trim();
+        const body = String(pushBody.body ?? "").trim();
+        if (userId && (title || body)) {
+          await mirrorPushToSupabaseInbox({
+            userId,
+            title: title || "Notification",
+            body,
+            route: pushBody.data?.route,
+          });
+        }
+      } catch (error) {
+        console.error(
+          "[staging-push] failed to parse push body for inbox mirror:",
+          error instanceof Error ? error.message : error,
+        );
+      }
     }
 
     return NextResponse.json(adapted, { status: upstream.status });
