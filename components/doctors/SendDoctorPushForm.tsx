@@ -17,9 +17,46 @@ type PushStatus = {
 
 type Props = {
   doctorId: string;
+  /** Current doctor row (same source as GET /admin/doctors) — avoids stale push-status mismatch */
+  fcmToken?: string | null;
+  notificationsEnabled?: boolean | null;
 };
 
-export default function SendDoctorPushForm({ doctorId }: Props) {
+function readinessFromDoctor(
+  fcmToken: string | null | undefined,
+  notificationsEnabled: boolean | null | undefined,
+): PushStatus {
+  const fcmRegistered = Boolean(fcmToken?.trim());
+  const enabled = notificationsEnabled !== false;
+  if (!fcmRegistered) {
+    return {
+      fcmRegistered: false,
+      notificationsEnabled: enabled,
+      canSend: false,
+      reason: "No FCM token registered",
+    };
+  }
+  if (!enabled) {
+    return {
+      fcmRegistered: true,
+      notificationsEnabled: false,
+      canSend: false,
+      reason: "Notifications disabled",
+    };
+  }
+  return {
+    fcmRegistered: true,
+    notificationsEnabled: true,
+    canSend: true,
+    reason: null,
+  };
+}
+
+export default function SendDoctorPushForm({
+  doctorId,
+  fcmToken,
+  notificationsEnabled: notificationsEnabledProp,
+}: Props) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -36,6 +73,13 @@ export default function SendDoctorPushForm({ doctorId }: Props) {
   const loadStatus = useCallback(async () => {
     setLoadingStatus(true);
     setStatusError(null);
+
+    // ponytail: doctor detail already has fcm_token + notifications_enabled from the API
+    if (fcmToken !== undefined || notificationsEnabledProp !== undefined) {
+      setStatus(readinessFromDoctor(fcmToken, notificationsEnabledProp));
+      setLoadingStatus(false);
+      return;
+    }
 
     try {
       const response = await adminFetch(`/api/admin/doctors/${doctorId}/push`);
@@ -54,7 +98,7 @@ export default function SendDoctorPushForm({ doctorId }: Props) {
     } finally {
       setLoadingStatus(false);
     }
-  }, [doctorId]);
+  }, [doctorId, fcmToken, notificationsEnabledProp]);
 
   useEffect(() => {
     if (!open) return;

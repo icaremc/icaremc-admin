@@ -67,6 +67,8 @@ export type DoctorProfile = {
   rating: number;
   available_today: boolean;
   is_verified: boolean;
+  notifications_enabled?: boolean | null;
+  fcm_token?: string | null;
   profile_photo_url: string | null;
   currency: string;
   prepayment_mode: "none" | "percent" | "full";
