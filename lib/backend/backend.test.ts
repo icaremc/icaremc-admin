@@ -108,7 +108,16 @@ describe("staging capabilities", () => {
 describe("adaptBackendResponse", () => {
   it("wraps doctors array", () => {
     const out = adaptBackendResponse("doctors", "GET", 200, [{ id: "1" }]);
-    assert.deepEqual(out, { doctors: [{ id: "1" }] });
+    assert.deepEqual(out, {
+      doctors: [
+        {
+          id: "1",
+          profile_photo_url: null,
+          license_image_url: null,
+          degree_image_url: null,
+        },
+      ],
+    });
   });
 
   it("picks doctor detail from list", () => {
@@ -116,7 +125,15 @@ describe("adaptBackendResponse", () => {
       { id: "d1", first_name: "A" },
       { id: "d2", first_name: "B" },
     ]);
-    assert.deepEqual(out, { doctor: { id: "d1", first_name: "A" } });
+    assert.deepEqual(out, {
+      doctor: {
+        id: "d1",
+        first_name: "A",
+        profile_photo_url: null,
+        license_image_url: null,
+        degree_image_url: null,
+      },
+    });
   });
 
   it("wraps appointments array", () => {
@@ -218,6 +235,9 @@ describe("adaptBackendResponse", () => {
       doctor: {
         id: "d1",
         first_name: "A",
+        profile_photo_url: null,
+        license_image_url: null,
+        degree_image_url: null,
         doctor_services: [{ id: "s1", name: "Consult", price: 100, currency: "ETB" }],
         doctor_availability_slots: [],
       },
@@ -271,6 +291,50 @@ describe("adaptBackendResponse", () => {
         },
       ],
     });
+  });
+
+  it("absolutizes doctor profile and credential media URLs", () => {
+    const list = adaptBackendResponse("doctors", "GET", 200, [
+      {
+        id: "d1",
+        profile_photo_url: "/static/uploads/a.jpg",
+        license_image_url: "/static/uploads/b.jpg",
+        degree_image_url: null,
+      },
+    ]) as {
+      doctors: Array<{
+        profile_photo_url: string | null;
+        license_image_url: string | null;
+        degree_image_url: string | null;
+      }>;
+    };
+    assert.equal(
+      list.doctors[0]?.profile_photo_url,
+      "https://api.icaremchealth.com/static/uploads/a.jpg",
+    );
+    assert.equal(
+      list.doctors[0]?.license_image_url,
+      "https://api.icaremchealth.com/static/uploads/b.jpg",
+    );
+    assert.equal(list.doctors[0]?.degree_image_url, null);
+
+    const detail = adaptBackendResponse(
+      "doctors/d1",
+      "GET",
+      200,
+      {
+        doctor: {
+          id: "d1",
+          profile_photo_url: "/static/uploads/c.jpg?t=1",
+        },
+        services: [],
+        slots: [],
+      },
+    ) as { doctor: { profile_photo_url: string | null } };
+    assert.equal(
+      detail.doctor.profile_photo_url,
+      "https://api.icaremchealth.com/static/uploads/c.jpg?t=1",
+    );
   });
 
   it("adapts referral-stats and referral-settings", () => {

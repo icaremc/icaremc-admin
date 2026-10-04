@@ -8,9 +8,14 @@ import type { DoctorReferralStats } from "@/lib/referrals/types";
 
 interface DoctorReferralPanelProps {
   doctorId: string;
+  /** Fallback from doctor row when stats request is slow/unavailable */
+  referralCode?: string | null;
 }
 
-export default function DoctorReferralPanel({ doctorId }: DoctorReferralPanelProps) {
+export default function DoctorReferralPanel({
+  doctorId,
+  referralCode: referralCodeProp = null,
+}: DoctorReferralPanelProps) {
   const [stats, setStats] = useState<DoctorReferralStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,9 +44,11 @@ export default function DoctorReferralPanel({ doctorId }: DoctorReferralPanelPro
     void loadStats();
   }, [loadStats]);
 
+  const referralCode = stats?.referralCode ?? referralCodeProp ?? null;
+
   async function copyCode() {
-    if (!stats?.referralCode) return;
-    await navigator.clipboard.writeText(stats.referralCode);
+    if (!referralCode) return;
+    await navigator.clipboard.writeText(referralCode);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 2000);
   }
@@ -61,7 +68,7 @@ export default function DoctorReferralPanel({ doctorId }: DoctorReferralPanelPro
       </div>
 
       {error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           {error}
         </div>
       ) : null}
@@ -74,9 +81,9 @@ export default function DoctorReferralPanel({ doctorId }: DoctorReferralPanelPro
             <p className="text-xs font-medium uppercase text-gray-500">Referral code</p>
             <div className="mt-2 flex items-center gap-2">
               <p className="font-mono text-lg font-semibold tracking-wide text-gray-900">
-                {stats?.referralCode ?? "—"}
+                {referralCode ?? "—"}
               </p>
-              {stats?.referralCode ? (
+              {referralCode ? (
                 <Button type="button" size="sm" variant="outline" onClick={() => void copyCode()}>
                   <Copy className="mr-1.5 h-3.5 w-3.5" />
                   {copied ? "Copied" : "Copy"}

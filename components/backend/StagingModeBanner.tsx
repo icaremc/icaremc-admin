@@ -32,10 +32,7 @@ export function StagingUnavailablePanel({ pathname }: { pathname: string }) {
   const cap = getStagingCapability(pathname);
   const available = STAGING_CAPABILITIES.filter((item) => item.backendHint);
   const missingReason =
-    pathname.startsWith("/admin/referrals") ||
-    pathname.startsWith("/admin/finance/referral-settings")
-      ? "OpenAPI only exposes GET /api/v1/doctor/referrals (doctor app token). There is no /api/v1/admin/referrals (or commissions/settings) route to wire."
-      : "This area exists in the production admin (Supabase), but there is no matching admin endpoint on api.icaremchealth.com.";
+    "This area exists in the production admin (Supabase), but there is no matching admin endpoint on api.icaremchealth.com.";
 
   return (
     <div className="admin-page">

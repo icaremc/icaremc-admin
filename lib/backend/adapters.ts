@@ -257,6 +257,22 @@ function mapReferralStats(row: Record<string, unknown>) {
   };
 }
 
+/** Backend returns `/static/uploads/...`; absolutize so <img> hits the API host. */
+function mapDoctorMedia(row: Record<string, unknown>): Record<string, unknown> {
+  return {
+    ...row,
+    profile_photo_url: resolveBackendMediaUrl(
+      (row.profile_photo_url ?? row.profilePhotoUrl ?? null) as string | null,
+    ),
+    license_image_url: resolveBackendMediaUrl(
+      (row.license_image_url ?? row.licenseImageUrl ?? null) as string | null,
+    ),
+    degree_image_url: resolveBackendMediaUrl(
+      (row.degree_image_url ?? row.degreeImageUrl ?? null) as string | null,
+    ),
+  };
+}
+
 /** ponytail: backend list ignores filters; apply admin query params in the bridge */
 function filterByAdminParams<T extends { doctorId: string; createdAt: string }>(
   rows: T[],
@@ -376,21 +392,22 @@ export function adaptBackendResponse(
     if (isPlainObject(body) && isPlainObject(body.doctor)) {
       const services = Array.isArray(body.services) ? body.services : [];
       const slots = Array.isArray(body.slots) ? body.slots : [];
+      const doctor = mapDoctorMedia(body.doctor);
       return {
         doctor: {
-          ...body.doctor,
-          doctor_services: body.doctor.doctor_services ?? services,
+          ...doctor,
+          doctor_services: doctor.doctor_services ?? services,
           doctor_availability_slots:
-            body.doctor.doctor_availability_slots ?? slots,
+            doctor.doctor_availability_slots ?? slots,
         },
       };
     }
     if (!Array.isArray(body)) {
-      return isPlainObject(body) ? { doctor: body } : body;
+      return isPlainObject(body) ? { doctor: mapDoctorMedia(body) } : body;
     }
     const doctor = findById(body, rest[0]);
     if (!doctor) return { error: "Doctor not found", stagingNotFound: true };
-    return { doctor };
+    return { doctor: mapDoctorMedia(doctor) };
   }
 
   if (
@@ -490,7 +507,9 @@ export function adaptBackendResponse(
   if (Array.isArray(body)) {
     switch (head) {
       case "doctors":
-        return { doctors: body };
+        return {
+          doctors: body.filter(isPlainObject).map(mapDoctorMedia),
+        };
       case "appointments":
         if (rest[0] === "stats") {
           return deriveAppointmentStats(body);
@@ -508,7 +527,14 @@ export function adaptBackendResponse(
           : { hospitals };
       }
       case "doctor-categories":
-        return { categories: body };
+        return {
+          categories: body.filter(isPlainObject).map((row) => ({
+            ...row,
+            image_url: resolveBackendMediaUrl(
+              (row.image_url ?? row.imageUrl ?? null) as string | null,
+            ),
+          })),
+        };
       case "users":
         return rest.length === 1 ? { profile: body[0] ?? body } : { profiles: body };
       case "documents":
@@ -571,7 +597,18 @@ export function adaptBackendResponse(
 
   if (isPlainObject(body)) {
     if (head === "doctors" && (rest[1] === "verify" || rest.length === 1)) {
-      return { doctor: body, ...body };
+      const doctor = mapDoctorMedia(body);
+      return { doctor, ...doctor };
+    }
+    if (head === "doctor-categories" && rest.length === 1) {
+      return {
+        category: {
+          ...body,
+          image_url: resolveBackendMediaUrl(
+            (body.image_url ?? body.imageUrl ?? null) as string | null,
+          ),
+        },
+      };
     }
     if (head === "hospitals" && (upper === "POST" || rest.length === 1)) {
       return {
