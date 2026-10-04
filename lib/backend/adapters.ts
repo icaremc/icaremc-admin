@@ -322,12 +322,21 @@ export function adaptBackendResponse(
   }
 
   if (head === "doctors" && rest.length === 2 && rest[1] === "push" && upper === "GET") {
-    if (!Array.isArray(body)) {
+    // GET maps to /admin/doctors (list). Accept bare array or { doctors: [...] }.
+    const rows = Array.isArray(body)
+      ? body
+      : isPlainObject(body) && Array.isArray(body.doctors)
+        ? body.doctors
+        : null;
+    if (!rows) {
       return { error: "Doctor not found", stagingNotFound: true };
     }
-    const doctor = findById(body, rest[0]);
+    const doctor = findById(rows, rest[0]);
     if (!doctor) return { error: "Doctor not found", stagingNotFound: true };
-    return pushReadinessFromToken(doctor.fcm_token, doctor.notifications_enabled);
+    return pushReadinessFromToken(
+      doctor.fcm_token ?? doctor.fcmToken,
+      doctor.notifications_enabled ?? doctor.notificationsEnabled,
+    );
   }
 
   if (head === "users" && rest.length === 2 && rest[1] === "push" && upper === "GET") {

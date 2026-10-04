@@ -394,7 +394,13 @@ export default function DoctorDetailPage() {
             <ArrowLeft className="h-4 w-4" />
             Back to doctors
           </Link>
-          {doctor && canManageDoctors ? <SendDoctorPushForm doctorId={doctor.id} /> : null}
+          {doctor && canManageDoctors ? (
+            <SendDoctorPushForm
+              doctorId={doctor.id}
+              fcmToken={doctor.fcm_token}
+              notificationsEnabled={doctor.notifications_enabled}
+            />
+          ) : null}
         </div>
 
         {error ? (
