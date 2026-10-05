@@ -55,23 +55,23 @@ export function DashboardBarChart({
 
   if (!hasData) {
     return (
-      <div className="flex h-[260px] items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 text-center text-sm text-gray-500">
+      <div className="flex h-[240px] items-center justify-center rounded-[var(--radius)] border border-dashed border-gray-200 bg-gray-50/80 px-4 text-center text-sm text-gray-500">
         {emptyLabel}
       </div>
     );
   }
 
   return (
-    <div className="h-[260px] w-full rounded-xl border border-gray-200 bg-gray-50/60 p-2">
+    <div className="h-[240px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} margin={{ top: 12, right: 12, bottom: 4, left: 0 }}>
+        <BarChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
           <CartesianGrid vertical={false} strokeDasharray="4 4" stroke="#e5e7eb" />
           <XAxis
             dataKey="period"
             tickLine={false}
             axisLine={false}
             tickMargin={10}
-            minTickGap={20}
+            minTickGap={16}
             interval="preserveStartEnd"
             tick={{ fill: "#6b7280", fontSize: 12 }}
           />
@@ -79,7 +79,7 @@ export function DashboardBarChart({
             tickLine={false}
             axisLine={false}
             tickMargin={8}
-            width={isCurrency ? 52 : 44}
+            width={isCurrency ? 48 : 40}
             allowDecimals={isCurrency}
             tickFormatter={(value) => formatAxisValue(Number(value), isCurrency)}
             tick={{ fill: "#6b7280", fontSize: 12 }}
@@ -89,12 +89,12 @@ export function DashboardBarChart({
             formatter={(value) => [formatTooltipValue(Number(value), isCurrency), valueLabel]}
             labelFormatter={(label) => String(label)}
             contentStyle={{
-              borderRadius: 12,
+              borderRadius: 10,
               border: "1px solid #e5e7eb",
               fontSize: 12,
             }}
           />
-          <Bar dataKey="value" fill="#10b981" radius={[8, 8, 2, 2]} maxBarSize={56} />
+          <Bar dataKey="value" fill="#059669" radius={[6, 6, 2, 2]} maxBarSize={48} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -120,20 +120,20 @@ export function DashboardAreaChart({
 
   if (!hasData) {
     return (
-      <div className="flex h-[260px] items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 text-center text-sm text-gray-500">
+      <div className="flex h-[240px] items-center justify-center rounded-[var(--radius)] border border-dashed border-gray-200 bg-gray-50/80 px-4 text-center text-sm text-gray-500">
         {emptyLabel}
       </div>
     );
   }
 
   return (
-    <div className="h-[260px] w-full rounded-xl border border-gray-200 bg-gray-50/60 p-2">
+    <div className="h-[240px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={chartData} margin={{ top: 12, right: 12, bottom: 4, left: 0 }}>
+        <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
           <defs>
             <linearGradient id="commissionFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.35} />
-              <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.02} />
+              <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.28} />
+              <stop offset="95%" stopColor="#7c3aed" stopOpacity={0.02} />
             </linearGradient>
           </defs>
           <CartesianGrid vertical={false} strokeDasharray="4 4" stroke="#e5e7eb" />
@@ -142,7 +142,7 @@ export function DashboardAreaChart({
             tickLine={false}
             axisLine={false}
             tickMargin={10}
-            minTickGap={20}
+            minTickGap={16}
             interval="preserveStartEnd"
             tick={{ fill: "#6b7280", fontSize: 12 }}
           />
@@ -150,7 +150,7 @@ export function DashboardAreaChart({
             tickLine={false}
             axisLine={false}
             tickMargin={8}
-            width={52}
+            width={48}
             tickFormatter={(value) => formatAxisValue(Number(value), true)}
             tick={{ fill: "#6b7280", fontSize: 12 }}
           />
@@ -158,7 +158,7 @@ export function DashboardAreaChart({
             formatter={(value) => [formatTooltipValue(Number(value), true), valueLabel]}
             labelFormatter={(label) => String(label)}
             contentStyle={{
-              borderRadius: 12,
+              borderRadius: 10,
               border: "1px solid #e5e7eb",
               fontSize: 12,
             }}
@@ -166,11 +166,11 @@ export function DashboardAreaChart({
           <Area
             type="monotone"
             dataKey="value"
-            stroke="#7c3aed"
-            strokeWidth={2.5}
+            stroke="#6d28d9"
+            strokeWidth={2}
             fill="url(#commissionFill)"
-            dot={{ r: 3, fill: "#7c3aed", strokeWidth: 0 }}
-            activeDot={{ r: 5, fill: "#6d28d9" }}
+            dot={{ r: 3, fill: "#6d28d9", strokeWidth: 0 }}
+            activeDot={{ r: 5, fill: "#5b21b6" }}
           />
         </AreaChart>
       </ResponsiveContainer>

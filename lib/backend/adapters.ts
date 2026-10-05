@@ -9,6 +9,81 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function asNumber(value: unknown): number {
+  const n = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** GET /admin/dashboard charts: `{ date, amount }` → UI `{ label, value }`. */
+function mapDashboardChart(rows: unknown): Array<{ label: string; value: number }> {
+  if (!Array.isArray(rows)) return [];
+  const out: Array<{ label: string; value: number }> = [];
+  for (const row of rows) {
+    if (!isPlainObject(row)) continue;
+    const amount = asNumber(row.amount ?? row.value);
+    const dateRaw = row.date ?? row.label;
+    let label =
+      typeof dateRaw === "string"
+        ? dateRaw
+        : dateRaw == null
+          ? ""
+          : String(dateRaw);
+    if (typeof dateRaw === "string" && /^\d{4}-\d{2}-\d{2}/.test(dateRaw)) {
+      const d = new Date(`${dateRaw.slice(0, 10)}T00:00:00`);
+      if (!Number.isNaN(d.getTime())) {
+        label = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      }
+    }
+    out.push({ label, value: amount });
+  }
+  return out;
+}
+
+function adaptAdminDashboard(body: Record<string, unknown>, range: string) {
+  // ponytail: API has no range filter yet; pass through UI range for the selector only
+  const analytics = {
+    ...body,
+    totalTransactions: asNumber(body.transactions_count ?? body.totalTransactions),
+    totalPaymentVolume: asNumber(
+      body.appointment_payments_sum ?? body.totalPaymentVolume,
+    ),
+    doctorBookingEarnings: asNumber(
+      body.doctor_earnings_sum ?? body.doctorBookingEarnings,
+    ),
+    doctorBookingEarningCount: asNumber(
+      body.doctor_earnings_count ?? body.doctorBookingEarningCount,
+    ),
+    totalCommission: asNumber(body.commission_sum ?? body.totalCommission),
+    monthlyCommission: asNumber(
+      body.monthly_commission ?? body.monthlyCommission ?? body.commission_sum,
+    ),
+    commissionChange: asNumber(body.commission_growth ?? body.commissionChange),
+    commissionPercent: asNumber(body.commission_percent ?? body.commissionPercent),
+    completedPaidBookings: asNumber(
+      body.appointment_payments_count ?? body.completedPaidBookings,
+    ),
+    subscriptionPaymentCount: asNumber(
+      body.subscription_payments_count ?? body.subscriptionPaymentCount,
+    ),
+    subscriptionPaymentVolume: asNumber(
+      body.subscription_payments_sum ?? body.subscriptionPaymentVolume,
+    ),
+    paymentChart: mapDashboardChart(
+      body.appointment_payments_chart ?? body.paymentChart,
+    ),
+    commissionChart: mapDashboardChart(
+      body.commission_chart ?? body.commissionChart,
+    ),
+    subscriptionChart: mapDashboardChart(
+      body.subscription_payments_chart ?? body.subscriptionChart,
+    ),
+    doctorEarningsChart: mapDashboardChart(
+      body.doctor_earnings_chart ?? body.doctorEarningsChart,
+    ),
+  };
+  return { range, analytics };
+}
+
 function findById(rows: unknown[], id: string): Record<string, unknown> | null {
   for (const row of rows) {
     if (isPlainObject(row) && String(row.id) === id) return row;
@@ -307,8 +382,14 @@ export function adaptBackendResponse(
   const upper = method.toUpperCase();
 
   if (head === "dashboard") {
-    if (isPlainObject(body) && "analytics" in body) return body;
-    return { range: "30d", analytics: body };
+    if (isPlainObject(body) && isPlainObject(body.analytics)) {
+      return body;
+    }
+    if (!isPlainObject(body)) {
+      return { range: "30d", analytics: body };
+    }
+    const range = options.searchParams?.get("range") || "30d";
+    return adaptAdminDashboard(body, range);
   }
 
   if (head === "app-version-settings" && isPlainObject(body)) {
