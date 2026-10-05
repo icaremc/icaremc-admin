@@ -136,12 +136,23 @@ const VIEW_FOR_MANAGE: Partial<Record<AdminPermission, AdminPermission>> = {
   manage_content: "view_content",
 };
 
+const MANAGE_FOR_VIEW: Partial<Record<AdminPermission, AdminPermission>> = {
+  view_users: "manage_users",
+  view_doctors: "manage_doctors",
+  view_appointments: "manage_appointments",
+  view_content: "manage_content",
+};
+
 export function adminCanView(
   role: AdminRole | null | undefined,
   permission: AdminPermission,
 ): boolean {
   if (!role) return false;
   if (adminHasPermission(role, permission)) return true;
+  // manage_X implies view_X (super_admin/support only have manage_* pairs)
+  const manageEquivalent = MANAGE_FOR_VIEW[permission];
+  if (manageEquivalent && adminHasPermission(role, manageEquivalent)) return true;
+  // asking for manage_X also accepts view_X (read-only viewers)
   if (permission.startsWith("manage_")) {
     const viewPermission = VIEW_FOR_MANAGE[permission];
     return viewPermission ? adminHasPermission(role, viewPermission) : false;
