@@ -79,8 +79,15 @@ export const updateAppointmentStatus = createAsyncThunk(
     if (!response.ok) {
       return rejectWithValue(await readApiError(response));
     }
-    const body = (await response.json()) as { appointment: Appointment };
-    return body.appointment;
+    const body = (await response.json()) as {
+      appointment?: Appointment;
+    } & Partial<Appointment>;
+    const appointment = body.appointment ?? body;
+    return {
+      ...(appointment && typeof appointment === "object" ? appointment : {}),
+      id,
+      status,
+    } as Appointment;
   },
 );
 
@@ -113,11 +120,18 @@ const appointmentsSlice = createSlice({
         state.savingId = action.meta.arg.id;
         state.error = null;
       })
-      .addCase(updateAppointmentStatus.fulfilled, (state, action: PayloadAction<Appointment>) => {
+      .addCase(updateAppointmentStatus.fulfilled, (state, action) => {
         state.savingId = null;
-        const index = state.appointments.findIndex((a) => a.id === action.payload.id);
+        // ponytail: match by request id — staging PATCH row may omit/mismatch id
+        const id = action.meta.arg.id;
+        const index = state.appointments.findIndex((a) => a.id === id);
         if (index >= 0) {
-          state.appointments[index] = action.payload;
+          state.appointments[index] = {
+            ...state.appointments[index],
+            ...action.payload,
+            id,
+            status: action.meta.arg.status,
+          };
         }
       })
       .addCase(updateAppointmentStatus.rejected, (state, action) => {

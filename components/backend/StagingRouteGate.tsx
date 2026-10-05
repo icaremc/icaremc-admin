@@ -9,25 +9,6 @@ import {
   STAGING_CAPABILITIES,
 } from "@/lib/backend/capabilities";
 
-export function StagingModeBanner() {
-  if (!isBackendApiEnabled()) return null;
-
-  return (
-    <div className="border-b border-emerald-200 bg-emerald-50 px-4 py-2 text-center text-sm text-emerald-900">
-      Production admin — connected to{" "}
-      <a
-        href="https://api.icaremchealth.com/docs"
-        target="_blank"
-        rel="noreferrer"
-        className="font-medium underline"
-      >
-        api.icaremchealth.com
-      </a>
-      .
-    </div>
-  );
-}
-
 export function StagingUnavailablePanel({ pathname }: { pathname: string }) {
   const cap = getStagingCapability(pathname);
   const available = STAGING_CAPABILITIES.filter((item) => item.backendHint);
