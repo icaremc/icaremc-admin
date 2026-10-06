@@ -62,7 +62,11 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     backendHint: "Via appointments list on staging API",
   },
   { pathPrefix: "/admin/admins", label: "Portal admins", backendHint: "GET|POST|PATCH /api/v1/admin/admins" },
-  { pathPrefix: "/admin/activity", label: "Activity log", backendHint: "GET /api/v1/admin/activity/*" },
+  {
+    pathPrefix: "/admin/activity",
+    label: "Activity log",
+    backendHint: "GET /api/v1/admin/activity-logs (+ admin/platform detail)",
+  },
   { pathPrefix: "/admin/legal", label: "Policies", backendHint: "GET|PUT /api/v1/admin/legal-documents" },
   {
     pathPrefix: "/admin/about",
@@ -287,12 +291,7 @@ export function mapAdminApiToBackend(
           : "/api/v1/admin/activity/admin";
       }
       if (method !== "GET") return null;
-      {
-        const source = options.searchParams?.get("source");
-        if (source === "platform") return "/api/v1/admin/activity/platform";
-        if (source === "all") return "__activity_all__";
-        return "/api/v1/admin/activity/admin";
-      }
+      return "/api/v1/admin/activity-logs";
     case "activity":
       if (rest[0] === "log") return null;
       return "/api/v1/admin/activity/platform";
@@ -493,7 +492,7 @@ export const ADMIN_API_MAPPING_CASES: Array<{
   { adminPath: "app-version-settings", backendPath: "/api/v1/admin/settings/app_version" },
   { adminPath: "admins", backendPath: "/api/v1/admin/admins", method: "GET" },
   { adminPath: "admins", backendPath: "__admin_patch__", method: "PATCH" },
-  { adminPath: "activity-logs", backendPath: "/api/v1/admin/activity/admin" },
+  { adminPath: "activity-logs", backendPath: "/api/v1/admin/activity-logs" },
   { adminPath: "legal-documents", backendPath: "/api/v1/admin/legal-documents" },
   { adminPath: "pregnancy-weeks", backendPath: "/api/v1/admin/pregnancy-weeks" },
   {

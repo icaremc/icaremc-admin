@@ -6,6 +6,13 @@ import {
   isBackendApiEnabled,
 } from "@/lib/backend/config";
 
+function readAccessToken(cookieHeader: string): string | null {
+  const match = cookieHeader.match(
+    new RegExp(`(?:^|;\\s*)${BACKEND_ACCESS_COOKIE}=([^;]+)`),
+  );
+  return match?.[1] ? decodeURIComponent(match[1]) : null;
+}
+
 export async function GET(request: Request) {
   if (!isBackendApiEnabled()) {
     return NextResponse.json(
@@ -14,52 +21,53 @@ export async function GET(request: Request) {
     );
   }
 
-  const cookie = request.headers.get("cookie") ?? "";
-  const match = cookie.match(new RegExp(`(?:^|;\\s*)${BACKEND_ACCESS_COOKIE}=([^;]+)`));
-  const token = match?.[1] ? decodeURIComponent(match[1]) : null;
+  const token = readAccessToken(request.headers.get("cookie") ?? "");
   if (!token) {
-    return NextResponse.json({ user: null, mode: "backend" });
+    return NextResponse.json({ user: null, mode: "backend", token: null });
   }
 
   try {
-    const upstream = await fetch(`${getBackendApiBaseUrl()}/api/v1/auth/me`, {
+    const upstream = await fetch(`${getBackendApiBaseUrl()}/api/v1/auth/session`, {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     });
 
     if (!upstream.ok) {
-      const response = NextResponse.json({ user: null, mode: "backend" });
+      const response = NextResponse.json({ user: null, mode: "backend", token: null });
       response.cookies.delete(BACKEND_ACCESS_COOKIE);
       response.cookies.delete(BACKEND_REFRESH_COOKIE);
       return response;
     }
 
-    const me = (await upstream.json()) as {
-      id?: string;
-      user_id?: string;
-      email?: string | null;
-      full_name?: string | null;
-      admin_role?: string | null;
-      role?: string | null;
+    const session = (await upstream.json()) as {
+      mode?: string;
+      token?: string | null;
+      user?: {
+        id?: string;
+        email?: string | null;
+        name?: string | null;
+        adminRole?: string | null;
+        admin_role?: string | null;
+      } | null;
     };
 
-    const id = me.id ?? me.user_id;
-    if (!id) {
-      return NextResponse.json({ user: null, mode: "backend" });
+    const user = session.user;
+    if (!user?.id) {
+      return NextResponse.json({ user: null, mode: "backend", token: null });
     }
 
     return NextResponse.json({
-      mode: "backend",
-      token,
+      mode: session.mode ?? "backend",
+      token: session.token ?? token,
       user: {
-        id,
-        email: me.email ?? "",
-        name: me.full_name ?? me.email?.split("@")[0] ?? "Admin",
-        adminRole: me.admin_role ?? me.role ?? "support",
+        id: user.id,
+        email: user.email ?? "",
+        name: user.name ?? "Admin",
+        adminRole: user.adminRole ?? user.admin_role ?? "support",
       },
     });
   } catch {
-    return NextResponse.json({ user: null, mode: "backend" });
+    return NextResponse.json({ user: null, mode: "backend", token: null });
   }
 }
 

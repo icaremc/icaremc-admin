@@ -523,39 +523,6 @@ export async function proxyAdminRequestToBackend(
     );
   }
 
-  // Activity "all" = merge admin + platform feeds
-  if (backendPath === "__activity_all__") {
-    const base = getBackendApiBaseUrl();
-    const headers = { Authorization: `Bearer ${token}` };
-    try {
-      const [adminRes, platformRes] = await Promise.all([
-        fetch(`${base}/api/v1/admin/activity/admin`, { headers, cache: "no-store" }),
-        fetch(`${base}/api/v1/admin/activity/platform`, { headers, cache: "no-store" }),
-      ]);
-      const adminBody = adminRes.ok ? await adminRes.json() : [];
-      const platformBody = platformRes.ok ? await platformRes.json() : [];
-      const merged = [
-        ...(Array.isArray(adminBody) ? adminBody : []),
-        ...(Array.isArray(platformBody) ? platformBody : []),
-      ];
-      const adapted = adaptBackendResponse(adminPath, method, 200, merged, {
-        searchParams: incomingUrl.searchParams,
-      });
-      return NextResponse.json(adapted, {
-        status: adminRes.ok || platformRes.ok ? 200 : 502,
-      });
-    } catch (error) {
-      return NextResponse.json(
-        {
-          error:
-            error instanceof Error ? error.message : "Failed to reach staging backend",
-          stagingUnavailable: true,
-        },
-        { status: 502 },
-      );
-    }
-  }
-
   // Doctor detail = admin doctor list row + admin services endpoint
   if (backendPath === "__doctor_detail__") {
     const doctorId = rest[0] ?? "";
@@ -756,7 +723,13 @@ export async function proxyAdminRequestToBackend(
     if (key === "app" && adminPath.replace(/^\/+/, "").startsWith("app-version-settings")) {
       return;
     }
-    if (key === "source" && head === "activity-logs") return;
+    // ponytail: FE filters these client-side; backend activity-logs only accepts source/limit/offset
+    if (
+      head === "activity-logs" &&
+      (key === "event_type" || key === "actor_type")
+    ) {
+      return;
+    }
     target.searchParams.set(key, value);
   });
 

@@ -257,6 +257,111 @@ function mapReferralStats(row: Record<string, unknown>) {
   };
 }
 
+function mapChildProfile(row: Record<string, unknown> | null) {
+  if (!row) return null;
+  return {
+    id: (row.id ?? null) as string | null,
+    phone: (row.phone ?? null) as string | null,
+    locale: (row.locale ?? null) as string | null,
+    full_name: (row.full_name ?? row.fullName ?? null) as string | null,
+    created_at: (row.created_at ?? row.createdAt ?? null) as string | null,
+    account_type: (row.account_type ?? row.accountType ?? null) as string | null,
+    onboarding_complete: Boolean(
+      row.onboarding_complete ?? row.onboardingComplete ?? false,
+    ),
+    notifications_enabled:
+      row.notifications_enabled ?? row.notificationsEnabled ?? true,
+  };
+}
+
+function mapChildRow(row: Record<string, unknown>) {
+  const profilesRaw = isPlainObject(row.profiles) ? row.profiles : null;
+  return {
+    id: str(row.id),
+    user_id: str(row.user_id ?? row.userId),
+    pregnancy_id: (row.pregnancy_id ?? row.pregnancyId ?? null) as string | null,
+    local_id: (row.local_id ?? row.localId ?? null) as string | null,
+    name: str(row.name),
+    gender: str(row.gender),
+    birth_date: str(row.birth_date ?? row.birthDate),
+    birth_weight: (row.birth_weight ?? row.birthWeight ?? null) as number | null,
+    birth_height: (row.birth_height ?? row.birthHeight ?? null) as number | null,
+    delivery_type: (row.delivery_type ?? row.deliveryType ?? null) as string | null,
+    is_active: Boolean(row.is_active ?? row.isActive ?? true),
+    created_at: str(row.created_at ?? row.createdAt),
+    updated_at: str(row.updated_at ?? row.updatedAt),
+    gestational_age_weeks: (row.gestational_age_weeks ??
+      row.gestationalAgeWeeks ??
+      null) as number | null,
+    gestational_age_days: (row.gestational_age_days ??
+      row.gestationalAgeDays ??
+      null) as number | null,
+    birth_hospital: (row.birth_hospital ??
+      row.birthHospital ??
+      null) as string | null,
+    blood_group: (row.blood_group ?? row.bloodGroup ?? null) as string | null,
+    woreda: (row.woreda ?? null) as string | null,
+    photo_url: resolveBackendMediaUrl(
+      (row.photo_url ?? row.photoUrl ?? null) as string | null,
+    ),
+    profiles: mapChildProfile(profilesRaw),
+  };
+}
+
+function mapActivityLog(
+  row: Record<string, unknown>,
+  sourceHint?: string | null,
+) {
+  const actorRole = (row.actor_role ?? row.actorRole ?? null) as string | null;
+  const actorTypeRaw = (row.actor_type ?? row.actorType ?? null) as string | null;
+  const inferred =
+    row.source === "admin" || row.source === "platform"
+      ? row.source
+      : actorRole != null || actorTypeRaw === "admin"
+        ? "admin"
+        : "platform";
+  const source =
+    sourceHint === "admin" || sourceHint === "platform" ? sourceHint : inferred;
+  return {
+    id: str(row.id),
+    source,
+    actor_id: (row.actor_id ?? row.actorId ?? null) as string | null,
+    actor_email: (row.actor_email ?? row.actorEmail ?? null) as string | null,
+    actor_name: (row.actor_name ?? row.actorName ?? null) as string | null,
+    actor_role: actorRole,
+    actor_type: (actorTypeRaw ?? (source === "admin" ? "admin" : null)) as
+      | string
+      | null,
+    event_type: str(row.event_type ?? row.eventType),
+    event_label: str(row.event_label ?? row.eventLabel),
+    resource_type: (row.resource_type ?? row.resourceType ?? null) as string | null,
+    resource_id: (row.resource_id ?? row.resourceId ?? null) as string | null,
+    metadata: isPlainObject(row.metadata) ? row.metadata : {},
+    ip_address: (row.ip_address ?? row.ipAddress ?? null) as string | null,
+    user_agent: (row.user_agent ?? row.userAgent ?? null) as string | null,
+    created_at: str(row.created_at ?? row.createdAt),
+  };
+}
+
+function activityLogRows(body: unknown): Record<string, unknown>[] {
+  if (Array.isArray(body)) return body.filter(isPlainObject);
+  if (isPlainObject(body) && Array.isArray(body.logs)) {
+    return body.logs.filter(isPlainObject);
+  }
+  return [];
+}
+
+function childListRows(body: unknown): Record<string, unknown>[] {
+  if (Array.isArray(body)) return body.filter(isPlainObject);
+  if (isPlainObject(body) && Array.isArray(body.children)) {
+    return body.children.filter(isPlainObject);
+  }
+  if (isPlainObject(body) && Array.isArray(body.items)) {
+    return body.items.filter(isPlainObject);
+  }
+  return [];
+}
+
 /** Backend returns `/static/uploads/...`; absolutize so <img> hits the API host. */
 function mapDoctorMedia(row: Record<string, unknown>): Record<string, unknown> {
   return {
@@ -429,12 +534,34 @@ export function adaptBackendResponse(
   }
 
   if (head === "activity-logs" && rest.length === 2 && upper === "GET") {
-    if (!Array.isArray(body)) {
-      return isPlainObject(body) ? { log: body } : body;
+    const sourceHint = rest[0] === "platform" ? "platform" : "admin";
+    if (isPlainObject(body) && !Array.isArray(body) && body.id != null) {
+      return { log: mapActivityLog(body, sourceHint) };
     }
-    const log = findById(body, rest[1]);
+    const rows = activityLogRows(body);
+    const log = findById(rows, rest[1]);
     if (!log) return { error: "Activity log not found", stagingNotFound: true };
-    return { log: { ...log, source: rest[0] } };
+    return { log: mapActivityLog(log, sourceHint) };
+  }
+
+  if (head === "activity-logs" && rest.length === 0 && upper === "GET") {
+    const sourceHint = options.searchParams?.get("source");
+    const eventType = options.searchParams?.get("event_type");
+    const actorType = options.searchParams?.get("actor_type");
+    let logs = activityLogRows(body).map((row) =>
+      mapActivityLog(
+        row,
+        sourceHint === "admin" || sourceHint === "platform" ? sourceHint : null,
+      ),
+    );
+    if (eventType) logs = logs.filter((row) => row.event_type === eventType);
+    if (actorType) logs = logs.filter((row) => row.actor_type === actorType);
+    return { logs };
+  }
+
+  if (head === "children" && rest.length === 0 && upper === "GET") {
+    const children = childListRows(body).map(mapChildRow);
+    return { children, items: children };
   }
 
   if (head === "appointments" && rest.length === 1 && rest[0] !== "stats" && upper === "GET") {
@@ -480,7 +607,7 @@ export function adaptBackendResponse(
     // Staging returns a bare child row; prod API returns the full detail envelope.
     if (isPlainObject(body) && isPlainObject(body.child)) {
       return {
-        child: body.child,
+        child: mapChildRow(body.child),
         milestoneChecks: Array.isArray(body.milestoneChecks) ? body.milestoneChecks : [],
         measurements: Array.isArray(body.measurements) ? body.measurements : [],
         vaccineRecords: Array.isArray(body.vaccineRecords) ? body.vaccineRecords : [],
@@ -490,7 +617,7 @@ export function adaptBackendResponse(
     }
     if (isPlainObject(body) && body.id != null) {
       return {
-        child: body,
+        child: mapChildRow(body),
         milestoneChecks: [],
         measurements: [],
         vaccineRecords: [],
@@ -498,11 +625,12 @@ export function adaptBackendResponse(
         growthPeriods: [],
       };
     }
-    if (Array.isArray(body)) {
-      const child = findById(body, rest[0]);
+    const rows = childListRows(body);
+    if (rows.length > 0) {
+      const child = findById(rows, rest[0]);
       if (!child) return { error: "Child not found", stagingNotFound: true };
       return {
-        child,
+        child: mapChildRow(child),
         milestoneChecks: [],
         measurements: [],
         vaccineRecords: [],
@@ -557,9 +685,17 @@ export function adaptBackendResponse(
       case "app-membership-members":
         return { members: body, subscriptions: body };
       case "activity-logs":
-        return { logs: body };
+        return {
+          logs: body.map((row) =>
+            mapActivityLog(isPlainObject(row) ? row : {}, null),
+          ),
+        };
       case "activity":
-        return { logs: body };
+        return {
+          logs: body.map((row) =>
+            mapActivityLog(isPlainObject(row) ? row : {}, "platform"),
+          ),
+        };
       case "legal-documents":
         return { documents: body };
       case "pregnancy-weeks": {
@@ -593,8 +729,10 @@ export function adaptBackendResponse(
         const mapped = body.filter(isPlainObject).map(mapCommissionRow);
         return { commissions: filterByAdminParams(mapped, options.searchParams) };
       }
-      case "children":
-        return { children: body, items: body };
+      case "children": {
+        const children = body.filter(isPlainObject).map(mapChildRow);
+        return { children, items: children };
+      }
       case "daily-tips": {
         const tips = body.filter(isPlainObject).map(mapDailyTipRow);
         return { tips, items: tips };

@@ -371,15 +371,113 @@ describe("adaptBackendResponse", () => {
       id: "c1",
       name: "Amina",
       gender: "female",
-    });
-    assert.deepEqual(out, {
-      child: { id: "c1", name: "Amina", gender: "female" },
-      milestoneChecks: [],
-      measurements: [],
-      vaccineRecords: [],
-      vaccineSchedule: [],
-      growthPeriods: [],
-    });
+      birth_date: "2022-08-20",
+    }) as {
+      child: { id: string; name: string; gender: string; birth_date: string };
+      milestoneChecks: unknown[];
+    };
+    assert.equal(out.child.id, "c1");
+    assert.equal(out.child.name, "Amina");
+    assert.equal(out.child.gender, "female");
+    assert.equal(out.child.birth_date, "2022-08-20");
+    assert.deepEqual(out.milestoneChecks, []);
+  });
+
+  it("maps activity-logs list to CombinedActivityLog shape", () => {
+    assert.equal(
+      mapAdminApiToBackend("activity-logs", {
+        method: "GET",
+        searchParams: new URLSearchParams("source=all&limit=100"),
+      }),
+      "/api/v1/admin/activity-logs",
+    );
+    const out = adaptBackendResponse(
+      "activity-logs",
+      "GET",
+      200,
+      {
+        logs: [
+          {
+            id: "87599396-efbe-4625-9dd4-04dc48eaa8d3",
+            actor_id: "ae7f1336-b0bd-412c-84e7-bb6fecf79904",
+            actor_email: null,
+            actor_name: null,
+            actor_role: "super_admin",
+            event_type: "appointment.status",
+            event_label: "Appointment status updated",
+            resource_type: null,
+            resource_id: null,
+            ip_address: null,
+            user_agent: null,
+            created_at: "2026-10-05T13:16:38.651266Z",
+          },
+        ],
+      },
+      { searchParams: new URLSearchParams("source=all&limit=100") },
+    ) as {
+      logs: Array<{
+        id: string;
+        source: string;
+        actor_type: string | null;
+        event_type: string;
+        metadata: Record<string, unknown>;
+      }>;
+    };
+    assert.equal(out.logs.length, 1);
+    assert.equal(out.logs[0]?.source, "admin");
+    assert.equal(out.logs[0]?.actor_type, "admin");
+    assert.equal(out.logs[0]?.event_type, "appointment.status");
+    assert.deepEqual(out.logs[0]?.metadata, {});
+  });
+
+  it("keeps child list fields and nested profiles", () => {
+    const out = adaptBackendResponse("children", "GET", 200, {
+      children: [
+        {
+          id: "6cf371d1-18df-4b1f-8cda-41f56953d814",
+          user_id: "48af816b-ab14-406c-8e53-dfa2fc2fde13",
+          pregnancy_id: null,
+          local_id: "1791206341790978_148589",
+          name: "loyd gebrekidan",
+          gender: "female",
+          birth_date: "2022-08-20",
+          birth_weight: null,
+          birth_height: null,
+          delivery_type: null,
+          is_active: true,
+          created_at: "2026-10-05T13:19:02.327493+00:00",
+          updated_at: "2026-10-05T13:24:15.446554+00:00",
+          gestational_age_weeks: null,
+          gestational_age_days: null,
+          birth_hospital: null,
+          blood_group: null,
+          woreda: null,
+          photo_url: null,
+          profiles: {
+            id: "48af816b-ab14-406c-8e53-dfa2fc2fde13",
+            phone: "+251937254403",
+            locale: "en",
+            full_name: "Meron Asfaw",
+            created_at: "2026-10-05T13:18:25.008611+00:00",
+            account_type: "Mother",
+            onboarding_complete: true,
+            notifications_enabled: true,
+          },
+        },
+      ],
+    }) as {
+      children: Array<{
+        id: string;
+        local_id: string | null;
+        gestational_age_weeks: number | null;
+        profiles: { full_name: string | null; phone: string | null } | null;
+      }>;
+    };
+    assert.equal(out.children.length, 1);
+    assert.equal(out.children[0]?.local_id, "1791206341790978_148589");
+    assert.equal(out.children[0]?.gestational_age_weeks, null);
+    assert.equal(out.children[0]?.profiles?.full_name, "Meron Asfaw");
+    assert.equal(out.children[0]?.profiles?.phone, "+251937254403");
   });
 
   it("nests pregnancy week translations for admin UI", () => {
