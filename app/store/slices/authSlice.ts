@@ -85,7 +85,7 @@ export const login = createAsyncThunk<
       user?: { id: string; email: string; name: string; adminRole: string | null };
     };
     if (!response.ok || !payload.token || !payload.user) {
-      return rejectWithValue(payload.error ?? "Staging login failed.");
+      return rejectWithValue(payload.error ?? "Login failed.");
     }
     return {
       token: payload.token,
@@ -157,7 +157,7 @@ export const restoreSession = createAsyncThunk<
       };
     } catch (error) {
       return rejectWithValue(
-        error instanceof Error ? error.message : "Failed to restore staging session",
+        error instanceof Error ? error.message : "Failed to restore session",
       );
     }
   }

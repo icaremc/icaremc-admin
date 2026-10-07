@@ -1,23 +1,6 @@
-/**
- * Staging / Render backend switch.
- * Production must leave NEXT_PUBLIC_USE_BACKEND_API unset or "false".
- */
+/** Admin talks only to the backend API. Supabase is not used at runtime. */
 export function isBackendApiEnabled(): boolean {
-  if (typeof window !== "undefined") {
-    const host = window.location.hostname;
-    if (
-      host === "icaremc-admin-staging.vercel.app" ||
-      host.endsWith("-icaremc-admin-staging.vercel.app")
-    ) {
-      return true;
-    }
-  }
-
-  const flag =
-    process.env.NEXT_PUBLIC_USE_BACKEND_API?.trim().toLowerCase() ??
-    process.env.USE_BACKEND_API?.trim().toLowerCase() ??
-    "";
-  return flag === "1" || flag === "true" || flag === "yes";
+  return true;
 }
 
 export function getBackendApiBaseUrl(): string {

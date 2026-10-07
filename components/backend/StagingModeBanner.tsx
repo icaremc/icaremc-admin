@@ -32,7 +32,7 @@ export function StagingUnavailablePanel({ pathname }: { pathname: string }) {
   const cap = getStagingCapability(pathname);
   const available = STAGING_CAPABILITIES.filter((item) => item.backendHint);
   const missingReason =
-    "This area exists in the production admin (Supabase), but there is no matching admin endpoint on api.icaremchealth.com.";
+    "There is no matching admin endpoint on the API for this area yet.";
 
   return (
     <div className="admin-page">
@@ -42,7 +42,7 @@ export function StagingUnavailablePanel({ pathname }: { pathname: string }) {
           <div className="space-y-3">
             <div>
               <h1 className="text-lg font-semibold">
-                Not on staging API yet
+                Not on the API yet
               </h1>
               <p className="mt-1 text-sm text-amber-900/80">
                 <span className="font-medium">{cap?.label ?? "This area"}</span>
@@ -51,7 +51,7 @@ export function StagingUnavailablePanel({ pathname }: { pathname: string }) {
               </p>
             </div>
             <p className="text-sm">
-              Use production admin for this feature until the backend adds an{" "}
+              This feature is unavailable until the backend adds an{" "}
               <span className="font-medium">admin</span> API. Coverage list:{" "}
               <code className="rounded bg-amber-100/80 px-1 text-xs">
                 docs/staging-api-coverage.md
@@ -60,7 +60,7 @@ export function StagingUnavailablePanel({ pathname }: { pathname: string }) {
             </p>
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">
-                Available on staging
+                Available now
               </p>
               <ul className="mt-2 list-inside list-disc text-sm text-amber-900/90">
                 {available.map((item) => (

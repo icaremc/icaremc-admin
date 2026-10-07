@@ -38,14 +38,8 @@ describe("backend config", () => {
     );
   });
 
-  it("reads USE_BACKEND_API flag", () => {
-    const previous = process.env.NEXT_PUBLIC_USE_BACKEND_API;
-    process.env.NEXT_PUBLIC_USE_BACKEND_API = "true";
+  it("uses the backend API (no Supabase)", () => {
     assert.equal(isBackendApiEnabled(), true);
-    process.env.NEXT_PUBLIC_USE_BACKEND_API = "false";
-    assert.equal(isBackendApiEnabled(), false);
-    if (previous === undefined) delete process.env.NEXT_PUBLIC_USE_BACKEND_API;
-    else process.env.NEXT_PUBLIC_USE_BACKEND_API = previous;
   });
 });
 

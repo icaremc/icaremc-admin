@@ -6,10 +6,7 @@ import { Menu } from "lucide-react";
 import AuthGuard from "@/components/AuthGuard";
 import RoleGuard from "@/components/RoleGuard";
 import Sidebar from "@/components/Sidebar";
-import {
-  StagingModeBanner,
-  StagingRouteGate,
-} from "@/components/backend/StagingModeBanner";
+import { StagingRouteGate } from "@/components/backend/StagingModeBanner";
 
 export default function AdminPageShell({
   children,
@@ -28,7 +25,6 @@ export default function AdminPageShell({
         />
 
         <div className="flex min-w-0 flex-1 flex-col lg:ml-[260px]">
-          <StagingModeBanner />
           <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-gray-200 bg-white px-4 lg:hidden">
             <button
               type="button"

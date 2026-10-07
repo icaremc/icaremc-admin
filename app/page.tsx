@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { authActions, login, restoreSession } from "@/app/store/slices/authSlice";
-import { isBackendApiEnabled } from "@/lib/backend/config";
 
 function LoginContent() {
   const router = useRouter();
@@ -17,7 +16,6 @@ function LoginContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const stagingMode = isBackendApiEnabled();
 
   useEffect(() => {
     dispatch(restoreSession()).then((result) => {
@@ -67,15 +65,8 @@ function LoginContent() {
           </div>
           <h1 className="text-lg font-semibold text-gray-900">ICare MC Admin</h1>
           <p className="mt-1 text-sm text-gray-600">
-            {stagingMode
-              ? "Sign in with your production admin account."
-              : "Sign in with your authorized admin account."}
+            Sign in with your authorized admin account.
           </p>
-          {stagingMode ? (
-            <p className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs text-emerald-900">
-              Connected to api.icaremchealth.com
-            </p>
-          ) : null}
         </div>
 
         <form onSubmit={onSubmit} className="space-y-4">
