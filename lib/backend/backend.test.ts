@@ -379,23 +379,104 @@ describe("adaptBackendResponse", () => {
     assert.equal(wallet.transactions[0]?.doctor_profiles?.first_name, "Tigist");
   });
 
-  it("maps doctor verify PATCH to verify endpoint", () => {
-    assert.equal(
-      mapAdminApiToBackend("doctors/abc", { method: "PATCH" }),
-      "/api/v1/admin/doctors/abc/verify",
-    );
+  it("maps doctor verify as POST /doctors/{id}/verify", () => {
     assert.equal(
       mapAdminApiToBackend("doctors/abc/verify", { method: "POST" }),
       "/api/v1/admin/doctors/abc/verify",
     );
+    assert.equal(mapAdminApiToBackend("doctors/abc", { method: "PATCH" }), null);
     const out = adaptBackendResponse(
-      "doctors/abc",
-      "PATCH",
+      "doctors/abc/verify",
+      "POST",
       200,
       { id: "abc", is_verified: true, first_name: "A" },
     ) as { doctor: { id: string; is_verified: boolean } };
     assert.equal(out.doctor.id, "abc");
     assert.equal(out.doctor.is_verified, true);
+  });
+
+  it("adapts user referral GET and POST", () => {
+    assert.equal(
+      mapAdminApiToBackend("users/u1/referral", { method: "GET" }),
+      "/api/v1/admin/users/u1/referral",
+    );
+    assert.equal(
+      mapAdminApiToBackend("users/u1/referral", { method: "POST" }),
+      "/api/v1/admin/users/u1/referral",
+    );
+    const out = adaptBackendResponse("users/u1/referral", "GET", 200, {
+      referral: {
+        referralCodeUsed: "MCNWMM4Y",
+        referredByDoctorId: "doc-1",
+        referredByDoctorName: "Dr. Selamawit Muleta",
+        referredAt: "2026-10-05T11:20:59.103769+00:00",
+        canApplyCode: false,
+      },
+    }) as {
+      referral: {
+        referralCodeUsed: string;
+        referredByDoctorId: string;
+        canApplyCode: boolean;
+      };
+    };
+    assert.equal(out.referral.referralCodeUsed, "MCNWMM4Y");
+    assert.equal(out.referral.referredByDoctorId, "doc-1");
+    assert.equal(out.referral.canApplyCode, false);
+
+    const applied = adaptBackendResponse("users/u1/referral", "POST", 200, {
+      referral_code_used: "ABC",
+      referred_by_doctor_id: "d1",
+      can_apply_code: false,
+    }) as { referral: { referralCodeUsed: string; canApplyCode: boolean } };
+    assert.equal(applied.referral.referralCodeUsed, "ABC");
+    assert.equal(applied.referral.canApplyCode, false);
+  });
+
+  it("adapts doctor wallet bundle into history envelope", () => {
+    const out = adaptBackendResponse("doctors/d1/wallet", "GET", 200, {
+      wallet: {
+        available_balance: 1200,
+        pending_balance: 100,
+        currency: "ETB",
+      },
+      transactions: [
+        {
+          id: "t1",
+          doctor_id: "d1",
+          amount: 500,
+          is_credit: true,
+          type: "appointment_earning",
+          appointment_id: "a1",
+          payout_request_id: null,
+          note: null,
+          created_at: "2026-09-18T02:53:33Z",
+        },
+        {
+          id: "t2",
+          doctor_id: "d1",
+          amount: 50,
+          is_credit: false,
+          type: "payout_hold",
+          appointment_id: null,
+          payout_request_id: "p1",
+          note: "Hold",
+          created_at: "2026-09-19T02:53:33Z",
+        },
+      ],
+    }) as {
+      history: {
+        wallet: { available_balance: number; pending_balance: number };
+        commissionPercent: number;
+        earnings: Array<{ id: string; amount: number }>;
+        transactions: Array<{ id: string; type: string }>;
+      };
+    };
+    assert.equal(out.history.wallet.available_balance, 1200);
+    assert.equal(out.history.wallet.pending_balance, 100);
+    assert.equal(out.history.transactions.length, 2);
+    assert.equal(out.history.earnings.length, 1);
+    assert.equal(out.history.earnings[0]?.id, "t1");
+    assert.equal(out.history.commissionPercent, 30);
   });
 
   it("adapts referrals list to camelCase", () => {

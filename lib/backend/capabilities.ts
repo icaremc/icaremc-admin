@@ -33,7 +33,8 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
   {
     pathPrefix: "/admin/users",
     label: "Parents",
-    backendHint: "GET /api/v1/admin/users + GET /users/{id} + POST /push/notify",
+    backendHint:
+      "GET /api/v1/admin/users + GET /users/{id} + referral GET|POST + POST /push/notify",
   },
   { pathPrefix: "/admin/documents", label: "Internal docs", backendHint: "GET|POST /api/v1/admin/documents + deliver + delivery history" },
   {
@@ -181,7 +182,8 @@ export function mapAdminApiToBackend(
         return null;
       }
       if (rest.length === 2 && rest[1] === "verify") {
-        return `/api/v1/admin/doctors/${rest[0]}/verify`;
+        if (method === "POST") return `/api/v1/admin/doctors/${rest[0]}/verify`;
+        return null;
       }
       if (rest.length === 2 && rest[1] === "push") {
         if (method === "POST") return "/api/v1/push/notify";
@@ -218,9 +220,6 @@ export function mapAdminApiToBackend(
       if (rest.length === 1) {
         // Prefer admin list + admin services (added upstream) over public doctor detail
         if (method === "GET") return "__doctor_detail__";
-        if (method === "PATCH" || method === "POST") {
-          return `/api/v1/admin/doctors/${rest[0]}/verify`;
-        }
         return null;
       }
       return null;
@@ -237,6 +236,12 @@ export function mapAdminApiToBackend(
       if (rest.length === 2 && rest[1] === "push") {
         if (method === "POST") return "/api/v1/push/notify";
         if (method === "GET") return `/api/v1/admin/users/${rest[0]}`;
+        return null;
+      }
+      if (rest.length === 2 && rest[1] === "referral") {
+        if (method === "GET" || method === "POST") {
+          return `/api/v1/admin/users/${rest[0]}/referral`;
+        }
         return null;
       }
       if (rest.length === 1) return `/api/v1/admin/users/${rest[0]}`;
@@ -426,17 +431,16 @@ export const ADMIN_API_MAPPING_CASES: Array<{
   { adminPath: "children/c1", backendPath: "/api/v1/admin/children/c1", method: "GET" },
   { adminPath: "children/c1", backendPath: null, method: "PATCH" },
   { adminPath: "doctors", backendPath: "/api/v1/admin/doctors" },
-  { adminPath: "doctors/abc/verify", backendPath: "/api/v1/admin/doctors/abc/verify" },
+  {
+    adminPath: "doctors/abc/verify",
+    backendPath: "/api/v1/admin/doctors/abc/verify",
+    method: "POST",
+  },
   { adminPath: "doctors/abc", backendPath: "__doctor_detail__", method: "GET" },
   {
     adminPath: "doctors/abc/services",
     backendPath: "/api/v1/admin/doctors/abc/services",
     method: "GET",
-  },
-  {
-    adminPath: "doctors/abc",
-    backendPath: "/api/v1/admin/doctors/abc/verify",
-    method: "PATCH",
   },
   {
     adminPath: "doctors/abc/push",
@@ -568,6 +572,16 @@ export const ADMIN_API_MAPPING_CASES: Array<{
     adminPath: "doctors/abc/referral-stats",
     backendPath: "/api/v1/admin/doctors/abc/referral-stats",
     method: "GET",
+  },
+  {
+    adminPath: "users/u1/referral",
+    backendPath: "/api/v1/admin/users/u1/referral",
+    method: "GET",
+  },
+  {
+    adminPath: "users/u1/referral",
+    backendPath: "/api/v1/admin/users/u1/referral",
+    method: "POST",
   },
   { adminPath: "daily-tips", backendPath: "/api/v1/admin/daily-tips", method: "GET" },
   { adminPath: "daily-tips", backendPath: "/api/v1/admin/daily-tips", method: "POST" },

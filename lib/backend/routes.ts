@@ -49,6 +49,8 @@ export const STAGING_BACKEND_ADMIN_ROUTES = [
   { method: "POST", path: "/api/v1/admin/doctors/{id}/verify", label: "doctor-verify" },
   { method: "GET", path: "/api/v1/admin/children", label: "children" },
   { method: "GET", path: "/api/v1/admin/children/{id}", label: "children-detail" },
+  { method: "GET", path: "/api/v1/admin/users/{id}/referral", label: "user-referral" },
+  { method: "POST", path: "/api/v1/admin/users/{id}/referral", label: "user-referral-apply" },
   { method: "GET", path: "/api/v1/admin/appointments/{id}", label: "appointment-detail" },
   { method: "GET", path: "/api/v1/auth/session", label: "auth-session" },
   { method: "GET", path: "/api/v1/auth/me", label: "auth-me" },

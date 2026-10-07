@@ -322,15 +322,6 @@ async function rewriteUpstreamRequest(
     };
   }
 
-  // PATCH /doctors/:id { is_verified } → POST /doctors/:id/verify
-  if (head === "doctors" && rest.length === 1 && upper === "PATCH") {
-    return {
-      method: "POST",
-      body: encodeJson(parsed),
-      contentType: "application/json",
-    };
-  }
-
   // JSON hospital create/update: ensure slug when name is present
   if (head === "hospitals" && (upper === "POST" || upper === "PATCH") && isPlainObject(parsed)) {
     const name = typeof parsed.name === "string" ? parsed.name.trim() : "";

@@ -439,6 +439,70 @@ function walletTransactionRows(body: unknown): Record<string, unknown>[] {
   return [];
 }
 
+function mapUserReferral(row: Record<string, unknown>) {
+  return {
+    referralCodeUsed: (row.referral_code_used ??
+      row.referralCodeUsed ??
+      null) as string | null,
+    referredByDoctorId: (row.referred_by_doctor_id ??
+      row.referredByDoctorId ??
+      null) as string | null,
+    referredByDoctorName: (row.referred_by_doctor_name ??
+      row.referredByDoctorName ??
+      null) as string | null,
+    referredAt: (row.referred_at ?? row.referredAt ?? null) as string | null,
+    canApplyCode: Boolean(row.can_apply_code ?? row.canApplyCode),
+  };
+}
+
+function mapDoctorWalletHistory(body: unknown) {
+  if (isPlainObject(body) && isPlainObject(body.history)) {
+    return { history: body.history };
+  }
+
+  const walletRaw =
+    isPlainObject(body) && isPlainObject(body.wallet) ? body.wallet : null;
+  const transactions = walletTransactionRows(body).map(mapWalletTransactionRow);
+  const earnings = transactions
+    .filter((row) => row.type === "appointment_earning")
+    .map((row) => ({
+      id: row.id,
+      amount: row.amount,
+      created_at: row.created_at,
+      note: row.note,
+      appointment_id: row.appointment_id,
+      appointment_date: null,
+      time_slot: null,
+      service_name: null,
+      patient_id: null,
+      patient_name: null,
+    }));
+
+  return {
+    history: {
+      wallet: walletRaw
+        ? {
+            available_balance: num(
+              walletRaw.available_balance ?? walletRaw.availableBalance,
+            ),
+            pending_balance: num(
+              walletRaw.pending_balance ?? walletRaw.pendingBalance,
+            ),
+            currency: str(walletRaw.currency || "ETB"),
+          }
+        : null,
+      // ponytail: wallet bundle has no commission; UI only displays the number
+      commissionPercent: num(
+        isPlainObject(body)
+          ? (body.commissionPercent ?? body.commission_percent ?? 30)
+          : 30,
+      ),
+      earnings,
+      transactions,
+    },
+  };
+}
+
 /** Backend returns `/static/uploads/...`; absolutize so <img> hits the API host. */
 function mapDoctorMedia(row: Record<string, unknown>): Record<string, unknown> {
   return {
@@ -515,6 +579,25 @@ export function adaptBackendResponse(
 
   if (head === "documents" && rest.length === 0 && upper === "GET") {
     return { documents: documentListRows(body).map(mapDocumentRow) };
+  }
+
+  if (head === "users" && rest.length === 2 && rest[1] === "referral") {
+    const raw = isPlainObject(body)
+      ? isPlainObject(body.referral)
+        ? body.referral
+        : body
+      : null;
+    if (!raw) return body;
+    return {
+      referral: mapUserReferral(raw),
+      ...(isPlainObject(body) && body.applied != null && upper === "POST"
+        ? { applied: body.applied }
+        : {}),
+    };
+  }
+
+  if (head === "doctors" && rest.length === 2 && rest[1] === "wallet" && upper === "GET") {
+    return mapDoctorWalletHistory(body);
   }
 
   if (head === "doctors" && rest.length === 2 && rest[1] === "push" && upper === "GET") {

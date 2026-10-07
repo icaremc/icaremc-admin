@@ -42,8 +42,8 @@ export const updateDoctorVerification = createAsyncThunk(
     payload: { id: string; is_verified: boolean },
     { rejectWithValue },
   ) => {
-    const response = await fetch(`/api/admin/doctors/${payload.id}`, {
-      method: "PATCH",
+    const response = await fetch(`/api/admin/doctors/${payload.id}/verify`, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_verified: payload.is_verified }),
     });
