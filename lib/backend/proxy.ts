@@ -134,7 +134,8 @@ async function enrichDocumentsWithPreviewUrls(
   if (!rows || rows.length === 0) return body;
 
   if (rows.every((row) => row.preview_url || row.previewUrl)) {
-    return Array.isArray(body) ? rows : { ...body, documents: rows };
+    if (Array.isArray(body)) return rows;
+    return isPlainObject(body) ? { ...body, documents: rows } : body;
   }
 
   try {
@@ -154,7 +155,8 @@ async function enrichDocumentsWithPreviewUrls(
         return { ...row, preview_url };
       }),
     );
-    return Array.isArray(body) ? enriched : { ...body, documents: enriched };
+    if (Array.isArray(body)) return enriched;
+    return isPlainObject(body) ? { ...body, documents: enriched } : body;
   } catch {
     return body;
   }
