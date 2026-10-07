@@ -362,6 +362,83 @@ function childListRows(body: unknown): Record<string, unknown>[] {
   return [];
 }
 
+/** Settings APIs return `{ data }` or the already-shaped admin envelope. */
+function settingsData(
+  body: Record<string, unknown>,
+  key: string,
+): Record<string, unknown> {
+  const nested = body[key];
+  if (isPlainObject(nested)) return nested;
+  if (isPlainObject(body.data)) return body.data;
+  return body;
+}
+
+function settingsUpdatedAt(body: Record<string, unknown>): string | null {
+  const value = body.updatedAt ?? body.updated_at ?? null;
+  return value == null ? null : String(value);
+}
+
+function mapDocumentRow(row: Record<string, unknown>) {
+  return {
+    id: str(row.id),
+    title: str(row.title),
+    category: str(row.category || "other"),
+    storage_path: str(row.storage_path ?? row.storagePath),
+    file_name: str(row.file_name ?? row.fileName),
+    mime_type: str(row.mime_type ?? row.mimeType ?? "application/pdf"),
+    uploaded_by: (row.uploaded_by ?? row.uploadedBy ?? null) as string | null,
+    created_at: str(row.created_at ?? row.createdAt),
+    updated_at: str(row.updated_at ?? row.updatedAt),
+    preview_url: (row.preview_url ?? row.previewUrl ?? null) as string | null,
+  };
+}
+
+function documentListRows(body: unknown): Record<string, unknown>[] {
+  if (Array.isArray(body)) return body.filter(isPlainObject);
+  if (isPlainObject(body) && Array.isArray(body.documents)) {
+    return body.documents.filter(isPlainObject);
+  }
+  return [];
+}
+
+function mapWalletTransactionRow(row: Record<string, unknown>) {
+  const profilesRaw = isPlainObject(row.doctor_profiles)
+    ? row.doctor_profiles
+    : isPlainObject(row.doctorProfiles)
+      ? row.doctorProfiles
+      : null;
+  return {
+    ...row,
+    id: str(row.id),
+    doctor_id: str(row.doctor_id ?? row.doctorId),
+    amount: num(row.amount),
+    is_credit: Boolean(row.is_credit ?? row.isCredit),
+    type: str(row.type),
+    appointment_id: (row.appointment_id ??
+      row.appointmentId ??
+      null) as string | null,
+    payout_request_id: (row.payout_request_id ??
+      row.payoutRequestId ??
+      null) as string | null,
+    note: (row.note ?? null) as string | null,
+    created_at: str(row.created_at ?? row.createdAt),
+    doctor_profiles: profilesRaw
+      ? {
+          first_name: str(profilesRaw.first_name ?? profilesRaw.firstName),
+          last_name: str(profilesRaw.last_name ?? profilesRaw.lastName),
+        }
+      : null,
+  };
+}
+
+function walletTransactionRows(body: unknown): Record<string, unknown>[] {
+  if (Array.isArray(body)) return body.filter(isPlainObject);
+  if (isPlainObject(body) && Array.isArray(body.transactions)) {
+    return body.transactions.filter(isPlainObject);
+  }
+  return [];
+}
+
 /** Backend returns `/static/uploads/...`; absolutize so <img> hits the API host. */
 function mapDoctorMedia(row: Record<string, unknown>): Record<string, unknown> {
   return {
@@ -417,13 +494,27 @@ export function adaptBackendResponse(
   }
 
   if (head === "app-version-settings" && isPlainObject(body)) {
-    const app = options.searchParams?.get("app") === "doctors" ? "doctors" : "mc";
-    const data = isPlainObject(body.data) ? body.data : body;
+    const app =
+      body.app === "doctors" || body.app === "mc"
+        ? body.app
+        : options.searchParams?.get("app") === "doctors"
+          ? "doctors"
+          : "mc";
     return {
       app,
-      appVersionSettings: data,
-      updatedAt: body.updated_at ?? null,
+      appVersionSettings: settingsData(body, "appVersionSettings"),
+      updatedAt: settingsUpdatedAt(body),
     };
+  }
+
+  if (head === "wallet-transactions" && (Array.isArray(body) || isPlainObject(body))) {
+    return {
+      transactions: walletTransactionRows(body).map(mapWalletTransactionRow),
+    };
+  }
+
+  if (head === "documents" && rest.length === 0 && upper === "GET") {
+    return { documents: documentListRows(body).map(mapDocumentRow) };
   }
 
   if (head === "doctors" && rest.length === 2 && rest[1] === "push" && upper === "GET") {
@@ -591,7 +682,9 @@ export function adaptBackendResponse(
   }
 
   if (head === "documents" && upper === "POST" && rest.length === 0) {
-    return isPlainObject(body) ? { document: body } : body;
+    if (!isPlainObject(body)) return body;
+    const row = isPlainObject(body.document) ? body.document : body;
+    return { document: mapDocumentRow(row) };
   }
 
   if (head === "payout-requests" && rest.length === 1 && upper === "GET") {
@@ -675,11 +768,13 @@ export function adaptBackendResponse(
       case "users":
         return rest.length === 1 ? { profile: body[0] ?? body } : { profiles: body };
       case "documents":
-        return { documents: body };
+        return { documents: body.filter(isPlainObject).map(mapDocumentRow) };
       case "payout-requests":
         return { requests: body };
       case "wallet-transactions":
-        return { transactions: body };
+        return {
+          transactions: body.filter(isPlainObject).map(mapWalletTransactionRow),
+        };
       case "admins":
         return { admins: body };
       case "app-membership-members":
@@ -809,32 +904,41 @@ export function adaptBackendResponse(
     }
     if (head === "app-membership-settings") {
       return {
-        appMembershipSettings: parseAppMembershipSettingsData(body.data ?? body),
-        updatedAt: body.updated_at ?? null,
+        appMembershipSettings: parseAppMembershipSettingsData(
+          settingsData(body, "appMembershipSettings"),
+        ),
+        updatedAt: settingsUpdatedAt(body),
       };
     }
     if (head === "referral-settings") {
-      const data = isPlainObject(body.data) ? body.data : body;
+      const data = settingsData(body, "referralSettings");
       return {
         referralSettings: {
           commissionPercent: num(
             data.commissionPercent ?? data.commission_percent ?? 20,
           ),
         },
-        updatedAt: body.updated_at ?? null,
+        updatedAt: settingsUpdatedAt(body),
       };
     }
     if (head === "finance-settings") {
-      return { financeSettings: body.data ?? body, ...body };
+      return {
+        financeSettings: settingsData(body, "financeSettings"),
+        updatedAt: settingsUpdatedAt(body),
+      };
     }
     if (head === "legal-documents" && (upper === "PATCH" || upper === "PUT")) {
-      return { document: body };
+      const doc = isPlainObject(body.document) ? body.document : body;
+      return { document: doc };
     }
     if (head === "documents" && rest[1] === "deliver" && upper === "POST") {
       return { ok: true, delivery: body, ...(isPlainObject(body) ? body : {}) };
     }
     if (head === "payment-settings") {
-      return { paymentSettings: body.data ?? body, ...body };
+      return {
+        paymentSettings: settingsData(body, "paymentSettings"),
+        updatedAt: settingsUpdatedAt(body),
+      };
     }
     if (head === "app-membership-members") {
       return { members: Array.isArray(body.members) ? body.members : body };

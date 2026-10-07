@@ -7,7 +7,9 @@ import {
   resolveBackendMediaUrl,
 } from "@/lib/backend/config";
 import { mapAdminApiToBackend } from "@/lib/backend/capabilities";
+import { signedAdminDocumentUrl } from "@/lib/adminDocuments/storage";
 import { slugifyHospitalName } from "@/lib/hospitals/storage";
+import { createServiceSupabaseClient } from "@/lib/supabase/service";
 
 export function readAccessToken(request: Request): string | null {
   const header = request.headers.get("authorization");
@@ -119,6 +121,44 @@ let pregnancyCmsEnrichCache: {
   at: number;
   byId: Map<string, Record<string, unknown>[]>;
 } | null = null;
+
+/** ponytail: backend document rows omit signed URLs; mint via Supabase when credentials exist */
+async function enrichDocumentsWithPreviewUrls(
+  body: unknown,
+): Promise<unknown> {
+  const rows = Array.isArray(body)
+    ? body.filter(isPlainObject)
+    : isPlainObject(body) && Array.isArray(body.documents)
+      ? body.documents.filter(isPlainObject)
+      : null;
+  if (!rows || rows.length === 0) return body;
+
+  if (rows.every((row) => row.preview_url || row.previewUrl)) {
+    return Array.isArray(body) ? rows : { ...body, documents: rows };
+  }
+
+  try {
+    const client = createServiceSupabaseClient();
+    const enriched = await Promise.all(
+      rows.map(async (row) => {
+        if (row.preview_url || row.previewUrl) {
+          return {
+            ...row,
+            preview_url: row.preview_url ?? row.previewUrl ?? null,
+          };
+        }
+        const storagePath = String(row.storage_path ?? row.storagePath ?? "");
+        const preview_url = storagePath
+          ? await signedAdminDocumentUrl(client, storagePath)
+          : null;
+        return { ...row, preview_url };
+      }),
+    );
+    return Array.isArray(body) ? enriched : { ...body, documents: enriched };
+  } catch {
+    return body;
+  }
+}
 
 async function enrichPregnancyWeeksFromPublicCms(
   weeks: Record<string, unknown>[],
@@ -790,6 +830,14 @@ export async function proxyAdminRequestToBackend(
       bodyForAdapt = await enrichPregnancyWeeksFromPublicCms(
         parsed.filter(isPlainObject),
       );
+    }
+    if (
+      upstream.ok &&
+      method === "GET" &&
+      head === "documents" &&
+      rest.length === 0
+    ) {
+      bodyForAdapt = await enrichDocumentsWithPreviewUrls(parsed);
     }
 
     const adapted = adaptBackendResponse(

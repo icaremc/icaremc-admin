@@ -248,6 +248,154 @@ describe("adaptBackendResponse", () => {
     assert.deepEqual(out, {
       document: { slug: "privacy", title: "Privacy", locale: "en", sections: [] },
     });
+    const nested = adaptBackendResponse(
+      "legal-documents",
+      "PATCH",
+      200,
+      {
+        document: {
+          slug: "about-app",
+          locale: "en",
+          title: "About iCare MC",
+          sections: [{ title: "About", body: "Help" }],
+          updated_at: "2026-10-06T11:43:11.134+00:00",
+        },
+      },
+    ) as { document: { slug: string; sections: unknown[] } };
+    assert.equal(nested.document.slug, "about-app");
+    assert.equal(nested.document.sections.length, 1);
+  });
+
+  it("adapts settings PUT envelopes without double-wrapping", () => {
+    const finance = adaptBackendResponse("finance-settings", "PUT", 200, {
+      financeSettings: {
+        minimumAmountWithdraw: 1,
+        platformCommissionPercent: 30,
+        doctorCancelPenaltyEnabled: true,
+        doctorCancelPenaltyAmount: 100,
+      },
+      updatedAt: "2026-10-06T10:57:20.896931+00:00",
+    }) as {
+      financeSettings: { minimumAmountWithdraw: number };
+      updatedAt: string | null;
+    };
+    assert.equal(finance.financeSettings.minimumAmountWithdraw, 1);
+    assert.equal(finance.updatedAt, "2026-10-06T10:57:20.896931+00:00");
+
+    const payment = adaptBackendResponse("payment-settings", "PUT", 200, {
+      paymentSettings: {
+        chapa: { name: "Chapa", enable: true, feePercent: 2.5 },
+      },
+      updatedAt: "2026-10-06T11:02:23.035871+00:00",
+    }) as { paymentSettings: { chapa: { name: string } } };
+    assert.equal(payment.paymentSettings.chapa.name, "Chapa");
+
+    const referral = adaptBackendResponse("referral-settings", "PUT", 200, {
+      referralSettings: { commissionPercent: 20 },
+      updatedAt: "2026-10-06T08:21:03.122649+00:00",
+    }) as { referralSettings: { commissionPercent: number } };
+    assert.equal(referral.referralSettings.commissionPercent, 20);
+
+    const membership = adaptBackendResponse(
+      "app-membership-settings",
+      "PUT",
+      200,
+      {
+        appMembershipSettings: {
+          enabled: true,
+          yearlyPrice: 100,
+          currency: "ETB",
+          durationDays: 365,
+          requireForAppAccess: true,
+        },
+        updatedAt: "2026-10-06T12:32:14.442553+00:00",
+      },
+    ) as { appMembershipSettings: { yearlyPrice: number } };
+    assert.equal(membership.appMembershipSettings.yearlyPrice, 100);
+
+    const appVersion = adaptBackendResponse(
+      "app-version-settings",
+      "PUT",
+      200,
+      {
+        app: "mc",
+        appVersionSettings: {
+          min_version: "1.0.0",
+          force_update: false,
+          message_en: "Update",
+          message_am: "",
+          message_om: "",
+        },
+        updatedAt: "2026-10-06T11:23:42.643865+00:00",
+      },
+      { searchParams: new URLSearchParams("app=mc") },
+    ) as {
+      app: string;
+      appVersionSettings: { min_version: string };
+      updatedAt: string | null;
+    };
+    assert.equal(appVersion.app, "mc");
+    assert.equal(appVersion.appVersionSettings.min_version, "1.0.0");
+    assert.equal(appVersion.updatedAt, "2026-10-06T11:23:42.643865+00:00");
+  });
+
+  it("keeps document preview_url and wallet doctor_profiles", () => {
+    const docs = adaptBackendResponse("documents", "GET", 200, [
+      {
+        id: "d1",
+        title: "Agreement",
+        category: "agreement",
+        storage_path: "library/a.pdf",
+        file_name: "a.pdf",
+        mime_type: "application/pdf",
+        uploaded_by: null,
+        created_at: "2026-09-01T00:00:00Z",
+        updated_at: "2026-09-01T00:00:00Z",
+        preview_url: "https://example.com/a.pdf",
+      },
+    ]) as { documents: Array<{ preview_url: string | null; title: string }> };
+    assert.equal(docs.documents[0]?.preview_url, "https://example.com/a.pdf");
+
+    const wallet = adaptBackendResponse("wallet-transactions", "GET", 200, {
+      transactions: [
+        {
+          id: "t1",
+          doctor_id: "doc1",
+          amount: 200,
+          is_credit: true,
+          type: "adjustment",
+          appointment_id: null,
+          payout_request_id: null,
+          note: "Referral commission",
+          created_at: "2026-09-18T02:53:33Z",
+          doctor_profiles: { first_name: "Tigist", last_name: "Argaw" },
+        },
+      ],
+    }) as {
+      transactions: Array<{
+        doctor_profiles: { first_name: string; last_name: string } | null;
+      }>;
+    };
+    assert.equal(wallet.transactions[0]?.doctor_profiles?.first_name, "Tigist");
+  });
+
+  it("maps doctor verify PATCH to verify endpoint", () => {
+    assert.equal(
+      mapAdminApiToBackend("doctors/abc", { method: "PATCH" }),
+      "/api/v1/admin/doctors/abc/verify",
+    );
+    assert.equal(
+      mapAdminApiToBackend("doctors/abc/verify", { method: "POST" }),
+      "/api/v1/admin/doctors/abc/verify",
+    );
+    const out = adaptBackendResponse(
+      "doctors/abc",
+      "PATCH",
+      200,
+      { id: "abc", is_verified: true, first_name: "A" },
+    ) as { doctor: { id: string; is_verified: boolean } };
+    assert.equal(out.doctor.id, "abc");
+    assert.equal(out.doctor.is_verified, true);
   });
 
   it("adapts referrals list to camelCase", () => {
