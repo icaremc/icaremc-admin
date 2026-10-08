@@ -11,16 +11,6 @@ export function getBackendApiBaseUrl(): string {
   return raw.replace(/\/$/, "");
 }
 
-/**
- * Temporary: when false (default on staging), the browser calls the API host
- * directly so DevTools shows api.icaremchealth.com. Set to true to force the
- * same-origin bridge again.
- */
-export function isBackendBridgeOnly(): boolean {
-  const v = process.env.NEXT_PUBLIC_BACKEND_BRIDGE_ONLY?.trim().toLowerCase() ?? "";
-  return v === "1" || v === "true" || v === "yes";
-}
-
 /** Backend often returns `/static/uploads/...`; browsers would hit the admin host otherwise. */
 export function resolveBackendMediaUrl(
   url: string | null | undefined,

@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import AuthGuard from "@/components/AuthGuard";
 import RoleGuard from "@/components/RoleGuard";
 import Sidebar from "@/components/Sidebar";
 import { StagingRouteGate } from "@/components/backend/StagingRouteGate";
-import { installBackendDirectFetch } from "@/lib/client/backendDirectFetch";
 
 export default function AdminPageShell({
   children,
@@ -16,9 +15,6 @@ export default function AdminPageShell({
 }) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const pathname = usePathname() || "/admin/dashboard";
-
-  // ponytail: temporary Network-tab visibility of api.icaremchealth.com
-  useEffect(() => installBackendDirectFetch(), []);
 
   return (
     <AuthGuard>

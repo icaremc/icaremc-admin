@@ -47,7 +47,8 @@ export async function POST(request: Request) {
       cache: "no-store",
     });
 
-    const payload = (await upstream.json()) as {
+    const raw = await upstream.text();
+    let payload: {
       access_token?: string;
       refresh_token?: string;
       user_id?: string;
@@ -56,7 +57,17 @@ export async function POST(request: Request) {
       roles?: string[] | null;
       detail?: string | { msg?: string }[];
       message?: string;
-    };
+    } = {};
+    if (raw) {
+      try {
+        payload = JSON.parse(raw) as typeof payload;
+      } catch {
+        return NextResponse.json(
+          { error: "Staging login returned a non-JSON response" },
+          { status: 502 },
+        );
+      }
+    }
 
     if (!upstream.ok || !payload.access_token || !payload.user_id) {
       const detail =
