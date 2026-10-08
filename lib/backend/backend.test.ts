@@ -146,14 +146,49 @@ describe("adaptBackendResponse", () => {
     });
   });
 
-  it("wraps dashboard object", () => {
-    const out = adaptBackendResponse("dashboard/analytics", "GET", 200, {
-      totalPaymentVolume: 10,
-    });
-    assert.deepEqual(out, {
-      range: "30d",
-      analytics: { totalPaymentVolume: 10 },
-    });
+  it("maps admin dashboard totals and charts", () => {
+    const out = adaptBackendResponse(
+      "dashboard/analytics",
+      "GET",
+      200,
+      {
+        profiles: 241,
+        doctors: 33,
+        transactions_count: 36,
+        appointment_payments_sum: 2010,
+        appointment_payments_count: 4,
+        doctor_earnings_sum: 910,
+        doctor_earnings_count: 2,
+        subscription_payments_sum: 4167,
+        subscription_payments_count: 34,
+        commission_sum: 201.6,
+        commission_growth: 0,
+        appointment_payments_chart: [{ date: "2026-08-17", amount: 500 }],
+        doctor_earnings_chart: [{ date: "2026-07-05", amount: 900 }],
+        subscription_payments_chart: [{ date: "2026-08-29", amount: 57 }],
+        commission_chart: [{ date: "2026-09-18", amount: 200 }],
+      },
+      { searchParams: new URLSearchParams("range=7d") },
+    ) as {
+      range: string;
+      analytics: Record<string, unknown>;
+    };
+    assert.equal(out.range, "7d");
+    const a = out.analytics;
+    assert.equal(a.profiles, 241);
+    assert.equal(a.totalTransactions, 36);
+    assert.equal(a.totalPaymentVolume, 2010);
+    assert.equal(a.completedPaidBookings, 4);
+    assert.equal(a.doctorBookingEarnings, 910);
+    assert.equal(a.doctorBookingEarningCount, 2);
+    assert.equal(a.subscriptionPaymentVolume, 4167);
+    assert.equal(a.subscriptionPaymentCount, 34);
+    assert.equal(a.totalCommission, 201.6);
+    assert.equal(a.commissionChange, 0);
+    assert.deepEqual(a.paymentChart, [{ label: "Aug 17", value: 500 }]);
+    assert.deepEqual(a.doctorEarningsChart, [{ label: "Jul 5", value: 900 }]);
+    assert.deepEqual(a.subscriptionChart, [{ label: "Aug 29", value: 57 }]);
+    assert.deepEqual(a.commissionChart, [{ label: "Sep 18", value: 200 }]);
   });
 
   it("derives appointment stats", () => {
