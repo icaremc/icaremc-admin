@@ -426,6 +426,16 @@ function activityLogRows(body: unknown): Record<string, unknown>[] {
   return [];
 }
 
+function appointmentListRows(body: unknown): Record<string, unknown>[] {
+  if (Array.isArray(body)) return body.filter(isPlainObject);
+  if (!isPlainObject(body)) return [];
+  for (const key of ["appointments", "items", "data"] as const) {
+    const rows = body[key];
+    if (Array.isArray(rows)) return rows.filter(isPlainObject);
+  }
+  return [];
+}
+
 function childListRows(body: unknown): Record<string, unknown>[] {
   if (Array.isArray(body)) return body.filter(isPlainObject);
   if (isPlainObject(body) && Array.isArray(body.children)) {
@@ -908,7 +918,7 @@ export function adaptBackendResponse(
         if (rest[0] === "stats") {
           return deriveAppointmentStats(body);
         }
-        return { appointments: body };
+        return { appointments: appointmentListRows(body) };
       case "hospitals": {
         const hospitals = body.filter(isPlainObject).map((row) => ({
           ...row,
@@ -1002,6 +1012,13 @@ export function adaptBackendResponse(
   }
 
   if (isPlainObject(body)) {
+    if (head === "appointments" && rest.length === 0) {
+      const appointments = appointmentListRows(body);
+      return { appointments };
+    }
+    if (head === "appointments" && rest[0] === "stats") {
+      return deriveAppointmentStats(appointmentListRows(body));
+    }
     if (head === "doctors" && (rest[1] === "verify" || rest.length === 1)) {
       const doctor = mapDoctorMedia(body);
       return { doctor, ...doctor };
@@ -1130,7 +1147,7 @@ export function deriveAppointmentStats(
   };
   for (const row of appointments) {
     if (!isPlainObject(row)) continue;
-    const status = String(row.status ?? "");
+    const status = String(row.status ?? "").trim().toLowerCase();
     if (status === "pending") counts.pending += 1;
     else if (status === "confirmed") counts.confirmed += 1;
     else if (status === "completed") counts.completed += 1;

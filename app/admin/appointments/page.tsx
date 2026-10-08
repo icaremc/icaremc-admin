@@ -371,7 +371,7 @@ export default function AppointmentsPage() {
   const { appointments, stats, loading, savingId, error } = useAppSelector(
     (state) => state.appointments,
   );
-  const [filter, setFilter] = useState<StatusFilter>("pending");
+  const [filter, setFilter] = useState<StatusFilter>("all");
   const [responseFilter, setResponseFilter] = useState<ResponseFilter>("all");
   const [search, setSearch] = useState("");
   const [pendingStatusChange, setPendingStatusChange] = useState<{

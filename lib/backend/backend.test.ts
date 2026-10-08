@@ -135,6 +135,15 @@ describe("adaptBackendResponse", () => {
     assert.deepEqual(out, { appointments: [{ id: "a" }] });
   });
 
+  it("unwraps appointments object list", () => {
+    const out = adaptBackendResponse("appointments", "GET", 200, {
+      appointments: [{ id: "a", status: "confirmed" }],
+    });
+    assert.deepEqual(out, {
+      appointments: [{ id: "a", status: "confirmed" }],
+    });
+  });
+
   it("picks appointment detail from list", () => {
     const out = adaptBackendResponse("appointments/a1", "GET", 200, [
       { id: "a1", status: "pending" },
@@ -211,6 +220,23 @@ describe("adaptBackendResponse", () => {
       pending: 0,
       confirmed: 1,
       completed: 0,
+      cancelled: 0,
+    });
+  });
+
+  it("adapts appointments/stats from wrapped object payload", () => {
+    const out = adaptBackendResponse("appointments/stats", "GET", 200, {
+      appointments: [
+        { status: "Pending" },
+        { status: "confirmed" },
+        { status: "completed" },
+      ],
+    });
+    assert.deepEqual(out, {
+      total: 3,
+      pending: 1,
+      confirmed: 1,
+      completed: 1,
       cancelled: 0,
     });
   });

@@ -19,12 +19,11 @@ function dartWeekdayFromJs(date: Date): number {
   return jsDay === 0 ? 7 : jsDay;
 }
 
-export function summarizeAvailabilitySlots(
+function activeSlots(
   slots: DoctorAvailabilitySlot[] | undefined,
-): string {
-  if (!slots?.length) return "No hours set";
-
-  const active = slots
+): DoctorAvailabilitySlot[] {
+  if (!slots?.length) return [];
+  return slots
     .filter((slot) => slot.is_active)
     .sort((a, b) => {
       if (a.day_of_week !== b.day_of_week) {
@@ -32,27 +31,44 @@ export function summarizeAvailabilitySlots(
       }
       return a.start_time.localeCompare(b.start_time);
     });
+}
 
-  if (!active.length) return "No hours set";
-
-  return active
-    .map(
-      (slot) =>
-        `${DAY_NAMES[slot.day_of_week]} ${formatDbTime(slot.start_time)}-${formatDbTime(slot.end_time)}`,
-    )
-    .join(" · ");
+/** Backend often sends a free-text `availability` when slot rows are absent. */
+export function summarizeAvailabilitySlots(
+  slots: DoctorAvailabilitySlot[] | undefined,
+  fallbackText?: string | null,
+): string {
+  const active = activeSlots(slots);
+  if (active.length) {
+    return active
+      .map(
+        (slot) =>
+          `${DAY_NAMES[slot.day_of_week]} ${formatDbTime(slot.start_time)}-${formatDbTime(slot.end_time)}`,
+      )
+      .join(" · ");
+  }
+  const text = fallbackText?.trim();
+  return text || "No hours set";
 }
 
 export function activeSlotCount(
   slots: DoctorAvailabilitySlot[] | undefined,
+  fallbackText?: string | null,
 ): number {
-  return slots?.filter((slot) => slot.is_active).length ?? 0;
+  const count = activeSlots(slots).length;
+  if (count > 0) return count;
+  return fallbackText?.trim() ? 1 : 0;
 }
 
 export function hasSlotsToday(
   slots: DoctorAvailabilitySlot[] | undefined,
+  availableToday?: boolean | null,
 ): boolean {
-  if (!slots?.length) return false;
-  const today = dartWeekdayFromJs(new Date());
-  return slots.some((slot) => slot.is_active && slot.day_of_week === today);
+  if (slots?.length) {
+    const today = dartWeekdayFromJs(new Date());
+    if (slots.some((slot) => slot.is_active && slot.day_of_week === today)) {
+      return true;
+    }
+  }
+  return availableToday === true;
 }

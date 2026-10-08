@@ -186,16 +186,27 @@ export default function DoctorsPage() {
                     <TableCell>{doctor.experience_years} yrs</TableCell>
                     <TableCell className="max-w-55">
                       <div className="truncate text-sm">
-                        {summarizeAvailabilitySlots(doctor.doctor_availability_slots)}
+                        {summarizeAvailabilitySlots(
+                          doctor.doctor_availability_slots,
+                          doctor.availability,
+                        )}
                       </div>
                       <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-gray-500">
-                        <span>
-                          {activeSlotCount(doctor.doctor_availability_slots)} window
-                          {activeSlotCount(doctor.doctor_availability_slots) === 1
-                            ? ""
-                            : "s"}
-                        </span>
-                        {hasSlotsToday(doctor.doctor_availability_slots) ? (
+                        {(() => {
+                          const windows = activeSlotCount(
+                            doctor.doctor_availability_slots,
+                            doctor.availability,
+                          );
+                          return (
+                            <span>
+                              {windows} window{windows === 1 ? "" : "s"}
+                            </span>
+                          );
+                        })()}
+                        {hasSlotsToday(
+                          doctor.doctor_availability_slots,
+                          doctor.available_today,
+                        ) ? (
                           <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-medium text-emerald-800">
                             Open today
                           </span>

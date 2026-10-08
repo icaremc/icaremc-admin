@@ -84,7 +84,13 @@ function formatDbTime(raw: string): string {
   return `${hour12}:${minute.toString().padStart(2, "0")} ${period}`;
 }
 
-function AvailabilityTable({ slots }: { slots: DoctorAvailabilitySlot[] | undefined }) {
+function AvailabilityTable({
+  slots,
+  fallbackText,
+}: {
+  slots: DoctorAvailabilitySlot[] | undefined;
+  fallbackText?: string | null;
+}) {
   const active = (slots ?? [])
     .filter((slot) => slot.is_active)
     .sort((a, b) => {
@@ -93,7 +99,12 @@ function AvailabilityTable({ slots }: { slots: DoctorAvailabilitySlot[] | undefi
     });
 
   if (!active.length) {
-    return <p className="text-sm text-gray-500">No availability windows set.</p>;
+    const text = fallbackText?.trim();
+    return (
+      <p className="text-sm text-gray-500">
+        {text || "No availability windows set."}
+      </p>
+    );
   }
 
   return (
@@ -238,10 +249,16 @@ function DoctorPersonalDetails({
             Availability
           </h2>
           <p className="text-sm text-gray-500">
-            {summarizeAvailabilitySlots(doctor.doctor_availability_slots)}
+            {summarizeAvailabilitySlots(
+              doctor.doctor_availability_slots,
+              doctor.availability,
+            )}
           </p>
         </div>
-        <AvailabilityTable slots={doctor.doctor_availability_slots} />
+        <AvailabilityTable
+          slots={doctor.doctor_availability_slots}
+          fallbackText={doctor.availability}
+        />
       </div>
 
       <DoctorReferralPanel
