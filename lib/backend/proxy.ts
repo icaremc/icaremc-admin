@@ -7,6 +7,7 @@ import {
   resolveBackendMediaUrl,
 } from "@/lib/backend/config";
 import { mapAdminApiToBackend } from "@/lib/backend/capabilities";
+import { signedAdminDocumentUrl } from "@/lib/adminDocuments/storage";
 import { slugifyHospitalName } from "@/lib/hospitals/storage";
 import { saveNotification } from "@/lib/push/saveNotification";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
@@ -145,6 +146,46 @@ let pregnancyCmsEnrichCache: {
   at: number;
   byId: Map<string, Record<string, unknown>[]>;
 } | null = null;
+
+/** ponytail: backend document rows omit signed URLs; mint via Supabase when credentials exist */
+async function enrichDocumentsWithPreviewUrls(
+  body: unknown,
+): Promise<unknown> {
+  const rows = Array.isArray(body)
+    ? body.filter(isPlainObject)
+    : isPlainObject(body) && Array.isArray(body.documents)
+      ? body.documents.filter(isPlainObject)
+      : null;
+  if (!rows || rows.length === 0) return body;
+
+  if (rows.every((row) => row.preview_url || row.previewUrl)) {
+    if (Array.isArray(body)) return rows;
+    return isPlainObject(body) ? { ...body, documents: rows } : body;
+  }
+
+  try {
+    const client = createServiceSupabaseClient();
+    const enriched = await Promise.all(
+      rows.map(async (row) => {
+        if (row.preview_url || row.previewUrl) {
+          return {
+            ...row,
+            preview_url: row.preview_url ?? row.previewUrl ?? null,
+          };
+        }
+        const storagePath = String(row.storage_path ?? row.storagePath ?? "");
+        const preview_url = storagePath
+          ? await signedAdminDocumentUrl(client, storagePath)
+          : null;
+        return { ...row, preview_url };
+      }),
+    );
+    if (Array.isArray(body)) return enriched;
+    return isPlainObject(body) ? { ...body, documents: enriched } : body;
+  } catch {
+    return body;
+  }
+}
 
 async function enrichPregnancyWeeksFromPublicCms(
   weeks: Record<string, unknown>[],
@@ -305,15 +346,6 @@ async function rewriteUpstreamRequest(
     return {
       error: "Staging backend expects JSON for this request",
       status: 400,
-    };
-  }
-
-  // PATCH /doctors/:id { is_verified } → POST /doctors/:id/verify
-  if (head === "doctors" && rest.length === 1 && upper === "PATCH") {
-    return {
-      method: "POST",
-      body: encodeJson(parsed),
-      contentType: "application/json",
     };
   }
 
@@ -557,39 +589,6 @@ export async function proxyAdminRequestToBackend(
     );
   }
 
-  // Activity "all" = merge admin + platform feeds
-  if (backendPath === "__activity_all__") {
-    const base = getBackendApiBaseUrl();
-    const headers = { Authorization: `Bearer ${token}` };
-    try {
-      const [adminRes, platformRes] = await Promise.all([
-        fetch(`${base}/api/v1/admin/activity/admin`, { headers, cache: "no-store" }),
-        fetch(`${base}/api/v1/admin/activity/platform`, { headers, cache: "no-store" }),
-      ]);
-      const adminBody = adminRes.ok ? await adminRes.json() : [];
-      const platformBody = platformRes.ok ? await platformRes.json() : [];
-      const merged = [
-        ...(Array.isArray(adminBody) ? adminBody : []),
-        ...(Array.isArray(platformBody) ? platformBody : []),
-      ];
-      const adapted = adaptBackendResponse(adminPath, method, 200, merged, {
-        searchParams: incomingUrl.searchParams,
-      });
-      return NextResponse.json(adapted, {
-        status: adminRes.ok || platformRes.ok ? 200 : 502,
-      });
-    } catch (error) {
-      return NextResponse.json(
-        {
-          error:
-            error instanceof Error ? error.message : "Failed to reach staging backend",
-          stagingUnavailable: true,
-        },
-        { status: 502 },
-      );
-    }
-  }
-
   // Doctor detail = admin doctor list row + admin services endpoint
   if (backendPath === "__doctor_detail__") {
     const doctorId = rest[0] ?? "";
@@ -790,7 +789,13 @@ export async function proxyAdminRequestToBackend(
     if (key === "app" && adminPath.replace(/^\/+/, "").startsWith("app-version-settings")) {
       return;
     }
-    if (key === "source" && head === "activity-logs") return;
+    // ponytail: FE filters these client-side; backend activity-logs only accepts source/limit/offset
+    if (
+      head === "activity-logs" &&
+      (key === "event_type" || key === "actor_type")
+    ) {
+      return;
+    }
     target.searchParams.set(key, value);
   });
 
@@ -851,6 +856,14 @@ export async function proxyAdminRequestToBackend(
       bodyForAdapt = await enrichPregnancyWeeksFromPublicCms(
         parsed.filter(isPlainObject),
       );
+    }
+    if (
+      upstream.ok &&
+      method === "GET" &&
+      head === "documents" &&
+      rest.length === 0
+    ) {
+      bodyForAdapt = await enrichDocumentsWithPreviewUrls(parsed);
     }
 
     const adapted = adaptBackendResponse(

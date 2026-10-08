@@ -32,7 +32,6 @@ import {
   Info,
   type LucideIcon,
 } from "lucide-react";
-import { supabase } from "@/lib/supabaseClient";
 import { CONTENT_NAMESPACES } from "@/lib/constants";
 import { canAccessRoute } from "@/lib/adminNav";
 import { isBackendApiEnabled } from "@/lib/backend/config";
@@ -277,11 +276,7 @@ export default function Sidebar({ mobileOpen = false, onCloseMobile }: SidebarPr
                 event_type: ADMIN_ACTIVITY_EVENTS.LOGOUT,
                 event_label: "Signed out of admin portal",
               });
-              if (process.env.NEXT_PUBLIC_USE_BACKEND_API === "true") {
-                await fetch("/api/backend/auth/session", { method: "DELETE" });
-              } else {
-                await supabase.auth.signOut();
-              }
+              await fetch("/api/backend/auth/session", { method: "DELETE" });
               location.href = "/";
             }}
             className="inline-flex w-full items-center justify-center gap-2 rounded-(--radius) border border-gray-200 px-3 py-2.5 text-sm text-gray-700 transition-colors hover:bg-gray-50"

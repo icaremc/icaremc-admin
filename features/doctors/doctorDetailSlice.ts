@@ -58,8 +58,8 @@ export const fetchDoctorDetail = createAsyncThunk(
 export const approveDoctor = createAsyncThunk(
   "doctorDetail/approve",
   async (id: string, { rejectWithValue }) => {
-    const response = await fetch(`/api/admin/doctors/${id}`, {
-      method: "PATCH",
+    const response = await fetch(`/api/admin/doctors/${id}/verify`, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_verified: true }),
     });
@@ -86,8 +86,8 @@ export const fetchDoctorWallet = createAsyncThunk(
 export const revokeDoctorApproval = createAsyncThunk(
   "doctorDetail/revoke",
   async (id: string, { rejectWithValue }) => {
-    const response = await fetch(`/api/admin/doctors/${id}`, {
-      method: "PATCH",
+    const response = await fetch(`/api/admin/doctors/${id}/verify`, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_verified: false }),
     });

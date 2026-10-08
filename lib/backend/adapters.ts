@@ -332,6 +332,252 @@ function mapReferralStats(row: Record<string, unknown>) {
   };
 }
 
+function mapChildProfile(row: Record<string, unknown> | null) {
+  if (!row) return null;
+  return {
+    id: (row.id ?? null) as string | null,
+    phone: (row.phone ?? null) as string | null,
+    locale: (row.locale ?? null) as string | null,
+    full_name: (row.full_name ?? row.fullName ?? null) as string | null,
+    created_at: (row.created_at ?? row.createdAt ?? null) as string | null,
+    account_type: (row.account_type ?? row.accountType ?? null) as string | null,
+    onboarding_complete: Boolean(
+      row.onboarding_complete ?? row.onboardingComplete ?? false,
+    ),
+    notifications_enabled:
+      row.notifications_enabled ?? row.notificationsEnabled ?? true,
+  };
+}
+
+function mapChildRow(row: Record<string, unknown>) {
+  const profilesRaw = isPlainObject(row.profiles) ? row.profiles : null;
+  return {
+    id: str(row.id),
+    user_id: str(row.user_id ?? row.userId),
+    pregnancy_id: (row.pregnancy_id ?? row.pregnancyId ?? null) as string | null,
+    local_id: (row.local_id ?? row.localId ?? null) as string | null,
+    name: str(row.name),
+    gender: str(row.gender),
+    birth_date: str(row.birth_date ?? row.birthDate),
+    birth_weight: (row.birth_weight ?? row.birthWeight ?? null) as number | null,
+    birth_height: (row.birth_height ?? row.birthHeight ?? null) as number | null,
+    delivery_type: (row.delivery_type ?? row.deliveryType ?? null) as string | null,
+    is_active: Boolean(row.is_active ?? row.isActive ?? true),
+    created_at: str(row.created_at ?? row.createdAt),
+    updated_at: str(row.updated_at ?? row.updatedAt),
+    gestational_age_weeks: (row.gestational_age_weeks ??
+      row.gestationalAgeWeeks ??
+      null) as number | null,
+    gestational_age_days: (row.gestational_age_days ??
+      row.gestationalAgeDays ??
+      null) as number | null,
+    birth_hospital: (row.birth_hospital ??
+      row.birthHospital ??
+      null) as string | null,
+    blood_group: (row.blood_group ?? row.bloodGroup ?? null) as string | null,
+    woreda: (row.woreda ?? null) as string | null,
+    photo_url: resolveBackendMediaUrl(
+      (row.photo_url ?? row.photoUrl ?? null) as string | null,
+    ),
+    profiles: mapChildProfile(profilesRaw),
+  };
+}
+
+function mapActivityLog(
+  row: Record<string, unknown>,
+  sourceHint?: string | null,
+) {
+  const actorRole = (row.actor_role ?? row.actorRole ?? null) as string | null;
+  const actorTypeRaw = (row.actor_type ?? row.actorType ?? null) as string | null;
+  const inferred =
+    row.source === "admin" || row.source === "platform"
+      ? row.source
+      : actorRole != null || actorTypeRaw === "admin"
+        ? "admin"
+        : "platform";
+  const source =
+    sourceHint === "admin" || sourceHint === "platform" ? sourceHint : inferred;
+  return {
+    id: str(row.id),
+    source,
+    actor_id: (row.actor_id ?? row.actorId ?? null) as string | null,
+    actor_email: (row.actor_email ?? row.actorEmail ?? null) as string | null,
+    actor_name: (row.actor_name ?? row.actorName ?? null) as string | null,
+    actor_role: actorRole,
+    actor_type: (actorTypeRaw ?? (source === "admin" ? "admin" : null)) as
+      | string
+      | null,
+    event_type: str(row.event_type ?? row.eventType),
+    event_label: str(row.event_label ?? row.eventLabel),
+    resource_type: (row.resource_type ?? row.resourceType ?? null) as string | null,
+    resource_id: (row.resource_id ?? row.resourceId ?? null) as string | null,
+    metadata: isPlainObject(row.metadata) ? row.metadata : {},
+    ip_address: (row.ip_address ?? row.ipAddress ?? null) as string | null,
+    user_agent: (row.user_agent ?? row.userAgent ?? null) as string | null,
+    created_at: str(row.created_at ?? row.createdAt),
+  };
+}
+
+function activityLogRows(body: unknown): Record<string, unknown>[] {
+  if (Array.isArray(body)) return body.filter(isPlainObject);
+  if (isPlainObject(body) && Array.isArray(body.logs)) {
+    return body.logs.filter(isPlainObject);
+  }
+  return [];
+}
+
+function childListRows(body: unknown): Record<string, unknown>[] {
+  if (Array.isArray(body)) return body.filter(isPlainObject);
+  if (isPlainObject(body) && Array.isArray(body.children)) {
+    return body.children.filter(isPlainObject);
+  }
+  if (isPlainObject(body) && Array.isArray(body.items)) {
+    return body.items.filter(isPlainObject);
+  }
+  return [];
+}
+
+/** Settings APIs return `{ data }` or the already-shaped admin envelope. */
+function settingsData(
+  body: Record<string, unknown>,
+  key: string,
+): Record<string, unknown> {
+  const nested = body[key];
+  if (isPlainObject(nested)) return nested;
+  if (isPlainObject(body.data)) return body.data;
+  return body;
+}
+
+function settingsUpdatedAt(body: Record<string, unknown>): string | null {
+  const value = body.updatedAt ?? body.updated_at ?? null;
+  return value == null ? null : String(value);
+}
+
+function mapDocumentRow(row: Record<string, unknown>) {
+  return {
+    id: str(row.id),
+    title: str(row.title),
+    category: str(row.category || "other"),
+    storage_path: str(row.storage_path ?? row.storagePath),
+    file_name: str(row.file_name ?? row.fileName),
+    mime_type: str(row.mime_type ?? row.mimeType ?? "application/pdf"),
+    uploaded_by: (row.uploaded_by ?? row.uploadedBy ?? null) as string | null,
+    created_at: str(row.created_at ?? row.createdAt),
+    updated_at: str(row.updated_at ?? row.updatedAt),
+    preview_url: (row.preview_url ?? row.previewUrl ?? null) as string | null,
+  };
+}
+
+function documentListRows(body: unknown): Record<string, unknown>[] {
+  if (Array.isArray(body)) return body.filter(isPlainObject);
+  if (isPlainObject(body) && Array.isArray(body.documents)) {
+    return body.documents.filter(isPlainObject);
+  }
+  return [];
+}
+
+function mapWalletTransactionRow(row: Record<string, unknown>) {
+  const profilesRaw = isPlainObject(row.doctor_profiles)
+    ? row.doctor_profiles
+    : isPlainObject(row.doctorProfiles)
+      ? row.doctorProfiles
+      : null;
+  return {
+    ...row,
+    id: str(row.id),
+    doctor_id: str(row.doctor_id ?? row.doctorId),
+    amount: num(row.amount),
+    is_credit: Boolean(row.is_credit ?? row.isCredit),
+    type: str(row.type),
+    appointment_id: (row.appointment_id ??
+      row.appointmentId ??
+      null) as string | null,
+    payout_request_id: (row.payout_request_id ??
+      row.payoutRequestId ??
+      null) as string | null,
+    note: (row.note ?? null) as string | null,
+    created_at: str(row.created_at ?? row.createdAt),
+    doctor_profiles: profilesRaw
+      ? {
+          first_name: str(profilesRaw.first_name ?? profilesRaw.firstName),
+          last_name: str(profilesRaw.last_name ?? profilesRaw.lastName),
+        }
+      : null,
+  };
+}
+
+function walletTransactionRows(body: unknown): Record<string, unknown>[] {
+  if (Array.isArray(body)) return body.filter(isPlainObject);
+  if (isPlainObject(body) && Array.isArray(body.transactions)) {
+    return body.transactions.filter(isPlainObject);
+  }
+  return [];
+}
+
+function mapUserReferral(row: Record<string, unknown>) {
+  return {
+    referralCodeUsed: (row.referral_code_used ??
+      row.referralCodeUsed ??
+      null) as string | null,
+    referredByDoctorId: (row.referred_by_doctor_id ??
+      row.referredByDoctorId ??
+      null) as string | null,
+    referredByDoctorName: (row.referred_by_doctor_name ??
+      row.referredByDoctorName ??
+      null) as string | null,
+    referredAt: (row.referred_at ?? row.referredAt ?? null) as string | null,
+    canApplyCode: Boolean(row.can_apply_code ?? row.canApplyCode),
+  };
+}
+
+function mapDoctorWalletHistory(body: unknown) {
+  if (isPlainObject(body) && isPlainObject(body.history)) {
+    return { history: body.history };
+  }
+
+  const walletRaw =
+    isPlainObject(body) && isPlainObject(body.wallet) ? body.wallet : null;
+  const transactions = walletTransactionRows(body).map(mapWalletTransactionRow);
+  const earnings = transactions
+    .filter((row) => row.type === "appointment_earning")
+    .map((row) => ({
+      id: row.id,
+      amount: row.amount,
+      created_at: row.created_at,
+      note: row.note,
+      appointment_id: row.appointment_id,
+      appointment_date: null,
+      time_slot: null,
+      service_name: null,
+      patient_id: null,
+      patient_name: null,
+    }));
+
+  return {
+    history: {
+      wallet: walletRaw
+        ? {
+            available_balance: num(
+              walletRaw.available_balance ?? walletRaw.availableBalance,
+            ),
+            pending_balance: num(
+              walletRaw.pending_balance ?? walletRaw.pendingBalance,
+            ),
+            currency: str(walletRaw.currency || "ETB"),
+          }
+        : null,
+      // ponytail: wallet bundle has no commission; UI only displays the number
+      commissionPercent: num(
+        isPlainObject(body)
+          ? (body.commissionPercent ?? body.commission_percent ?? 30)
+          : 30,
+      ),
+      earnings,
+      transactions,
+    },
+  };
+}
+
 /** Backend returns `/static/uploads/...`; absolutize so <img> hits the API host. */
 function mapDoctorMedia(row: Record<string, unknown>): Record<string, unknown> {
   return {
@@ -393,13 +639,46 @@ export function adaptBackendResponse(
   }
 
   if (head === "app-version-settings" && isPlainObject(body)) {
-    const app = options.searchParams?.get("app") === "doctors" ? "doctors" : "mc";
-    const data = isPlainObject(body.data) ? body.data : body;
+    const app =
+      body.app === "doctors" || body.app === "mc"
+        ? body.app
+        : options.searchParams?.get("app") === "doctors"
+          ? "doctors"
+          : "mc";
     return {
       app,
-      appVersionSettings: data,
-      updatedAt: body.updated_at ?? null,
+      appVersionSettings: settingsData(body, "appVersionSettings"),
+      updatedAt: settingsUpdatedAt(body),
     };
+  }
+
+  if (head === "wallet-transactions" && (Array.isArray(body) || isPlainObject(body))) {
+    return {
+      transactions: walletTransactionRows(body).map(mapWalletTransactionRow),
+    };
+  }
+
+  if (head === "documents" && rest.length === 0 && upper === "GET") {
+    return { documents: documentListRows(body).map(mapDocumentRow) };
+  }
+
+  if (head === "users" && rest.length === 2 && rest[1] === "referral") {
+    const raw = isPlainObject(body)
+      ? isPlainObject(body.referral)
+        ? body.referral
+        : body
+      : null;
+    if (!raw) return body;
+    return {
+      referral: mapUserReferral(raw),
+      ...(isPlainObject(body) && body.applied != null && upper === "POST"
+        ? { applied: body.applied }
+        : {}),
+    };
+  }
+
+  if (head === "doctors" && rest.length === 2 && rest[1] === "wallet" && upper === "GET") {
+    return mapDoctorWalletHistory(body);
   }
 
   if (head === "doctors" && rest.length === 2 && rest[1] === "push" && upper === "GET") {
@@ -510,12 +789,34 @@ export function adaptBackendResponse(
   }
 
   if (head === "activity-logs" && rest.length === 2 && upper === "GET") {
-    if (!Array.isArray(body)) {
-      return isPlainObject(body) ? { log: body } : body;
+    const sourceHint = rest[0] === "platform" ? "platform" : "admin";
+    if (isPlainObject(body) && !Array.isArray(body) && body.id != null) {
+      return { log: mapActivityLog(body, sourceHint) };
     }
-    const log = findById(body, rest[1]);
+    const rows = activityLogRows(body);
+    const log = findById(rows, rest[1]);
     if (!log) return { error: "Activity log not found", stagingNotFound: true };
-    return { log: { ...log, source: rest[0] } };
+    return { log: mapActivityLog(log, sourceHint) };
+  }
+
+  if (head === "activity-logs" && rest.length === 0 && upper === "GET") {
+    const sourceHint = options.searchParams?.get("source");
+    const eventType = options.searchParams?.get("event_type");
+    const actorType = options.searchParams?.get("actor_type");
+    let logs = activityLogRows(body).map((row) =>
+      mapActivityLog(
+        row,
+        sourceHint === "admin" || sourceHint === "platform" ? sourceHint : null,
+      ),
+    );
+    if (eventType) logs = logs.filter((row) => row.event_type === eventType);
+    if (actorType) logs = logs.filter((row) => row.actor_type === actorType);
+    return { logs };
+  }
+
+  if (head === "children" && rest.length === 0 && upper === "GET") {
+    const children = childListRows(body).map(mapChildRow);
+    return { children, items: children };
   }
 
   if (head === "appointments" && rest.length === 1 && rest[0] !== "stats" && upper === "GET") {
@@ -545,7 +846,9 @@ export function adaptBackendResponse(
   }
 
   if (head === "documents" && upper === "POST" && rest.length === 0) {
-    return isPlainObject(body) ? { document: body } : body;
+    if (!isPlainObject(body)) return body;
+    const row = isPlainObject(body.document) ? body.document : body;
+    return { document: mapDocumentRow(row) };
   }
 
   if (head === "payout-requests" && rest.length === 1 && upper === "GET") {
@@ -561,7 +864,7 @@ export function adaptBackendResponse(
     // Staging returns a bare child row; prod API returns the full detail envelope.
     if (isPlainObject(body) && isPlainObject(body.child)) {
       return {
-        child: body.child,
+        child: mapChildRow(body.child),
         milestoneChecks: Array.isArray(body.milestoneChecks) ? body.milestoneChecks : [],
         measurements: Array.isArray(body.measurements) ? body.measurements : [],
         vaccineRecords: Array.isArray(body.vaccineRecords) ? body.vaccineRecords : [],
@@ -571,7 +874,7 @@ export function adaptBackendResponse(
     }
     if (isPlainObject(body) && body.id != null) {
       return {
-        child: body,
+        child: mapChildRow(body),
         milestoneChecks: [],
         measurements: [],
         vaccineRecords: [],
@@ -579,11 +882,12 @@ export function adaptBackendResponse(
         growthPeriods: [],
       };
     }
-    if (Array.isArray(body)) {
-      const child = findById(body, rest[0]);
+    const rows = childListRows(body);
+    if (rows.length > 0) {
+      const child = findById(rows, rest[0]);
       if (!child) return { error: "Child not found", stagingNotFound: true };
       return {
-        child,
+        child: mapChildRow(child),
         milestoneChecks: [],
         measurements: [],
         vaccineRecords: [],
@@ -628,19 +932,29 @@ export function adaptBackendResponse(
       case "users":
         return rest.length === 1 ? { profile: body[0] ?? body } : { profiles: body };
       case "documents":
-        return { documents: body };
+        return { documents: body.filter(isPlainObject).map(mapDocumentRow) };
       case "payout-requests":
         return { requests: body };
       case "wallet-transactions":
-        return { transactions: body };
+        return {
+          transactions: body.filter(isPlainObject).map(mapWalletTransactionRow),
+        };
       case "admins":
         return { admins: body };
       case "app-membership-members":
         return { members: body, subscriptions: body };
       case "activity-logs":
-        return { logs: body };
+        return {
+          logs: body.map((row) =>
+            mapActivityLog(isPlainObject(row) ? row : {}, null),
+          ),
+        };
       case "activity":
-        return { logs: body };
+        return {
+          logs: body.map((row) =>
+            mapActivityLog(isPlainObject(row) ? row : {}, "platform"),
+          ),
+        };
       case "legal-documents":
         return { documents: body };
       case "pregnancy-weeks": {
@@ -674,8 +988,10 @@ export function adaptBackendResponse(
         const mapped = body.filter(isPlainObject).map(mapCommissionRow);
         return { commissions: filterByAdminParams(mapped, options.searchParams) };
       }
-      case "children":
-        return { children: body, items: body };
+      case "children": {
+        const children = body.filter(isPlainObject).map(mapChildRow);
+        return { children, items: children };
+      }
       case "daily-tips": {
         const tips = body.filter(isPlainObject).map(mapDailyTipRow);
         return { tips, items: tips };
@@ -752,32 +1068,41 @@ export function adaptBackendResponse(
     }
     if (head === "app-membership-settings") {
       return {
-        appMembershipSettings: parseAppMembershipSettingsData(body.data ?? body),
-        updatedAt: body.updated_at ?? null,
+        appMembershipSettings: parseAppMembershipSettingsData(
+          settingsData(body, "appMembershipSettings"),
+        ),
+        updatedAt: settingsUpdatedAt(body),
       };
     }
     if (head === "referral-settings") {
-      const data = isPlainObject(body.data) ? body.data : body;
+      const data = settingsData(body, "referralSettings");
       return {
         referralSettings: {
           commissionPercent: num(
             data.commissionPercent ?? data.commission_percent ?? 20,
           ),
         },
-        updatedAt: body.updated_at ?? null,
+        updatedAt: settingsUpdatedAt(body),
       };
     }
     if (head === "finance-settings") {
-      return { financeSettings: body.data ?? body, ...body };
+      return {
+        financeSettings: settingsData(body, "financeSettings"),
+        updatedAt: settingsUpdatedAt(body),
+      };
     }
     if (head === "legal-documents" && (upper === "PATCH" || upper === "PUT")) {
-      return { document: body };
+      const doc = isPlainObject(body.document) ? body.document : body;
+      return { document: doc };
     }
     if (head === "documents" && rest[1] === "deliver" && upper === "POST") {
       return { ok: true, delivery: body, ...(isPlainObject(body) ? body : {}) };
     }
     if (head === "payment-settings") {
-      return { paymentSettings: body.data ?? body, ...body };
+      return {
+        paymentSettings: settingsData(body, "paymentSettings"),
+        updatedAt: settingsUpdatedAt(body),
+      };
     }
     if (head === "app-membership-members") {
       return { members: Array.isArray(body.members) ? body.members : body };
