@@ -696,7 +696,7 @@ describe("adaptBackendResponse", () => {
   it("maps child nested detail endpoints", () => {
     assert.equal(
       mapAdminApiToBackend("children/c1", { method: "GET" }),
-      "__child_detail__",
+      "/api/v1/admin/children/c1",
     );
     assert.equal(
       mapAdminApiToBackend("children/c1/measurements", { method: "GET" }),

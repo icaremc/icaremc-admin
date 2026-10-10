@@ -390,7 +390,9 @@ export function mapAdminApiToBackend(
       return "/api/v1/admin/settings/referral";
     case "children":
       if (rest.length === 0 && method === "GET") return "/api/v1/admin/children";
-      if (rest.length === 1 && method === "GET") return "__child_detail__";
+      if (rest.length === 1 && method === "GET") {
+        return `/api/v1/admin/children/${rest[0]}`;
+      }
       if (
         rest.length === 2 &&
         method === "GET" &&
@@ -442,7 +444,7 @@ export const ADMIN_API_MAPPING_CASES: Array<{
     method: "PATCH",
   },
   { adminPath: "children", backendPath: "/api/v1/admin/children", method: "GET" },
-  { adminPath: "children/c1", backendPath: "__child_detail__", method: "GET" },
+  { adminPath: "children/c1", backendPath: "/api/v1/admin/children/c1", method: "GET" },
   {
     adminPath: "children/c1/measurements",
     backendPath: "/api/v1/admin/children/c1/measurements",
