@@ -589,6 +589,119 @@ export async function proxyAdminRequestToBackend(
     );
   }
 
+  // Child detail = child row + measurements + milestones + vaccines + growth periods
+  if (backendPath === "__child_detail__") {
+    const childId = rest[0] ?? "";
+    const base = getBackendApiBaseUrl();
+    const headers = { Authorization: `Bearer ${token}` };
+    try {
+      const [childRes, measurementsRes, milestonesRes, vaccinesRes, periodsRes] =
+        await Promise.all([
+          fetch(`${base}/api/v1/admin/children/${childId}`, {
+            headers,
+            cache: "no-store",
+          }),
+          fetch(`${base}/api/v1/admin/children/${childId}/measurements`, {
+            headers,
+            cache: "no-store",
+          }),
+          fetch(`${base}/api/v1/admin/children/${childId}/milestones`, {
+            headers,
+            cache: "no-store",
+          }),
+          fetch(`${base}/api/v1/admin/children/${childId}/vaccines`, {
+            headers,
+            cache: "no-store",
+          }),
+          fetch(`${base}/api/v1/admin/child-growth-periods`, {
+            headers,
+            cache: "no-store",
+          }),
+        ]);
+
+      if (!childRes.ok) {
+        const text = await childRes.text();
+        try {
+          return NextResponse.json(text ? JSON.parse(text) : null, {
+            status: childRes.status,
+          });
+        } catch {
+          return new NextResponse(text, { status: childRes.status });
+        }
+      }
+
+      const childBody = (await childRes.json()) as unknown;
+      const measurementsBody = measurementsRes.ok
+        ? await measurementsRes.json()
+        : [];
+      const milestonesBody = milestonesRes.ok
+        ? await milestonesRes.json()
+        : [];
+      const vaccinesBody = vaccinesRes.ok ? await vaccinesRes.json() : [];
+      const periodsBody = periodsRes.ok ? await periodsRes.json() : [];
+
+      const childRow =
+        typeof childBody === "object" &&
+        childBody !== null &&
+        "child" in childBody &&
+        typeof (childBody as { child: unknown }).child === "object"
+          ? (childBody as { child: unknown }).child
+          : childBody;
+
+      const asList = (value: unknown, keys: string[]): unknown[] => {
+        if (Array.isArray(value)) return value;
+        if (typeof value === "object" && value !== null) {
+          const record = value as Record<string, unknown>;
+          for (const key of keys) {
+            if (Array.isArray(record[key])) return record[key] as unknown[];
+          }
+        }
+        return [];
+      };
+
+      const adapted = adaptBackendResponse(
+        adminPath,
+        method,
+        200,
+        {
+          child: childRow,
+          measurements: asList(measurementsBody, ["measurements", "items", "data"]),
+          milestones: asList(milestonesBody, [
+            "milestones",
+            "milestoneChecks",
+            "items",
+            "data",
+          ]),
+          vaccines: asList(vaccinesBody, [
+            "vaccines",
+            "vaccineRecords",
+            "items",
+            "data",
+          ]),
+          growthPeriods: asList(periodsBody, [
+            "periods",
+            "items",
+            "data",
+            "child_growth_periods",
+          ]),
+        },
+        { searchParams: incomingUrl.searchParams },
+      );
+      return NextResponse.json(adapted, { status: 200 });
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to reach staging backend",
+          stagingUnavailable: true,
+        },
+        { status: 502 },
+      );
+    }
+  }
+
   // Doctor detail = admin doctor list row + admin services endpoint
   if (backendPath === "__doctor_detail__") {
     const doctorId = rest[0] ?? "";

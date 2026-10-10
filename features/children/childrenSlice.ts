@@ -87,60 +87,14 @@ export const fetchChildren = createAsyncThunk(
 export const fetchChildDetail = createAsyncThunk(
   "children/fetchDetail",
   async (childId: string, { rejectWithValue }) => {
-    const [detailRes, measurementsRes, milestonesRes, vaccinesRes, periodsRes] =
-      await Promise.all([
-        fetch(`/api/admin/children/${childId}`),
-        fetch(`/api/admin/children/${childId}/measurements`),
-        fetch(`/api/admin/children/${childId}/milestones`),
-        fetch(`/api/admin/children/${childId}/vaccines`),
-        fetch("/api/admin/child-growth"),
-      ]);
-
-    if (!detailRes.ok) {
-      return rejectWithValue(await readApiError(detailRes));
+    const response = await fetch(`/api/admin/children/${childId}`);
+    if (!response.ok) {
+      return rejectWithValue(await readApiError(response));
     }
-
-    const detailBody = (await detailRes.json()) as Record<string, unknown>;
-    const detail = asDetailPayload(detailBody);
+    const body = (await response.json()) as Record<string, unknown>;
+    const detail = asDetailPayload(body);
     if (!detail) return rejectWithValue("Child not found");
-
-    async function readJsonBody(
-      response: Response,
-    ): Promise<Record<string, unknown>> {
-      if (!response.ok) return {};
-      return (await response.json()) as Record<string, unknown>;
-    }
-
-    const [measurementsBody, milestonesBody, vaccinesBody, periodsBody] =
-      await Promise.all([
-        readJsonBody(measurementsRes),
-        readJsonBody(milestonesRes),
-        readJsonBody(vaccinesRes),
-        readJsonBody(periodsRes),
-      ]);
-
-    const measurements = Array.isArray(measurementsBody.measurements)
-      ? (measurementsBody.measurements as ChildGrowthMeasurement[])
-      : detail.measurements;
-    const milestoneChecks = Array.isArray(milestonesBody.milestoneChecks)
-      ? (milestonesBody.milestoneChecks as ChildMilestoneCheck[])
-      : detail.milestoneChecks;
-    const vaccineRecords = Array.isArray(vaccinesBody.vaccineRecords)
-      ? (vaccinesBody.vaccineRecords as ChildVaccineRecord[])
-      : detail.vaccineRecords;
-    const growthPeriods = Array.isArray(periodsBody.periods)
-      ? (periodsBody.periods as ChildGrowthPeriod[])
-      : Array.isArray(periodsBody.items)
-        ? (periodsBody.items as ChildGrowthPeriod[])
-        : detail.growthPeriods;
-
-    return {
-      ...detail,
-      measurements,
-      milestoneChecks,
-      vaccineRecords,
-      growthPeriods,
-    };
+    return detail;
   },
 );
 
@@ -152,7 +106,7 @@ export const updateChild = createAsyncThunk(
   ) => {
     if (isBackendApiEnabled()) {
       return rejectWithValue(
-        "Editing children is not available on the staging API yet.",
+        "Editing children is not available on the admin API yet.",
       );
     }
 

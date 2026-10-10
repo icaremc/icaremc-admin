@@ -667,7 +667,37 @@ describe("adaptBackendResponse", () => {
     assert.deepEqual(out.milestoneChecks, []);
   });
 
+  it("adapts composed child detail envelope", () => {
+    const out = adaptBackendResponse("children/c1", "GET", 200, {
+      child: {
+        id: "c1",
+        name: "Amina",
+        gender: "female",
+        birth_date: "2022-08-20",
+      },
+      measurements: [{ id: "m1", weight_kg: 7.5, measured_on: "2026-01-02" }],
+      milestones: [{ id: "k1", item_key: "2m:yes:smiles" }],
+      vaccines: [
+        { id: "v1", vaccine_key: "bcg", vaccine_name: "BCG", received: true },
+      ],
+      growthPeriods: [{ id: "p1", age_months: 2, age_label: "2 months" }],
+    }) as {
+      measurements: Array<{ id: string }>;
+      milestoneChecks: Array<{ item_key: string }>;
+      vaccineRecords: Array<{ vaccine_key: string }>;
+      growthPeriods: Array<{ age_months: number }>;
+    };
+    assert.equal(out.measurements.length, 1);
+    assert.equal(out.milestoneChecks[0]?.item_key, "2m:yes:smiles");
+    assert.equal(out.vaccineRecords[0]?.vaccine_key, "bcg");
+    assert.equal(out.growthPeriods[0]?.age_months, 2);
+  });
+
   it("maps child nested detail endpoints", () => {
+    assert.equal(
+      mapAdminApiToBackend("children/c1", { method: "GET" }),
+      "__child_detail__",
+    );
     assert.equal(
       mapAdminApiToBackend("children/c1/measurements", { method: "GET" }),
       "/api/v1/admin/children/c1/measurements",
