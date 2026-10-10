@@ -151,8 +151,8 @@ export default function ChildDetailPage() {
 
       {stagingMode ? (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
-          Staging shows the birth record only. Growth, vaccines, milestones, and
-          edits need admin child write APIs that are not deployed yet.
+          Birth-record edits are not available on the admin API yet. Growth,
+          vaccines, and milestones load from the children detail endpoints.
         </div>
       ) : null}
 

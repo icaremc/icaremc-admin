@@ -108,7 +108,12 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     label: "Referral settings",
     backendHint: "GET|PUT /api/v1/admin/settings/referral",
   },
-  { pathPrefix: "/admin/children", label: "Children", backendHint: "GET /api/v1/admin/children (+ detail)" },
+  {
+    pathPrefix: "/admin/children",
+    label: "Children",
+    backendHint:
+      "GET /api/v1/admin/children (+ detail, measurements, milestones, vaccines)",
+  },
   {
     pathPrefix: "/admin/content",
     label: "Content CMS",
@@ -385,7 +390,18 @@ export function mapAdminApiToBackend(
       return "/api/v1/admin/settings/referral";
     case "children":
       if (rest.length === 0 && method === "GET") return "/api/v1/admin/children";
-      if (rest.length === 1 && method === "GET") return `/api/v1/admin/children/${rest[0]}`;
+      if (rest.length === 1 && method === "GET") {
+        return `/api/v1/admin/children/${rest[0]}`;
+      }
+      if (
+        rest.length === 2 &&
+        method === "GET" &&
+        (rest[1] === "measurements" ||
+          rest[1] === "milestones" ||
+          rest[1] === "vaccines")
+      ) {
+        return `/api/v1/admin/children/${rest[0]}/${rest[1]}`;
+      }
       return null;
     case "daily-tips":
       if (rest.length === 0) {
@@ -429,6 +445,21 @@ export const ADMIN_API_MAPPING_CASES: Array<{
   },
   { adminPath: "children", backendPath: "/api/v1/admin/children", method: "GET" },
   { adminPath: "children/c1", backendPath: "/api/v1/admin/children/c1", method: "GET" },
+  {
+    adminPath: "children/c1/measurements",
+    backendPath: "/api/v1/admin/children/c1/measurements",
+    method: "GET",
+  },
+  {
+    adminPath: "children/c1/milestones",
+    backendPath: "/api/v1/admin/children/c1/milestones",
+    method: "GET",
+  },
+  {
+    adminPath: "children/c1/vaccines",
+    backendPath: "/api/v1/admin/children/c1/vaccines",
+    method: "GET",
+  },
   { adminPath: "children/c1", backendPath: null, method: "PATCH" },
   { adminPath: "doctors", backendPath: "/api/v1/admin/doctors" },
   {

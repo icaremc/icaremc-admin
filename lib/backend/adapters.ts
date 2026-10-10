@@ -383,6 +383,64 @@ function mapChildRow(row: Record<string, unknown>) {
   };
 }
 
+function childDetailRows(
+  body: unknown,
+  keys: string[],
+): Record<string, unknown>[] {
+  if (Array.isArray(body)) return body.filter(isPlainObject);
+  if (!isPlainObject(body)) return [];
+  for (const key of keys) {
+    const rows = body[key];
+    if (Array.isArray(rows)) return rows.filter(isPlainObject);
+  }
+  return [];
+}
+
+function mapChildMeasurementRow(row: Record<string, unknown>) {
+  return {
+    id: str(row.id),
+    user_id: str(row.user_id ?? row.userId),
+    child_local_id: str(row.child_local_id ?? row.childLocalId),
+    measured_on: str(row.measured_on ?? row.measuredOn),
+    age_months: (row.age_months ?? row.ageMonths ?? null) as number | null,
+    weight_kg: (row.weight_kg ?? row.weightKg ?? null) as number | null,
+    height_cm: (row.height_cm ?? row.heightCm ?? null) as number | null,
+    head_circumference_cm: (row.head_circumference_cm ??
+      row.headCircumferenceCm ??
+      null) as number | null,
+    notes: (row.notes ?? null) as string | null,
+    created_at: str(row.created_at ?? row.createdAt),
+    updated_at: str(row.updated_at ?? row.updatedAt),
+  };
+}
+
+function mapChildMilestoneRow(row: Record<string, unknown>) {
+  return {
+    id: str(row.id),
+    user_id: str(row.user_id ?? row.userId),
+    child_local_id: str(row.child_local_id ?? row.childLocalId),
+    item_key: str(row.item_key ?? row.itemKey),
+    created_at: str(row.created_at ?? row.createdAt),
+  };
+}
+
+function mapChildVaccineRow(row: Record<string, unknown>) {
+  return {
+    id: str(row.id),
+    user_id: str(row.user_id ?? row.userId),
+    child_local_id: str(row.child_local_id ?? row.childLocalId),
+    vaccine_key: str(row.vaccine_key ?? row.vaccineKey),
+    vaccine_name: str(row.vaccine_name ?? row.vaccineName),
+    age_months: (row.age_months ?? row.ageMonths ?? null) as number | null,
+    received: Boolean(row.received ?? false),
+    date_received: (row.date_received ?? row.dateReceived ?? null) as
+      | string
+      | null,
+    created_at: str(row.created_at ?? row.createdAt),
+    updated_at: str(row.updated_at ?? row.updatedAt),
+  };
+}
+
 function mapActivityLog(
   row: Record<string, unknown>,
   sourceHint?: string | null,
@@ -870,16 +928,58 @@ export function adaptBackendResponse(
     return { request, context: null };
   }
 
+  if (head === "children" && rest.length === 2 && upper === "GET") {
+    if (rest[1] === "measurements") {
+      return {
+        measurements: childDetailRows(body, ["measurements", "items", "data"]).map(
+          mapChildMeasurementRow,
+        ),
+      };
+    }
+    if (rest[1] === "milestones") {
+      return {
+        milestoneChecks: childDetailRows(body, [
+          "milestones",
+          "milestoneChecks",
+          "items",
+          "data",
+        ]).map(mapChildMilestoneRow),
+      };
+    }
+    if (rest[1] === "vaccines") {
+      return {
+        vaccineRecords: childDetailRows(body, [
+          "vaccines",
+          "vaccineRecords",
+          "items",
+          "data",
+        ]).map(mapChildVaccineRow),
+      };
+    }
+  }
+
   if (head === "children" && rest.length === 1 && upper === "GET") {
-    // Staging returns a bare child row; prod API returns the full detail envelope.
+    // Bare child row or envelope; nested lists come from sibling endpoints.
     if (isPlainObject(body) && isPlainObject(body.child)) {
       return {
         child: mapChildRow(body.child),
-        milestoneChecks: Array.isArray(body.milestoneChecks) ? body.milestoneChecks : [],
-        measurements: Array.isArray(body.measurements) ? body.measurements : [],
-        vaccineRecords: Array.isArray(body.vaccineRecords) ? body.vaccineRecords : [],
-        vaccineSchedule: Array.isArray(body.vaccineSchedule) ? body.vaccineSchedule : [],
-        growthPeriods: Array.isArray(body.growthPeriods) ? body.growthPeriods : [],
+        milestoneChecks: childDetailRows(body, [
+          "milestoneChecks",
+          "milestones",
+        ]).map(mapChildMilestoneRow),
+        measurements: childDetailRows(body, ["measurements"]).map(
+          mapChildMeasurementRow,
+        ),
+        vaccineRecords: childDetailRows(body, [
+          "vaccineRecords",
+          "vaccines",
+        ]).map(mapChildVaccineRow),
+        vaccineSchedule: Array.isArray(body.vaccineSchedule)
+          ? body.vaccineSchedule
+          : [],
+        growthPeriods: Array.isArray(body.growthPeriods)
+          ? body.growthPeriods.filter(isPlainObject).map(mapChildGrowthPeriodRow)
+          : [],
       };
     }
     if (isPlainObject(body) && body.id != null) {

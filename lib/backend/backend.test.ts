@@ -667,6 +667,62 @@ describe("adaptBackendResponse", () => {
     assert.deepEqual(out.milestoneChecks, []);
   });
 
+  it("maps child nested detail endpoints", () => {
+    assert.equal(
+      mapAdminApiToBackend("children/c1/measurements", { method: "GET" }),
+      "/api/v1/admin/children/c1/measurements",
+    );
+    assert.equal(
+      mapAdminApiToBackend("children/c1/milestones", { method: "GET" }),
+      "/api/v1/admin/children/c1/milestones",
+    );
+    assert.equal(
+      mapAdminApiToBackend("children/c1/vaccines", { method: "GET" }),
+      "/api/v1/admin/children/c1/vaccines",
+    );
+
+    const measurements = adaptBackendResponse(
+      "children/c1/measurements",
+      "GET",
+      200,
+      [{ id: "m1", weight_kg: 8.2, measured_on: "2026-01-01" }],
+    ) as { measurements: Array<{ id: string; weight_kg: number }> };
+    assert.equal(measurements.measurements[0]?.id, "m1");
+    assert.equal(measurements.measurements[0]?.weight_kg, 8.2);
+
+    const milestones = adaptBackendResponse(
+      "children/c1/milestones",
+      "GET",
+      200,
+      [{ id: "k1", item_key: "2m:yes:smiles" }],
+    ) as { milestoneChecks: Array<{ id: string; item_key: string }> };
+    assert.equal(milestones.milestoneChecks[0]?.item_key, "2m:yes:smiles");
+
+    const vaccines = adaptBackendResponse(
+      "children/c1/vaccines",
+      "GET",
+      200,
+      {
+        vaccines: [
+          {
+            id: "v1",
+            vaccine_key: "bcg",
+            vaccine_name: "BCG",
+            received: true,
+          },
+        ],
+      },
+    ) as {
+      vaccineRecords: Array<{
+        id: string;
+        vaccine_key: string;
+        received: boolean;
+      }>;
+    };
+    assert.equal(vaccines.vaccineRecords[0]?.vaccine_key, "bcg");
+    assert.equal(vaccines.vaccineRecords[0]?.received, true);
+  });
+
   it("maps activity-logs list to CombinedActivityLog shape", () => {
     assert.equal(
       mapAdminApiToBackend("activity-logs", {
