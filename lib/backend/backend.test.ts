@@ -257,6 +257,41 @@ describe("adaptBackendResponse", () => {
     });
   });
 
+  it("maps app-membership members with parent name and access", () => {
+    const out = adaptBackendResponse("app-membership-members", "GET", 200, [
+      {
+        id: "s1",
+        patient_id: "p1",
+        status: "Active",
+        ends_at: "2099-01-01T00:00:00Z",
+        starts_at: "2026-01-01T00:00:00Z",
+        amount_paid: 500,
+        patient_name: "Meron Asfaw",
+        patient_phone: "+251900000000",
+      },
+      {
+        id: "s2",
+        patientId: "p2",
+        status: "active",
+        endsAt: "2020-01-01T00:00:00Z",
+        startsAt: "2019-01-01T00:00:00Z",
+        amountPaid: 100,
+        profile: { full_name: "Past Parent", phone: "+251911" },
+      },
+    ]) as {
+      members: Array<{
+        patient_name: string | null;
+        has_access: boolean;
+        status: string;
+      }>;
+    };
+    assert.equal(out.members[0]?.patient_name, "Meron Asfaw");
+    assert.equal(out.members[0]?.has_access, true);
+    assert.equal(out.members[0]?.status, "active");
+    assert.equal(out.members[1]?.patient_name, "Past Parent");
+    assert.equal(out.members[1]?.has_access, false);
+  });
+
   it("adapts app-membership-settings as appMembershipSettings", () => {
     const out = adaptBackendResponse("app-membership-settings", "GET", 200, {
       data: {

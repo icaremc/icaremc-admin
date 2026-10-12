@@ -2,6 +2,11 @@
  * Normalize Render staging responses into the shapes existing admin UI expects.
  */
 
+import {
+  normalizeSubscriptionStatus,
+  subscriptionHasAccess,
+  type AppSubscriptionStatus,
+} from "../appMembership/members.ts";
 import { parseAppMembershipSettingsData } from "../appMembership/subscriptionSettings.ts";
 import { resolveBackendMediaUrl } from "./config.ts";
 
@@ -346,6 +351,78 @@ function mapChildProfile(row: Record<string, unknown> | null) {
     ),
     notifications_enabled:
       row.notifications_enabled ?? row.notificationsEnabled ?? true,
+  };
+}
+
+function membershipListRows(body: unknown): Record<string, unknown>[] {
+  if (Array.isArray(body)) return body.filter(isPlainObject);
+  if (!isPlainObject(body)) return [];
+  for (const key of ["members", "subscriptions", "items", "data"] as const) {
+    const rows = body[key];
+    if (Array.isArray(rows)) return rows.filter(isPlainObject);
+  }
+  return [];
+}
+
+function mapMembershipMember(row: Record<string, unknown>) {
+  const profile = isPlainObject(row.profiles)
+    ? row.profiles
+    : isPlainObject(row.profile)
+      ? row.profile
+      : isPlainObject(row.patient)
+        ? row.patient
+        : null;
+  const statusRaw = normalizeSubscriptionStatus(
+    (row.status ?? null) as string | null,
+  );
+  const status = (
+    statusRaw === "active" ||
+    statusRaw === "expired" ||
+    statusRaw === "cancelled"
+      ? statusRaw
+      : "expired"
+  ) as AppSubscriptionStatus;
+  const endsAt = str(row.ends_at ?? row.endsAt);
+  const hasAccessExplicit = row.has_access ?? row.hasAccess;
+  const has_access =
+    typeof hasAccessExplicit === "boolean"
+      ? hasAccessExplicit
+      : subscriptionHasAccess(status, endsAt);
+
+  return {
+    id: str(row.id),
+    patient_id: str(
+      row.patient_id ?? row.patientId ?? row.user_id ?? row.userId,
+    ),
+    plan: str(row.plan ?? "yearly"),
+    status,
+    starts_at: str(row.starts_at ?? row.startsAt),
+    ends_at: endsAt,
+    amount_paid: num(row.amount_paid ?? row.amountPaid),
+    currency: str(row.currency || "ETB"),
+    payment_method: (row.payment_method ?? row.paymentMethod ?? null) as
+      | string
+      | null,
+    chapa_tx_ref: (row.chapa_tx_ref ?? row.chapaTxRef ?? null) as string | null,
+    admin_receipt_url: resolveBackendMediaUrl(
+      (row.admin_receipt_url ?? row.adminReceiptUrl ?? null) as string | null,
+    ),
+    created_at: str(row.created_at ?? row.createdAt),
+    updated_at: str(row.updated_at ?? row.updatedAt),
+    patient_name: (row.patient_name ??
+      row.patientName ??
+      row.parent_name ??
+      row.parentName ??
+      profile?.full_name ??
+      profile?.fullName ??
+      null) as string | null,
+    patient_phone: (row.patient_phone ??
+      row.patientPhone ??
+      row.parent_phone ??
+      row.parentPhone ??
+      profile?.phone ??
+      null) as string | null,
+    has_access,
   };
 }
 
@@ -1051,8 +1128,10 @@ export function adaptBackendResponse(
         };
       case "admins":
         return { admins: body };
-      case "app-membership-members":
-        return { members: body, subscriptions: body };
+      case "app-membership-members": {
+        const members = membershipListRows(body).map(mapMembershipMember);
+        return { members, subscriptions: members };
+      }
       case "activity-logs":
         return {
           logs: body.map((row) =>
@@ -1222,7 +1301,8 @@ export function adaptBackendResponse(
       };
     }
     if (head === "app-membership-members") {
-      return { members: Array.isArray(body.members) ? body.members : body };
+      const members = membershipListRows(body).map(mapMembershipMember);
+      return { members, subscriptions: members };
     }
     if (head === "users" && rest[1] === "push" && upper === "POST") {
       return { ok: true, ...body };

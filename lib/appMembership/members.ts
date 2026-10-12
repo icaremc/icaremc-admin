@@ -19,12 +19,26 @@ export type AppSubscriptionMember = {
   has_access: boolean;
 };
 
+export function normalizeSubscriptionStatus(
+  status: string | null | undefined,
+): AppSubscriptionStatus | string {
+  return String(status ?? "")
+    .trim()
+    .toLowerCase();
+}
+
 export function subscriptionHasAccess(
   status: string,
   endsAt: string,
   now = Date.now(),
 ): boolean {
-  return status === "active" && new Date(endsAt).getTime() > now;
+  const normalized = normalizeSubscriptionStatus(status);
+  const endsAtMs = new Date(endsAt).getTime();
+  return (
+    normalized === "active" &&
+    Number.isFinite(endsAtMs) &&
+    endsAtMs > now
+  );
 }
 
 export function latestSubscriptionPerPatient<T extends { patient_id: string }>(
@@ -47,15 +61,27 @@ export function matchesMembershipStatusFilter(
   filter: string,
 ): boolean {
   if (!filter || filter === "all") return true;
+  const status = normalizeSubscriptionStatus(member.status);
   if (filter === "active") return member.has_access;
-  if (filter === "cancelled") return member.status === "cancelled";
+  if (filter === "cancelled") return status === "cancelled";
   if (filter === "expired") {
     return (
-      member.status === "expired" ||
-      (member.status === "active" && !member.has_access)
+      status === "expired" || (status === "active" && !member.has_access)
     );
   }
   return true;
+}
+
+export function membershipExpiringWithinDays(
+  member: Pick<AppSubscriptionMember, "has_access" | "ends_at">,
+  days: number,
+  now = Date.now(),
+): boolean {
+  if (!member.has_access || days < 0) return false;
+  const endsAtMs = new Date(member.ends_at).getTime();
+  if (!Number.isFinite(endsAtMs)) return false;
+  const remainingMs = endsAtMs - now;
+  return remainingMs >= 0 && remainingMs <= days * 24 * 60 * 60 * 1000;
 }
 
 export function chunkValues<T>(values: T[], size: number): T[][] {

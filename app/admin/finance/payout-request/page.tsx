@@ -49,11 +49,23 @@ function hasChapaReference(note: string | null | undefined): boolean {
   return (note ?? "").toLowerCase().includes("reference=");
 }
 
+function extractChapaReference(note: string | null | undefined): string {
+  const match = (note ?? "").match(/reference=([A-Za-z0-9\-_]+)/);
+  return match?.[1] ?? "";
+}
+
 function maskAccountNumber(accountNumber?: string | null): string {
   const normalized = (accountNumber ?? "").trim();
   if (!normalized) return "N/A";
   if (normalized.length <= 4) return normalized;
   return `${"*".repeat(Math.max(normalized.length - 4, 2))}${normalized.slice(-4)}`;
+}
+
+function escapeCsv(value: string): string {
+  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
 }
 
 function isToday(value?: string | null): boolean {
@@ -66,6 +78,60 @@ function isToday(value?: string | null): boolean {
     date.getMonth() === today.getMonth() &&
     date.getDate() === today.getDate()
   );
+}
+
+function downloadPayoutAuditCsv(
+  rows: DoctorPayoutRequest[],
+  segment: string,
+) {
+  const header = [
+    "id",
+    "doctor",
+    "amount",
+    "status",
+    "holder_name",
+    "bank_name",
+    "account_number",
+    "chapa_reference",
+    "note",
+    "admin_note",
+    "created_at",
+    "payment_date",
+  ];
+  const body = rows.map((request) => {
+    const doctor = request.doctor_profiles;
+    const method = request.doctor_payout_methods;
+    return [
+      request.id,
+      doctor
+        ? `Dr. ${doctor.first_name} ${doctor.last_name}`
+        : request.doctor_id,
+      String(request.amount),
+      request.status,
+      method?.holder_name ?? "",
+      method?.bank_name ?? "",
+      method?.account_number
+        ? maskAccountNumber(method.account_number)
+        : "",
+      extractChapaReference(request.admin_note),
+      request.note ?? "",
+      request.admin_note ?? "",
+      request.created_at,
+      request.payment_date ?? "",
+    ]
+      .map((value) => escapeCsv(String(value)))
+      .join(",");
+  });
+  const csv = [header.join(","), ...body].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = segment
+    ? `payout-audit-${segment}.csv`
+    : "payout-audit.csv";
+  anchor.click();
+  URL.revokeObjectURL(url);
 }
 
 function PayoutRequestContent() {
@@ -257,10 +323,6 @@ function PayoutRequestContent() {
             ? "Completed today"
             : "";
 
-  const exportHref = segment
-    ? `/api/admin/payout-requests/export-audit?segment=${encodeURIComponent(segment)}`
-    : "/api/admin/payout-requests/export-audit";
-
   return (
     <>
       <PageHero
@@ -279,12 +341,14 @@ function PayoutRequestContent() {
               <RefreshCw className={cn("mr-2 h-4 w-4", loading && "animate-spin")} />
               Refresh
             </Button>
-            <a
-              href={exportHref}
-              className="inline-flex h-8 items-center justify-center rounded-[var(--radius)] border border-gray-200 bg-white px-3 text-sm font-medium text-gray-900 hover:bg-gray-50"
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={loading || filteredRequests.length === 0}
+              onClick={() => downloadPayoutAuditCsv(filteredRequests, segment)}
             >
               Export audit CSV
-            </a>
+            </Button>
           </div>
         }
       />

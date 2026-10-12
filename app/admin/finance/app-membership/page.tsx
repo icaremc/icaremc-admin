@@ -23,7 +23,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { AppSubscriptionMember } from "@/lib/appMembership/members";
+import {
+  matchesMembershipStatusFilter,
+  membershipExpiringWithinDays,
+  normalizeSubscriptionStatus,
+  type AppSubscriptionMember,
+} from "@/lib/appMembership/members";
 import type { AppMembershipSettingsData } from "@/lib/appMembership/subscriptionSettings";
 import { ExtendMembershipModal } from "@/components/appMembership/ExtendMembershipModal";
 import { formatMoney } from "@/lib/appointments/display";
@@ -38,10 +43,11 @@ function statusBadge(member: AppSubscriptionMember) {
   if (member.has_access) {
     return { label: "Active", className: "bg-emerald-50 text-emerald-700" };
   }
-  if (member.status === "cancelled") {
+  const status = normalizeSubscriptionStatus(member.status);
+  if (status === "cancelled") {
     return { label: "Cancelled", className: "bg-red-50 text-red-700" };
   }
-  if (member.status === "expired") {
+  if (status === "expired" || status === "active") {
     return { label: "Expired", className: "bg-amber-50 text-amber-800" };
   }
   return { label: "Inactive", className: "bg-gray-100 text-gray-600" };
@@ -100,8 +106,6 @@ export default function FinanceAppMembershipPage() {
     setError(null);
     try {
       const params = new URLSearchParams();
-      if (statusFilter !== "all") params.set("status", statusFilter);
-      if (expiringOnly) params.set("expiringDays", "14");
       if (showHistory) params.set("history", "1");
 
       const res = await fetch(`/api/admin/app-membership-members?${params.toString()}`);
@@ -124,7 +128,7 @@ export default function FinanceAppMembershipPage() {
     } finally {
       setLoadingMembers(false);
     }
-  }, [expiringOnly, showHistory, statusFilter]);
+  }, [showHistory]);
 
   useEffect(() => {
     void loadSettings();
@@ -136,23 +140,33 @@ export default function FinanceAppMembershipPage() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return members;
-    return members.filter((member) =>
-      [member.patient_name, member.patient_phone, member.chapa_tx_ref, member.patient_id]
+    return members.filter((member) => {
+      if (!matchesMembershipStatusFilter(member, statusFilter)) return false;
+      if (expiringOnly && !membershipExpiringWithinDays(member, 14)) return false;
+      if (!q) return true;
+      return [
+        member.patient_name,
+        member.patient_phone,
+        member.chapa_tx_ref,
+        member.patient_id,
+      ]
         .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(q)),
-    );
-  }, [members, query]);
+        .some((value) => String(value).toLowerCase().includes(q));
+    });
+  }, [expiringOnly, members, query, statusFilter]);
 
   const stats = useMemo(() => {
     const active = members.filter((m) => m.has_access).length;
-    const expiring = members.filter(
-      (m) => m.has_access && daysUntil(m.ends_at) <= 14 && daysUntil(m.ends_at) >= 0,
+    const expiring = members.filter((m) =>
+      membershipExpiringWithinDays(m, 14),
     ).length;
-    const revenue = members.reduce((sum, m) => sum + Number(m.amount_paid ?? 0), 0);
+    const revenue = filtered.reduce(
+      (sum, m) => sum + Number(m.amount_paid ?? 0),
+      0,
+    );
     const currency = members[0]?.currency ?? settings?.currency ?? "ETB";
     return { active, expiring, revenue, currency, count: filtered.length };
-  }, [filtered.length, members, settings?.currency]);
+  }, [filtered, members, settings?.currency]);
 
   const handleSaveSettings = async () => {
     if (!settings) return;
@@ -521,7 +535,8 @@ export default function FinanceAppMembershipPage() {
                                   disabled={
                                     actingPatientId === member.id ||
                                     actingPatientId === member.patient_id ||
-                                    member.status !== "active"
+                                    normalizeSubscriptionStatus(member.status) !==
+                                      "active"
                                   }
                                   onClick={() =>
                                     void runMemberAction(member.id, "revoke")
