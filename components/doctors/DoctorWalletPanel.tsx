@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { DollarSign, Wallet } from "lucide-react";
+import { ListPagination } from "@/components/ListPagination";
 import StatCard from "@/components/StatCard";
 import {
   Table,
@@ -21,12 +22,16 @@ type DoctorWalletPanelProps = {
   history: DoctorWalletHistory | null;
   loading: boolean;
   error: string | null;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
 };
 
 export default function DoctorWalletPanel({
   history,
   loading,
   error,
+  hasMore = false,
+  onLoadMore,
 }: DoctorWalletPanelProps) {
   const currency = history?.wallet?.currency ?? "ETB";
 
@@ -215,6 +220,15 @@ export default function DoctorWalletPanel({
             </TableBody>
           </Table>
         </div>
+        {onLoadMore ? (
+          <ListPagination
+            mode="load-more"
+            count={history.transactions.length}
+            hasMore={hasMore}
+            loading={loading}
+            onLoadMore={onLoadMore}
+          />
+        ) : null}
       </section>
     </div>
   );

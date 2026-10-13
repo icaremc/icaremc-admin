@@ -53,6 +53,7 @@ import {
   doctorDisplayName,
 } from "@/lib/doctors/display";
 import { doctorVerificationConfirmCopy } from "@/lib/admin/confirmMessages";
+import { DEFAULT_PAGE_SIZE } from "@/lib/listPagination";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { useAdminCanManage } from "@/lib/useAdminPermissions";
 import type { DoctorAvailabilitySlot, DoctorProfile } from "@/lib/types/doctors";
@@ -274,8 +275,17 @@ export default function DoctorDetailPage() {
   const searchParams = useSearchParams();
   const doctorId = typeof params.id === "string" ? params.id : "";
   const dispatch = useAppDispatch();
-  const { doctor, loading, saving, error, wallet, walletLoading, walletError } =
-    useAppSelector((state) => state.doctorDetail);
+  const {
+    doctor,
+    loading,
+    saving,
+    error,
+    wallet,
+    walletLoading,
+    walletError,
+    walletLimit,
+    walletHasMore,
+  } = useAppSelector((state) => state.doctorDetail);
   const canManageDoctors = useAdminCanManage("manage_doctors");
   const [approvalNotice, setApprovalNotice] = useState<string | null>(null);
   const [verificationAction, setVerificationAction] = useState<
@@ -299,7 +309,7 @@ export default function DoctorDetailPage() {
 
   useEffect(() => {
     if (activeTab === "wallet" && doctorId) {
-      dispatch(fetchDoctorWallet(doctorId));
+      dispatch(fetchDoctorWallet({ id: doctorId, limit: DEFAULT_PAGE_SIZE }));
     }
   }, [activeTab, doctorId, dispatch]);
 
@@ -465,6 +475,15 @@ export default function DoctorDetailPage() {
                 history={wallet}
                 loading={walletLoading}
                 error={walletError}
+                hasMore={walletHasMore}
+                onLoadMore={() =>
+                  dispatch(
+                    fetchDoctorWallet({
+                      id: doctorId,
+                      limit: walletLimit + DEFAULT_PAGE_SIZE,
+                    }),
+                  )
+                }
               />
             ) : null}
           </>

@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { DEFAULT_PAGE_SIZE } from "@/lib/listPagination";
 import type { Appointment, AppointmentStatus } from "@/lib/types/doctors";
 
 export type BookingStats = {
@@ -15,6 +16,8 @@ type AppointmentsState = {
   loading: boolean;
   savingId: string | null;
   error: string | null;
+  limit: number;
+  hasMore: boolean;
 };
 
 const emptyStats: BookingStats = {
@@ -31,6 +34,8 @@ const initialState: AppointmentsState = {
   loading: false,
   savingId: null,
   error: null,
+  limit: DEFAULT_PAGE_SIZE,
+  hasMore: false,
 };
 
 async function readApiError(response: Response): Promise<string> {
@@ -44,13 +49,25 @@ async function readApiError(response: Response): Promise<string> {
 
 export const fetchAppointments = createAsyncThunk(
   "appointments/fetchAll",
-  async (_, { rejectWithValue }) => {
-    const response = await fetch("/api/admin/appointments");
+  async (
+    args: { limit?: number } | undefined,
+    { rejectWithValue },
+  ) => {
+    const limit = args?.limit ?? DEFAULT_PAGE_SIZE;
+    const params = new URLSearchParams({ limit: String(limit) });
+    const response = await fetch(`/api/admin/appointments?${params.toString()}`);
     if (!response.ok) {
       return rejectWithValue(await readApiError(response));
     }
-    const body = (await response.json()) as { appointments: Appointment[] };
-    return body.appointments;
+    const body = (await response.json()) as {
+      appointments: Appointment[];
+      pagination?: { hasMore: boolean; limit: number };
+    };
+    return {
+      appointments: body.appointments,
+      limit,
+      hasMore: body.pagination?.hasMore ?? body.appointments.length >= limit,
+    };
   },
 );
 
@@ -105,9 +122,11 @@ const appointmentsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchAppointments.fulfilled, (state, action: PayloadAction<Appointment[]>) => {
+      .addCase(fetchAppointments.fulfilled, (state, action) => {
         state.loading = false;
-        state.appointments = action.payload;
+        state.appointments = action.payload.appointments;
+        state.limit = action.payload.limit;
+        state.hasMore = action.payload.hasMore;
       })
       .addCase(fetchAppointments.rejected, (state, action) => {
         state.loading = false;

@@ -561,6 +561,33 @@ function activityLogRows(body: unknown): Record<string, unknown>[] {
   return [];
 }
 
+function listPageMeta(
+  body: unknown,
+  searchParams: URLSearchParams | undefined,
+  rowCount: number,
+) {
+  const offset = Number(searchParams?.get("offset") ?? 0) || 0;
+  const limit = Number(searchParams?.get("limit") ?? 50) || 50;
+  if (isPlainObject(body) && isPlainObject(body.pagination)) {
+    const p = body.pagination;
+    const total = Number(p.total) || 0;
+    const pageOffset = Number(p.offset) || offset;
+    const pageLimit = Number(p.limit) || limit;
+    return {
+      total,
+      offset: pageOffset,
+      limit: pageLimit,
+      hasMore: pageOffset + rowCount < total,
+    };
+  }
+  return {
+    total: null as number | null,
+    offset,
+    limit,
+    hasMore: rowCount >= limit,
+  };
+}
+
 function appointmentListRows(body: unknown): Record<string, unknown>[] {
   if (Array.isArray(body)) return body.filter(isPlainObject);
   if (!isPlainObject(body)) return [];
@@ -675,9 +702,19 @@ function mapUserReferral(row: Record<string, unknown>) {
   };
 }
 
-function mapDoctorWalletHistory(body: unknown) {
+function mapDoctorWalletHistory(
+  body: unknown,
+  searchParams?: URLSearchParams,
+) {
   if (isPlainObject(body) && isPlainObject(body.history)) {
-    return { history: body.history };
+    const history = body.history;
+    const txCount = Array.isArray(history.transactions)
+      ? history.transactions.length
+      : 0;
+    return {
+      history,
+      pagination: listPageMeta(body, searchParams, txCount),
+    };
   }
 
   const walletRaw =
@@ -720,6 +757,7 @@ function mapDoctorWalletHistory(body: unknown) {
       earnings,
       transactions,
     },
+    pagination: listPageMeta(body, searchParams, transactions.length),
   };
 }
 
@@ -798,8 +836,10 @@ export function adaptBackendResponse(
   }
 
   if (head === "wallet-transactions" && (Array.isArray(body) || isPlainObject(body))) {
+    const transactions = walletTransactionRows(body).map(mapWalletTransactionRow);
     return {
-      transactions: walletTransactionRows(body).map(mapWalletTransactionRow),
+      transactions,
+      pagination: listPageMeta(body, options.searchParams, transactions.length),
     };
   }
 
@@ -823,7 +863,7 @@ export function adaptBackendResponse(
   }
 
   if (head === "doctors" && rest.length === 2 && rest[1] === "wallet" && upper === "GET") {
-    return mapDoctorWalletHistory(body);
+    return mapDoctorWalletHistory(body, options.searchParams);
   }
 
   if (head === "doctors" && rest.length === 2 && rest[1] === "push" && upper === "GET") {
@@ -954,14 +994,22 @@ export function adaptBackendResponse(
         sourceHint === "admin" || sourceHint === "platform" ? sourceHint : null,
       ),
     );
+    // ponytail: API has no event_type/actor_type; filter after page — skews totals when set
     if (eventType) logs = logs.filter((row) => row.event_type === eventType);
     if (actorType) logs = logs.filter((row) => row.actor_type === actorType);
-    return { logs };
+    return {
+      logs,
+      pagination: listPageMeta(body, options.searchParams, logs.length),
+    };
   }
 
   if (head === "children" && rest.length === 0 && upper === "GET") {
     const children = childListRows(body).map(mapChildRow);
-    return { children, items: children };
+    return {
+      children,
+      items: children,
+      pagination: listPageMeta(body, options.searchParams, children.length),
+    };
   }
 
   if (head === "appointments" && rest.length === 1 && rest[0] !== "stats" && upper === "GET") {
@@ -1091,11 +1139,16 @@ export function adaptBackendResponse(
         return {
           doctors: body.filter(isPlainObject).map(mapDoctorMedia),
         };
-      case "appointments":
+      case "appointments": {
         if (rest[0] === "stats") {
           return deriveAppointmentStats(body);
         }
-        return { appointments: appointmentListRows(body) };
+        const appointments = appointmentListRows(body);
+        return {
+          appointments,
+          pagination: listPageMeta(body, options.searchParams, appointments.length),
+        };
+      }
       case "hospitals": {
         const hospitals = body.filter(isPlainObject).map((row) => ({
           ...row,
@@ -1117,27 +1170,51 @@ export function adaptBackendResponse(
           })),
         };
       case "users":
-        return rest.length === 1 ? { profile: body[0] ?? body } : { profiles: body };
+        if (rest.length === 1) return { profile: body[0] ?? body };
+        return {
+          profiles: body,
+          pagination: listPageMeta(
+            { profiles: body },
+            options.searchParams,
+            body.length,
+          ),
+        };
       case "documents":
         return { documents: body.filter(isPlainObject).map(mapDocumentRow) };
       case "payout-requests":
         return { requests: body };
-      case "wallet-transactions":
+      case "wallet-transactions": {
+        const transactions = body
+          .filter(isPlainObject)
+          .map(mapWalletTransactionRow);
         return {
-          transactions: body.filter(isPlainObject).map(mapWalletTransactionRow),
+          transactions,
+          pagination: listPageMeta(
+            { transactions: body },
+            options.searchParams,
+            transactions.length,
+          ),
         };
+      }
       case "admins":
         return { admins: body };
       case "app-membership-members": {
         const members = membershipListRows(body).map(mapMembershipMember);
         return { members, subscriptions: members };
       }
-      case "activity-logs":
+      case "activity-logs": {
+        const logs = body.map((row) =>
+          mapActivityLog(isPlainObject(row) ? row : {}, null),
+        );
         return {
-          logs: body.map((row) =>
-            mapActivityLog(isPlainObject(row) ? row : {}, null),
+          logs,
+          pagination: listPageMeta(
+            { logs: body },
+            options.searchParams,
+            logs.length,
           ),
         };
+      }
       case "activity":
         return {
           logs: body.map((row) =>
@@ -1165,21 +1242,31 @@ export function adaptBackendResponse(
           .filter(isPlainObject)
           .map(mapReferralRow);
         const subscribed = options.searchParams?.get("subscribed");
+        const referrals = filterByAdminParams(mapped, options.searchParams, (row) => {
+          if (subscribed === "yes") return row.isSubscribed;
+          if (subscribed === "no") return !row.isSubscribed;
+          return true;
+        });
         return {
-          referrals: filterByAdminParams(mapped, options.searchParams, (row) => {
-            if (subscribed === "yes") return row.isSubscribed;
-            if (subscribed === "no") return !row.isSubscribed;
-            return true;
-          }),
+          referrals,
+          pagination: listPageMeta(body, options.searchParams, referrals.length),
         };
       }
       case "referral-commissions": {
         const mapped = body.filter(isPlainObject).map(mapCommissionRow);
-        return { commissions: filterByAdminParams(mapped, options.searchParams) };
+        const commissions = filterByAdminParams(mapped, options.searchParams);
+        return {
+          commissions,
+          pagination: listPageMeta(body, options.searchParams, commissions.length),
+        };
       }
       case "children": {
         const children = body.filter(isPlainObject).map(mapChildRow);
-        return { children, items: children };
+        return {
+          children,
+          items: children,
+          pagination: listPageMeta(body, options.searchParams, children.length),
+        };
       }
       case "daily-tips": {
         const tips = body.filter(isPlainObject).map(mapDailyTipRow);
@@ -1193,7 +1280,10 @@ export function adaptBackendResponse(
   if (isPlainObject(body)) {
     if (head === "appointments" && rest.length === 0) {
       const appointments = appointmentListRows(body);
-      return { appointments };
+      return {
+        appointments,
+        pagination: listPageMeta(body, options.searchParams, appointments.length),
+      };
     }
     if (head === "appointments" && rest[0] === "stats") {
       return deriveAppointmentStats(appointmentListRows(body));

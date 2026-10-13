@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { DEFAULT_PAGE_SIZE } from "@/lib/listPagination";
 import type { CombinedActivityLog } from "@/lib/types/activity";
 
 type ActivityLogsState = {
@@ -10,6 +11,10 @@ type ActivityLogsState = {
   source: "all" | "admin" | "platform";
   eventType: string;
   actorType: string;
+  offset: number;
+  limit: number;
+  total: number | null;
+  hasMore: boolean;
 };
 
 const initialState: ActivityLogsState = {
@@ -21,6 +26,10 @@ const initialState: ActivityLogsState = {
   source: "all",
   eventType: "",
   actorType: "",
+  offset: 0,
+  limit: DEFAULT_PAGE_SIZE,
+  total: null,
+  hasMore: false,
 };
 
 async function readApiError(response: Response): Promise<string> {
@@ -39,22 +48,41 @@ export const fetchActivityLogs = createAsyncThunk(
       source?: "all" | "admin" | "platform";
       event_type?: string;
       actor_type?: string;
+      offset?: number;
+      limit?: number;
     },
     { rejectWithValue },
   ) => {
+    const limit = filters.limit ?? DEFAULT_PAGE_SIZE;
+    const offset = filters.offset ?? 0;
     const params = new URLSearchParams();
     if (filters.source) params.set("source", filters.source);
     if (filters.event_type) params.set("event_type", filters.event_type);
     if (filters.actor_type) params.set("actor_type", filters.actor_type);
-    params.set("limit", "100");
+    params.set("limit", String(limit));
+    params.set("offset", String(offset));
 
     const response = await fetch(`/api/admin/activity-logs?${params.toString()}`);
     if (!response.ok) {
       return rejectWithValue(await readApiError(response));
     }
 
-    const body = (await response.json()) as { logs: CombinedActivityLog[] };
-    return { logs: body.logs, filters };
+    const body = (await response.json()) as {
+      logs: CombinedActivityLog[];
+      pagination?: {
+        total: number | null;
+        offset: number;
+        limit: number;
+        hasMore: boolean;
+      };
+    };
+    const pagination = body.pagination ?? {
+      total: null,
+      offset,
+      limit,
+      hasMore: body.logs.length >= limit,
+    };
+    return { logs: body.logs, filters: { ...filters, offset, limit }, pagination };
   },
 );
 
@@ -95,6 +123,10 @@ const activityLogsSlice = createSlice({
         state.source = action.payload.filters.source ?? "all";
         state.eventType = action.payload.filters.event_type ?? "";
         state.actorType = action.payload.filters.actor_type ?? "";
+        state.offset = action.payload.pagination.offset;
+        state.limit = action.payload.pagination.limit;
+        state.total = action.payload.pagination.total;
+        state.hasMore = action.payload.pagination.hasMore;
       })
       .addCase(fetchActivityLogs.rejected, (state, action) => {
         state.loading = false;

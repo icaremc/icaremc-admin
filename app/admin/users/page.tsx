@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Plus, Search, Users } from "lucide-react";
 import PageHero from "@/components/PageHero";
+import { ListPagination } from "@/components/ListPagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,17 +62,20 @@ const emptyForm = {
 export default function UsersPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { profiles, loading, error, creating } = useAppSelector(
-    (state) => state.profiles,
-  );
+  const { profiles, loading, error, creating, offset, limit, total } =
+    useAppSelector((state) => state.profiles);
   const canManageUsers = useAdminCanManage("manage_users");
   const [query, setQuery] = useState("");
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
 
   useEffect(() => {
-    dispatch(fetchProfiles());
-  }, [dispatch]);
+    dispatch(fetchProfiles({ offset: 0, limit }));
+  }, [dispatch, limit]);
+
+  const loadPage = (nextOffset: number) => {
+    dispatch(fetchProfiles({ offset: nextOffset, limit }));
+  };
 
   const filtered = profiles.filter((profile) => {
     const q = query.toLowerCase();
@@ -108,7 +112,10 @@ export default function UsersPage() {
         title="Parents"
         description="Parent accounts. Open a row for pregnancy, vitals, and children."
         icon={Users}
-        stat={{ label: "Total parents", value: profiles.length }}
+        stat={{
+          label: "Parents on this page",
+          value: profiles.length,
+        }}
       />
 
       <div className="admin-page">
@@ -290,6 +297,15 @@ export default function UsersPage() {
             </TableBody>
           </Table>
         </div>
+
+        <ListPagination
+          offset={offset}
+          limit={limit}
+          count={profiles.length}
+          total={total}
+          loading={loading}
+          onOffsetChange={loadPage}
+        />
       </div>
     </>
   );

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import PageHero from "@/components/PageHero";
 import { ConfirmActionModal } from "@/components/ConfirmActionModal";
+import { ListPagination } from "@/components/ListPagination";
 import { Button } from "@/components/ui/button";
 import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import {
@@ -24,6 +25,7 @@ import {
   updateAppointmentStatus,
   type BookingStats,
 } from "@/features/appointments/appointmentsSlice";
+import { DEFAULT_PAGE_SIZE } from "@/lib/listPagination";
 import {
   APPOINTMENT_STATUSES,
   formatAppointmentDate,
@@ -368,9 +370,8 @@ function AppointmentCard({
 
 export default function AppointmentsPage() {
   const dispatch = useAppDispatch();
-  const { appointments, stats, loading, savingId, error } = useAppSelector(
-    (state) => state.appointments,
-  );
+  const { appointments, stats, loading, savingId, error, limit, hasMore } =
+    useAppSelector((state) => state.appointments);
   const [filter, setFilter] = useState<StatusFilter>("all");
   const [responseFilter, setResponseFilter] = useState<ResponseFilter>("all");
   const [search, setSearch] = useState("");
@@ -380,7 +381,7 @@ export default function AppointmentsPage() {
   } | null>(null);
 
   useEffect(() => {
-    dispatch(fetchAppointments());
+    dispatch(fetchAppointments({ limit: DEFAULT_PAGE_SIZE }));
     dispatch(fetchBookingStats());
   }, [dispatch]);
 
@@ -609,6 +610,16 @@ export default function AppointmentsPage() {
             ))}
           </div>
         )}
+
+        <ListPagination
+          mode="load-more"
+          count={appointments.length}
+          hasMore={hasMore}
+          loading={loading}
+          onLoadMore={() =>
+            dispatch(fetchAppointments({ limit: limit + DEFAULT_PAGE_SIZE }))
+          }
+        />
       </div>
 
       <ConfirmActionModal

@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "@/app/store/store";
+import { DEFAULT_PAGE_SIZE } from "@/lib/listPagination";
 import { isBackendApiEnabled } from "@/lib/backend/config";
 import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
 import { supabase } from "@/lib/supabaseClient";
@@ -12,6 +13,10 @@ type ProfilesState = {
   saving: boolean;
   creating: boolean;
   error: string | null;
+  offset: number;
+  limit: number;
+  total: number | null;
+  hasMore: boolean;
 };
 
 const initialState: ProfilesState = {
@@ -20,6 +25,10 @@ const initialState: ProfilesState = {
   saving: false,
   creating: false,
   error: null,
+  offset: 0,
+  limit: DEFAULT_PAGE_SIZE,
+  total: null,
+  hasMore: false,
 };
 
 async function readApiError(response: Response): Promise<string> {
@@ -33,26 +42,62 @@ async function readApiError(response: Response): Promise<string> {
 
 export const fetchProfiles = createAsyncThunk(
   "profiles/fetchAll",
-  async (_, { rejectWithValue }) => {
+  async (
+    args: { offset?: number; limit?: number } | undefined,
+    { rejectWithValue },
+  ) => {
+    const limit = args?.limit ?? DEFAULT_PAGE_SIZE;
+    const offset = args?.offset ?? 0;
+
     if (isBackendApiEnabled()) {
-      const response = await fetch("/api/admin/users");
+      const params = new URLSearchParams({
+        limit: String(limit),
+        offset: String(offset),
+      });
+      const response = await fetch(`/api/admin/users?${params.toString()}`);
       if (!response.ok) {
         const body = (await response.json().catch(() => ({}))) as { error?: string };
         return rejectWithValue(body.error ?? "Failed to load users from staging API");
       }
-      const body = (await response.json()) as { profiles?: Profile[]; items?: Profile[] };
-      return (body.profiles ?? body.items ?? []) as Profile[];
+      const body = (await response.json()) as {
+        profiles?: Profile[];
+        items?: Profile[];
+        pagination?: {
+          total: number | null;
+          offset: number;
+          limit: number;
+          hasMore: boolean;
+        };
+      };
+      const profiles = (body.profiles ?? body.items ?? []) as Profile[];
+      const pagination = body.pagination ?? {
+        total: null,
+        offset,
+        limit,
+        hasMore: profiles.length >= limit,
+      };
+      return { profiles, pagination };
     }
 
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
       .select("*")
       .eq("role", "mother")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (profilesError) return rejectWithValue(profilesError.message);
 
-    return (profiles ?? []) as Profile[];
+    const rows = (profiles ?? []) as Profile[];
+    return {
+      profiles: rows,
+      pagination: {
+        total: null,
+        offset,
+        limit,
+        hasMore: rows.length >= limit,
+      },
+    };
   },
 );
 
@@ -124,7 +169,11 @@ const profilesSlice = createSlice({
       })
       .addCase(fetchProfiles.fulfilled, (state, action) => {
         state.loading = false;
-        state.profiles = action.payload;
+        state.profiles = action.payload.profiles;
+        state.offset = action.payload.pagination.offset;
+        state.limit = action.payload.pagination.limit;
+        state.total = action.payload.pagination.total;
+        state.hasMore = action.payload.pagination.hasMore;
       })
       .addCase(fetchProfiles.rejected, (state, action) => {
         state.loading = false;

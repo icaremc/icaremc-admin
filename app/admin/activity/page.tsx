@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { Activity, ChevronRight } from "lucide-react";
 import PageHero from "@/components/PageHero";
+import { ListPagination } from "@/components/ListPagination";
 import {
   Table,
   TableBody,
@@ -39,24 +40,27 @@ const ACTOR_TYPE_OPTIONS = [
 
 export default function ActivityLogPage() {
   const dispatch = useAppDispatch();
-  const { logs, loading, error, source, eventType, actorType } = useAppSelector(
-    (state) => state.activityLogs,
-  );
+  const {
+    logs,
+    loading,
+    error,
+    source,
+    eventType,
+    actorType,
+    offset,
+    limit,
+    total,
+  } = useAppSelector((state) => state.activityLogs);
 
   useEffect(() => {
-    dispatch(
-      fetchActivityLogs({
-        source,
-        event_type: eventType || undefined,
-        actor_type: actorType || undefined,
-      }),
-    );
-  }, [dispatch, source, eventType, actorType]);
+    dispatch(fetchActivityLogs({ source: "all", limit, offset: 0 }));
+  }, [dispatch, limit]);
 
-  const applyFilters = (next: {
+  const loadPage = (next: {
     source?: "all" | "admin" | "platform";
     event_type?: string;
     actor_type?: string;
+    offset?: number;
   }) => {
     dispatch(
       fetchActivityLogs({
@@ -65,6 +69,8 @@ export default function ActivityLogPage() {
           next.event_type !== undefined ? next.event_type : eventType || undefined,
         actor_type:
           next.actor_type !== undefined ? next.actor_type : actorType || undefined,
+        offset: next.offset ?? 0,
+        limit,
       }),
     );
   };
@@ -75,7 +81,10 @@ export default function ActivityLogPage() {
         title="Activity log"
         description="Admin portal actions and platform events, including logins and appointments"
         icon={Activity}
-        stat={{ label: "Recent events", value: logs.length }}
+        stat={{
+          label: "Total events",
+          value: total ?? logs.length,
+        }}
       />
 
       <div className="admin-page admin-page-wide">
@@ -85,8 +94,9 @@ export default function ActivityLogPage() {
             <select
               value={source}
               onChange={(e) =>
-                applyFilters({
+                loadPage({
                   source: e.target.value as "all" | "admin" | "platform",
+                  offset: 0,
                 })
               }
               className="flex h-10 rounded-[var(--radius)] border border-gray-200 bg-white px-3 text-sm"
@@ -103,7 +113,9 @@ export default function ActivityLogPage() {
             <label className="text-xs font-medium text-gray-600">User type</label>
             <select
               value={actorType}
-              onChange={(e) => applyFilters({ actor_type: e.target.value })}
+              onChange={(e) =>
+                loadPage({ actor_type: e.target.value, offset: 0 })
+              }
               disabled={source === "admin"}
               className="flex h-10 rounded-[var(--radius)] border border-gray-200 bg-white px-3 text-sm disabled:opacity-50"
             >
@@ -119,7 +131,9 @@ export default function ActivityLogPage() {
             <label className="text-xs font-medium text-gray-600">Event</label>
             <select
               value={eventType}
-              onChange={(e) => applyFilters({ event_type: e.target.value })}
+              onChange={(e) =>
+                loadPage({ event_type: e.target.value, offset: 0 })
+              }
               className="flex h-10 min-w-[200px] rounded-[var(--radius)] border border-gray-200 bg-white px-3 text-sm"
             >
               <option value="">All events</option>
@@ -232,6 +246,15 @@ export default function ActivityLogPage() {
             </TableBody>
           </Table>
         </div>
+
+        <ListPagination
+          offset={offset}
+          limit={limit}
+          count={logs.length}
+          total={total}
+          loading={loading}
+          onOffsetChange={(nextOffset) => loadPage({ offset: nextOffset })}
+        />
       </div>
     </>
   );

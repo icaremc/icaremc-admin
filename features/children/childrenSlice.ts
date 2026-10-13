@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { isBackendApiEnabled } from "@/lib/backend/config";
+import { DEFAULT_PAGE_SIZE } from "@/lib/listPagination";
 import type {
   Child,
   ChildGrowthMeasurement,
@@ -26,6 +27,8 @@ type ChildrenState = {
   detailLoading: boolean;
   saving: boolean;
   error: string | null;
+  limit: number;
+  hasMore: boolean;
 };
 
 const initialState: ChildrenState = {
@@ -35,6 +38,8 @@ const initialState: ChildrenState = {
   detailLoading: false,
   saving: false,
   error: null,
+  limit: DEFAULT_PAGE_SIZE,
+  hasMore: false,
 };
 
 async function readApiError(response: Response): Promise<string> {
@@ -71,16 +76,27 @@ function asDetailPayload(body: Record<string, unknown>): ChildDetailPayload | nu
 
 export const fetchChildren = createAsyncThunk(
   "children/fetchAll",
-  async (_, { rejectWithValue }) => {
-    const response = await fetch("/api/admin/children");
+  async (
+    args: { limit?: number } | undefined,
+    { rejectWithValue },
+  ) => {
+    const limit = args?.limit ?? DEFAULT_PAGE_SIZE;
+    const params = new URLSearchParams({ limit: String(limit) });
+    const response = await fetch(`/api/admin/children?${params.toString()}`);
     if (!response.ok) {
       return rejectWithValue(await readApiError(response));
     }
     const body = (await response.json()) as {
       children?: Child[];
       items?: Child[];
+      pagination?: { hasMore: boolean; limit: number };
     };
-    return (body.children ?? body.items ?? []) as Child[];
+    const children = (body.children ?? body.items ?? []) as Child[];
+    return {
+      children,
+      limit,
+      hasMore: body.pagination?.hasMore ?? children.length >= limit,
+    };
   },
 );
 
@@ -185,7 +201,9 @@ const childrenSlice = createSlice({
       })
       .addCase(fetchChildren.fulfilled, (state, action) => {
         state.loading = false;
-        state.children = action.payload;
+        state.children = action.payload.children;
+        state.limit = action.payload.limit;
+        state.hasMore = action.payload.hasMore;
       })
       .addCase(fetchChildren.rejected, (state, action) => {
         state.loading = false;

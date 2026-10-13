@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Coins, Gift, RefreshCw, Search, Settings2 } from "lucide-react";
 import PageHero from "@/components/PageHero";
+import { ListPagination } from "@/components/ListPagination";
 import ReferralSettingsPanel from "@/components/referrals/ReferralSettingsPanel";
 import { AdminSelect, type AdminSelectOption } from "@/components/ui/admin-select";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import {
 import { formatMoney } from "@/lib/appointments/display";
 import { doctorDisplayName } from "@/lib/doctors/display";
 import { formatDateTime } from "@/lib/format";
+import { DEFAULT_PAGE_SIZE } from "@/lib/listPagination";
 import type { ReferralCommissionRow, ReferralListRow } from "@/lib/referrals/types";
 import type { DoctorProfile } from "@/lib/types/doctors";
 import { cn } from "@/lib/utils";
@@ -53,6 +55,8 @@ export default function ReferralsPage() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [query, setQuery] = useState("");
+  const [limit, setLimit] = useState(DEFAULT_PAGE_SIZE);
+  const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
     if (isReferralsTab(tabParam)) setTab(tabParam);
@@ -88,7 +92,7 @@ export default function ReferralsPage() {
     }
   }, []);
 
-  const loadReferrals = useCallback(async () => {
+  const loadReferrals = useCallback(async (pageLimit = DEFAULT_PAGE_SIZE) => {
     setLoading(true);
     setError(null);
     try {
@@ -97,23 +101,29 @@ export default function ReferralsPage() {
       if (subscribed !== "all") params.set("subscribed", subscribed);
       if (from) params.set("from", `${from}T00:00:00.000Z`);
       if (to) params.set("to", `${to}T23:59:59.999Z`);
+      params.set("limit", String(pageLimit));
 
       const res = await fetch(`/api/admin/referrals?${params.toString()}`);
       const payload = (await res.json()) as {
         error?: string;
         referrals?: ReferralListRow[];
+        pagination?: { hasMore: boolean };
       };
       if (!res.ok) throw new Error(payload.error ?? "Failed to load referrals");
-      setReferrals(payload.referrals ?? []);
+      const rows = payload.referrals ?? [];
+      setReferrals(rows);
+      setLimit(pageLimit);
+      setHasMore(payload.pagination?.hasMore ?? rows.length >= pageLimit);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load referrals");
       setReferrals([]);
+      setHasMore(false);
     } finally {
       setLoading(false);
     }
   }, [doctorId, from, subscribed, to]);
 
-  const loadCommissions = useCallback(async () => {
+  const loadCommissions = useCallback(async (pageLimit = DEFAULT_PAGE_SIZE) => {
     setLoading(true);
     setError(null);
     try {
@@ -121,17 +131,23 @@ export default function ReferralsPage() {
       if (doctorId) params.set("doctorId", doctorId);
       if (from) params.set("from", `${from}T00:00:00.000Z`);
       if (to) params.set("to", `${to}T23:59:59.999Z`);
+      params.set("limit", String(pageLimit));
 
       const res = await fetch(`/api/admin/referral-commissions?${params.toString()}`);
       const payload = (await res.json()) as {
         error?: string;
         commissions?: ReferralCommissionRow[];
+        pagination?: { hasMore: boolean };
       };
       if (!res.ok) throw new Error(payload.error ?? "Failed to load commissions");
-      setCommissions(payload.commissions ?? []);
+      const rows = payload.commissions ?? [];
+      setCommissions(rows);
+      setLimit(pageLimit);
+      setHasMore(payload.pagination?.hasMore ?? rows.length >= pageLimit);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load commissions");
       setCommissions([]);
+      setHasMore(false);
     } finally {
       setLoading(false);
     }
@@ -142,8 +158,8 @@ export default function ReferralsPage() {
   }, [loadDoctors]);
 
   useEffect(() => {
-    if (tab === "referrals") void loadReferrals();
-    if (tab === "commissions") void loadCommissions();
+    if (tab === "referrals") void loadReferrals(DEFAULT_PAGE_SIZE);
+    if (tab === "commissions") void loadCommissions(DEFAULT_PAGE_SIZE);
   }, [loadCommissions, loadReferrals, tab]);
 
   const filteredReferrals = useMemo(() => {
@@ -454,6 +470,20 @@ export default function ReferralsPage() {
                 </Table>
               </div>
             )}
+
+            {tab !== "settings" ? (
+              <ListPagination
+                mode="load-more"
+                count={tab === "commissions" ? commissions.length : referrals.length}
+                hasMore={hasMore}
+                loading={loading}
+                onLoadMore={() => {
+                  const next = limit + DEFAULT_PAGE_SIZE;
+                  if (tab === "commissions") void loadCommissions(next);
+                  else void loadReferrals(next);
+                }}
+              />
+            ) : null}
           </>
         )}
       </div>

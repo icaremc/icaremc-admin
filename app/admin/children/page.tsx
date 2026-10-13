@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Baby, ChevronRight, Search } from "lucide-react";
 import PageHero from "@/components/PageHero";
+import { ListPagination } from "@/components/ListPagination";
 import {
   Table,
   TableBody,
@@ -23,6 +24,7 @@ import {
 } from "@/lib/children/childUi";
 import ChildAvatar from "@/components/children/ChildAvatar";
 import { formatDate } from "@/lib/format";
+import { DEFAULT_PAGE_SIZE } from "@/lib/listPagination";
 
 function GenderBadge({ gender }: { gender: "male" | "female" }) {
   const styles =
@@ -39,11 +41,13 @@ function GenderBadge({ gender }: { gender: "male" | "female" }) {
 export default function ChildrenPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { children, loading, error } = useAppSelector((state) => state.children);
+  const { children, loading, error, limit, hasMore } = useAppSelector(
+    (state) => state.children,
+  );
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    dispatch(fetchChildren());
+    dispatch(fetchChildren({ limit: DEFAULT_PAGE_SIZE }));
   }, [dispatch]);
 
   const filtered = useMemo(
@@ -206,6 +210,16 @@ export default function ChildrenPage() {
             </TableBody>
           </Table>
         </div>
+
+        <ListPagination
+          mode="load-more"
+          count={children.length}
+          hasMore={hasMore}
+          loading={loading}
+          onLoadMore={() =>
+            dispatch(fetchChildren({ limit: limit + DEFAULT_PAGE_SIZE }))
+          }
+        />
 
         <p className="mt-4 text-xs text-gray-500">
           Milestone checklist content is managed under{" "}

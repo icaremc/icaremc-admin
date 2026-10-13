@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Wallet } from "lucide-react";
 import PageHero from "@/components/PageHero";
+import { ListPagination } from "@/components/ListPagination";
 import {
   Table,
   TableBody,
@@ -22,17 +23,18 @@ import {
 } from "@/lib/finance/walletTransactionDisplay";
 import { formatMoney } from "@/lib/appointments/display";
 import { formatDateTime } from "@/lib/format";
+import { DEFAULT_PAGE_SIZE } from "@/lib/listPagination";
 import { cn } from "@/lib/utils";
 
 export default function WalletTransactionsPage() {
   const dispatch = useAppDispatch();
-  const { transactions, loading, error } = useAppSelector(
+  const { transactions, loading, error, limit, hasMore } = useAppSelector(
     (state) => state.walletTransactions,
   );
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    dispatch(fetchWalletTransactions());
+    dispatch(fetchWalletTransactions({ limit: DEFAULT_PAGE_SIZE }));
   }, [dispatch]);
 
   const filtered = useMemo(() => {
@@ -189,6 +191,18 @@ export default function WalletTransactionsPage() {
             </TableBody>
           </Table>
         </div>
+
+        <ListPagination
+          mode="load-more"
+          count={transactions.length}
+          hasMore={hasMore}
+          loading={loading}
+          onLoadMore={() =>
+            dispatch(
+              fetchWalletTransactions({ limit: limit + DEFAULT_PAGE_SIZE }),
+            )
+          }
+        />
       </div>
     </>
   );

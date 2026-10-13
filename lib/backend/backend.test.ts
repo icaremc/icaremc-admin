@@ -131,16 +131,32 @@ describe("adaptBackendResponse", () => {
   });
 
   it("wraps appointments array", () => {
-    const out = adaptBackendResponse("appointments", "GET", 200, [{ id: "a" }]);
-    assert.deepEqual(out, { appointments: [{ id: "a" }] });
+    const out = adaptBackendResponse(
+      "appointments",
+      "GET",
+      200,
+      [{ id: "a" }],
+      { searchParams: new URLSearchParams("limit=50") },
+    );
+    assert.deepEqual(out, {
+      appointments: [{ id: "a" }],
+      pagination: { total: null, offset: 0, limit: 50, hasMore: false },
+    });
   });
 
   it("unwraps appointments object list", () => {
-    const out = adaptBackendResponse("appointments", "GET", 200, {
-      appointments: [{ id: "a", status: "confirmed" }],
-    });
+    const out = adaptBackendResponse(
+      "appointments",
+      "GET",
+      200,
+      {
+        appointments: [{ id: "a", status: "confirmed" }],
+      },
+      { searchParams: new URLSearchParams("limit=50") },
+    );
     assert.deepEqual(out, {
       appointments: [{ id: "a", status: "confirmed" }],
+      pagination: { total: null, offset: 0, limit: 50, hasMore: false },
     });
   });
 
@@ -573,6 +589,10 @@ describe("adaptBackendResponse", () => {
     assert.equal(out.history.earnings.length, 1);
     assert.equal(out.history.earnings[0]?.id, "t1");
     assert.equal(out.history.commissionPercent, 30);
+    assert.equal(
+      (out as { pagination?: { hasMore: boolean } }).pagination?.hasMore,
+      false,
+    );
   });
 
   it("adapts referrals list to camelCase", () => {
@@ -609,6 +629,7 @@ describe("adaptBackendResponse", () => {
           isSubscribed: true,
         },
       ],
+      pagination: { total: null, offset: 0, limit: 50, hasMore: false },
     });
   });
 
@@ -817,8 +838,9 @@ describe("adaptBackendResponse", () => {
             created_at: "2026-10-05T13:16:38.651266Z",
           },
         ],
+        pagination: { total: 42, offset: 0, limit: 100 },
       },
-      { searchParams: new URLSearchParams("source=all&limit=100") },
+      { searchParams: new URLSearchParams("source=all&limit=100&offset=0") },
     ) as {
       logs: Array<{
         id: string;
@@ -827,12 +849,38 @@ describe("adaptBackendResponse", () => {
         event_type: string;
         metadata: Record<string, unknown>;
       }>;
+      pagination: {
+        total: number | null;
+        offset: number;
+        limit: number;
+        hasMore: boolean;
+      };
     };
     assert.equal(out.logs.length, 1);
     assert.equal(out.logs[0]?.source, "admin");
     assert.equal(out.logs[0]?.actor_type, "admin");
     assert.equal(out.logs[0]?.event_type, "appointment.status");
     assert.deepEqual(out.logs[0]?.metadata, {});
+    assert.equal(out.pagination.total, 42);
+    assert.equal(out.pagination.hasMore, true);
+  });
+
+  it("adds hasMore pagination for users list without total", () => {
+    const rows = Array.from({ length: 50 }, (_, i) => ({ id: `u${i}` }));
+    const out = adaptBackendResponse(
+      "users",
+      "GET",
+      200,
+      rows,
+      { searchParams: new URLSearchParams("limit=50&offset=0") },
+    ) as {
+      profiles: unknown[];
+      pagination: { hasMore: boolean; total: number | null; limit: number };
+    };
+    assert.equal(out.profiles.length, 50);
+    assert.equal(out.pagination.hasMore, true);
+    assert.equal(out.pagination.total, null);
+    assert.equal(out.pagination.limit, 50);
   });
 
   it("keeps child list fields and nested profiles", () => {

@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { DoctorWalletHistory } from "@/lib/finance/doctorWalletHistory";
+import { DEFAULT_PAGE_SIZE } from "@/lib/listPagination";
 import type { DoctorProfile } from "@/lib/types/doctors";
 
 type DoctorDetailState = {
@@ -11,6 +12,8 @@ type DoctorDetailState = {
   saving: boolean;
   error: string | null;
   walletError: string | null;
+  walletLimit: number;
+  walletHasMore: boolean;
 };
 
 const initialState: DoctorDetailState = {
@@ -22,6 +25,8 @@ const initialState: DoctorDetailState = {
   saving: false,
   error: null,
   walletError: null,
+  walletLimit: DEFAULT_PAGE_SIZE,
+  walletHasMore: false,
 };
 
 async function readApiError(response: Response): Promise<string> {
@@ -73,13 +78,28 @@ export const approveDoctor = createAsyncThunk(
 
 export const fetchDoctorWallet = createAsyncThunk(
   "doctorDetail/fetchWallet",
-  async (id: string, { rejectWithValue }) => {
-    const response = await fetch(`/api/admin/doctors/${id}/wallet`);
+  async (
+    args: { id: string; limit?: number },
+    { rejectWithValue },
+  ) => {
+    const limit = args.limit ?? DEFAULT_PAGE_SIZE;
+    const params = new URLSearchParams({ limit: String(limit) });
+    const response = await fetch(
+      `/api/admin/doctors/${args.id}/wallet?${params.toString()}`,
+    );
     if (!response.ok) {
       return rejectWithValue(await readApiError(response));
     }
-    const body = (await response.json()) as { history: DoctorWalletHistory };
-    return body.history;
+    const body = (await response.json()) as {
+      history: DoctorWalletHistory;
+      pagination?: { hasMore: boolean; limit: number };
+    };
+    const txCount = body.history?.transactions?.length ?? 0;
+    return {
+      history: body.history,
+      limit,
+      hasMore: body.pagination?.hasMore ?? txCount >= limit,
+    };
   },
 );
 
@@ -124,6 +144,8 @@ const doctorDetailSlice = createSlice({
       state.wallet = null;
       state.error = null;
       state.walletError = null;
+      state.walletLimit = DEFAULT_PAGE_SIZE;
+      state.walletHasMore = false;
     },
   },
   extraReducers: (builder) => {
@@ -147,7 +169,9 @@ const doctorDetailSlice = createSlice({
       })
       .addCase(fetchDoctorWallet.fulfilled, (state, action) => {
         state.walletLoading = false;
-        state.wallet = action.payload;
+        state.wallet = action.payload.history;
+        state.walletLimit = action.payload.limit;
+        state.walletHasMore = action.payload.hasMore;
       })
       .addCase(fetchDoctorWallet.rejected, (state, action) => {
         state.walletLoading = false;
