@@ -407,19 +407,20 @@ async function enrichChildGrowthFromPublicCms(
 
   if (periods.length === 0) {
     // ponytail: admin empty → show CMS catalog until admin list is seeded
-    return [...rowsById.values()]
-      .map((row) => {
+    const fromCms: Record<string, unknown>[] = [...rowsById.values()].map(
+      (row) => {
         const id = String(row.id);
         return {
           ...row,
           child_growth_period_translations: byId.get(id) ?? [],
         };
-      })
-      .sort(
-        (a, b) =>
-          Number(a.age_months ?? a.ageMonths ?? 0) -
-          Number(b.age_months ?? b.ageMonths ?? 0),
-      );
+      },
+    );
+    return fromCms.sort(
+      (a, b) =>
+        Number(a.age_months ?? a.ageMonths ?? 0) -
+        Number(b.age_months ?? b.ageMonths ?? 0),
+    );
   }
 
   const alreadyNested = periods.some((period) => {

@@ -471,19 +471,17 @@ export default function ReferralsPage() {
               </div>
             )}
 
-            {tab !== "settings" ? (
-              <ListPagination
-                mode="load-more"
-                count={tab === "commissions" ? commissions.length : referrals.length}
-                hasMore={hasMore}
-                loading={loading}
-                onLoadMore={() => {
-                  const next = limit + DEFAULT_PAGE_SIZE;
-                  if (tab === "commissions") void loadCommissions(next);
-                  else void loadReferrals(next);
-                }}
-              />
-            ) : null}
+            <ListPagination
+              mode="load-more"
+              count={tab === "commissions" ? commissions.length : referrals.length}
+              hasMore={hasMore}
+              loading={loading}
+              onLoadMore={() => {
+                const next = limit + DEFAULT_PAGE_SIZE;
+                if (tab === "commissions") void loadCommissions(next);
+                else void loadReferrals(next);
+              }}
+            />
           </>
         )}
       </div>
