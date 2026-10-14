@@ -175,6 +175,20 @@ function num(value: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function byNum(a: unknown, b: unknown): number {
+  return num(a) - num(b);
+}
+
+function bySortOrderThenName(
+  a: Record<string, unknown>,
+  b: Record<string, unknown>,
+): number {
+  const order =
+    byNum(a.sort_order ?? a.sortOrder, b.sort_order ?? b.sortOrder);
+  if (order !== 0) return order;
+  return str(a.name).localeCompare(str(b.name));
+}
+
 function translationList(
   row: Record<string, unknown>,
   nestedKeys: string[],
@@ -1329,24 +1343,30 @@ export function adaptBackendResponse(
         };
       }
       case "hospitals": {
-        const hospitals = body.filter(isPlainObject).map((row) => ({
-          ...row,
-          image_url: resolveBackendMediaUrl(
-            (row.image_url ?? row.imageUrl ?? null) as string | null,
-          ),
-        }));
+        const hospitals = body
+          .filter(isPlainObject)
+          .map((row) => ({
+            ...row,
+            image_url: resolveBackendMediaUrl(
+              (row.image_url ?? row.imageUrl ?? null) as string | null,
+            ),
+          }))
+          .sort(bySortOrderThenName);
         return upper === "POST"
           ? { hospital: hospitals[0] ?? body }
           : { hospitals };
       }
       case "doctor-categories":
         return {
-          categories: body.filter(isPlainObject).map((row) => ({
-            ...row,
-            image_url: resolveBackendMediaUrl(
-              (row.image_url ?? row.imageUrl ?? null) as string | null,
-            ),
-          })),
+          categories: body
+            .filter(isPlainObject)
+            .map((row) => ({
+              ...row,
+              image_url: resolveBackendMediaUrl(
+                (row.image_url ?? row.imageUrl ?? null) as string | null,
+              ),
+            }))
+            .sort(bySortOrderThenName),
         };
       case "users":
         if (rest.length === 1) return { profile: body[0] ?? body };
@@ -1403,25 +1423,35 @@ export function adaptBackendResponse(
       case "legal-documents":
         return { documents: body };
       case "pregnancy-weeks": {
-        const weeks = body.filter(isPlainObject).map(mapPregnancyWeekRow);
+        const weeks = body
+          .filter(isPlainObject)
+          .map(mapPregnancyWeekRow)
+          .sort((a, b) => byNum(a.week_number, b.week_number));
         return { weeks, items: weeks };
       }
       case "child-growth": {
         const periods = body
           .filter(isPlainObject)
           .map(mapChildGrowthPeriodRow)
-          .sort(
-            (a, b) =>
-              Number(a.age_months ?? 0) - Number(b.age_months ?? 0),
-          );
+          .sort((a, b) => byNum(a.age_months, b.age_months));
         return { periods, items: periods };
       }
       case "clinical-advice": {
-        const items = body.filter(isPlainObject).map(mapClinicalAdviceRow);
+        const items = body
+          .filter(isPlainObject)
+          .map(mapClinicalAdviceRow)
+          .sort((a, b) => byNum(a.sort_order, b.sort_order));
         return { items, advice: items };
       }
-      case "followup-visits":
-        return { templates: body, items: body };
+      case "followup-visits": {
+        const templates = body
+          .filter(isPlainObject)
+          .slice()
+          .sort((a, b) =>
+            byNum(a.sort_order ?? a.sortOrder, b.sort_order ?? b.sortOrder),
+          );
+        return { templates, items: templates };
+      }
       case "referrals": {
         const mapped = body
           .filter(isPlainObject)
@@ -1454,7 +1484,14 @@ export function adaptBackendResponse(
         };
       }
       case "daily-tips": {
-        const tips = body.filter(isPlainObject).map(mapDailyTipRow);
+        const tips = body
+          .filter(isPlainObject)
+          .map(mapDailyTipRow)
+          .sort((a, b) => {
+            const week = byNum(a.week_number, b.week_number);
+            if (week !== 0) return week;
+            return byNum(a.day_number ?? 999, b.day_number ?? 999);
+          });
         return { tips, items: tips };
       }
       default:

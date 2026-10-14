@@ -203,7 +203,8 @@ export const fetchPregnancyWeeks = createAsyncThunk(
       weeks?: PregnancyWeek[];
       items?: PregnancyWeek[];
     };
-    return (body.weeks ?? body.items ?? []) as PregnancyWeek[];
+    const weeks = (body.weeks ?? body.items ?? []) as PregnancyWeek[];
+    return [...weeks].sort((a, b) => a.week_number - b.week_number);
   },
 );
 
@@ -369,7 +370,9 @@ const pregnancyWeeksSlice = createSlice({
       })
       .addCase(fetchPregnancyWeeks.fulfilled, (state, action) => {
         state.loading = false;
-        state.weeks = action.payload;
+        state.weeks = [...action.payload].sort(
+          (a, b) => a.week_number - b.week_number,
+        );
       })
       .addCase(fetchPregnancyWeeks.rejected, (state, action) => {
         state.loading = false;

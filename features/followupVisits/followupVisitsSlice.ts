@@ -137,7 +137,10 @@ export const fetchFollowupVisitTemplates = createAsyncThunk(
       templates?: ChildFollowupVisitTemplate[];
       items?: ChildFollowupVisitTemplate[];
     };
-    return (body.templates ?? body.items ?? []) as ChildFollowupVisitTemplate[];
+    const templates = (body.templates ??
+      body.items ??
+      []) as ChildFollowupVisitTemplate[];
+    return [...templates].sort((a, b) => a.sort_order - b.sort_order);
   },
 );
 
@@ -275,7 +278,9 @@ const followupVisitsSlice = createSlice({
       })
       .addCase(fetchFollowupVisitTemplates.fulfilled, (state, action) => {
         state.loading = false;
-        state.templates = action.payload;
+        state.templates = [...action.payload].sort(
+          (a, b) => a.sort_order - b.sort_order,
+        );
       })
       .addCase(fetchFollowupVisitTemplates.rejected, (state, action) => {
         state.loading = false;

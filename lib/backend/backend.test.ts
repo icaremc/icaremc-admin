@@ -1076,30 +1076,71 @@ describe("adaptBackendResponse", () => {
   it("nests pregnancy week translations for admin UI", () => {
     const out = adaptBackendResponse("pregnancy-weeks", "GET", 200, [
       {
-        id: "w1",
+        id: "w31",
         week_number: 31,
         trimester: 3,
         image_url: "/static/uploads/pregnancy-weeks/w1/week-31.jpg",
         pregnancy_week_translations: [
           {
             id: "t1",
-            pregnancy_week_id: "w1",
+            pregnancy_week_id: "w31",
             language_code: "en",
             title: "31 weeks",
             sections: [],
           },
         ],
       },
+      {
+        id: "w2",
+        weekNumber: 2,
+        trimester: 1,
+        image_url: null,
+      },
     ]) as {
       weeks: Array<{
+        id: string;
+        week_number: number;
         pregnancy_week_translations?: unknown[];
         image_url?: string | null;
       }>;
     };
-    assert.equal(out.weeks[0]?.pregnancy_week_translations?.length, 1);
+    assert.equal(out.weeks[0]?.id, "w2");
+    assert.equal(out.weeks[0]?.week_number, 2);
+    assert.equal(out.weeks[1]?.id, "w31");
+    assert.equal(out.weeks[1]?.pregnancy_week_translations?.length, 1);
     assert.equal(
-      out.weeks[0]?.image_url,
+      out.weeks[1]?.image_url,
       "https://api.icaremchealth.com/static/uploads/pregnancy-weeks/w1/week-31.jpg",
+    );
+  });
+
+  it("sorts daily tips, clinical advice, and followup visits", () => {
+    const tips = adaptBackendResponse("daily-tips", "GET", 200, [
+      { id: "t2", week_number: 2, day_number: 1 },
+      { id: "t1", weekNumber: 1, dayNumber: 3 },
+      { id: "t1b", week_number: 1, day_number: 1 },
+    ]) as { tips: Array<{ id: string }> };
+    assert.deepEqual(
+      tips.tips.map((t) => t.id),
+      ["t1b", "t1", "t2"],
+    );
+
+    const advice = adaptBackendResponse("clinical-advice", "GET", 200, [
+      { id: "a2", code: "b", metric: "w", condition: "low", sort_order: 2 },
+      { id: "a1", code: "a", metric: "w", condition: "low", sortOrder: 1 },
+    ]) as { items: Array<{ id: string }> };
+    assert.deepEqual(
+      advice.items.map((a) => a.id),
+      ["a1", "a2"],
+    );
+
+    const visits = adaptBackendResponse("followup-visits", "GET", 200, [
+      { id: "v2", sort_order: 20 },
+      { id: "v1", sortOrder: 10 },
+    ]) as { templates: Array<{ id: string }> };
+    assert.deepEqual(
+      visits.templates.map((v) => v.id),
+      ["v1", "v2"],
     );
   });
 
