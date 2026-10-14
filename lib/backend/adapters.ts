@@ -615,6 +615,120 @@ function appointmentListRows(body: unknown): Record<string, unknown>[] {
   return [];
 }
 
+function mapAppointmentDoctorProfiles(row: Record<string, unknown>) {
+  const nested = isPlainObject(row.doctor_profiles)
+    ? row.doctor_profiles
+    : isPlainObject(row.doctorProfiles)
+      ? row.doctorProfiles
+      : isPlainObject(row.doctor)
+        ? row.doctor
+        : null;
+  if (nested) {
+    const first = str(nested.first_name ?? nested.firstName);
+    const last = str(nested.last_name ?? nested.lastName);
+    if (first || last) {
+      return {
+        first_name: first,
+        last_name: last,
+        specialty: str(
+          nested.specialty ?? nested.speciality ?? nested.category ?? "",
+        ),
+        hospital: str(nested.hospital ?? ""),
+      };
+    }
+  }
+
+  const first = str(row.doctor_first_name ?? row.doctorFirstName);
+  const last = str(row.doctor_last_name ?? row.doctorLastName);
+  if (first || last) {
+    return {
+      first_name: first,
+      last_name: last,
+      specialty: str(row.doctor_specialty ?? row.doctorSpecialty ?? ""),
+      hospital: str(row.doctor_hospital ?? row.doctorHospital ?? ""),
+    };
+  }
+
+  const full = str(row.doctor_name ?? row.doctorName).replace(/^Dr\.?\s*/i, "").trim();
+  if (!full) return null;
+  const parts = full.split(/\s+/);
+  return {
+    first_name: parts[0] ?? full,
+    last_name: parts.slice(1).join(" "),
+    specialty: str(row.doctor_specialty ?? row.doctorSpecialty ?? ""),
+    hospital: str(row.doctor_hospital ?? row.doctorHospital ?? ""),
+  };
+}
+
+function mapAppointmentRow(row: Record<string, unknown>) {
+  const profilesRaw = isPlainObject(row.profiles)
+    ? row.profiles
+    : isPlainObject(row.patient)
+      ? row.patient
+      : isPlainObject(row.user)
+        ? row.user
+        : null;
+  const patient_name =
+    (typeof row.patient_name === "string" && row.patient_name.trim()
+      ? row.patient_name.trim()
+      : typeof row.patientName === "string" && row.patientName.trim()
+        ? row.patientName.trim()
+        : typeof profilesRaw?.full_name === "string"
+          ? profilesRaw.full_name
+          : typeof profilesRaw?.fullName === "string"
+            ? profilesRaw.fullName
+            : null) as string | null;
+  const patient_phone =
+    (typeof row.patient_phone === "string" && row.patient_phone.trim()
+      ? row.patient_phone.trim()
+      : typeof row.patientPhone === "string" && row.patientPhone.trim()
+        ? row.patientPhone.trim()
+        : typeof profilesRaw?.phone === "string"
+          ? profilesRaw.phone
+          : null) as string | null;
+
+  return {
+    ...row,
+    id: str(row.id),
+    doctor_id: str(row.doctor_id ?? row.doctorId),
+    patient_id: str(row.patient_id ?? row.patientId),
+    appointment_date: str(row.appointment_date ?? row.appointmentDate),
+    time_slot: str(row.time_slot ?? row.timeSlot),
+    status: str(row.status),
+    note: (row.note ?? null) as string | null,
+    patient_name,
+    patient_phone,
+    service_id: (row.service_id ?? row.serviceId ?? null) as string | null,
+    service_name: (row.service_name ?? row.serviceName ?? null) as string | null,
+    service_description: (row.service_description ??
+      row.serviceDescription ??
+      null) as string | null,
+    service_price:
+      row.service_price != null || row.servicePrice != null
+        ? num(row.service_price ?? row.servicePrice)
+        : null,
+    currency: str(row.currency || "ETB"),
+    total_amount: num(row.total_amount ?? row.totalAmount),
+    amount_paid: num(row.amount_paid ?? row.amountPaid),
+    payment_status: str(
+      (row.payment_status ?? row.paymentStatus ?? "unpaid") as string,
+    ),
+    created_at: str(row.created_at ?? row.createdAt),
+    updated_at: str(row.updated_at ?? row.updatedAt),
+    doctor_profiles: mapAppointmentDoctorProfiles(row),
+    profiles: profilesRaw
+      ? {
+          full_name: (profilesRaw.full_name ??
+            profilesRaw.fullName ??
+            null) as string | null,
+          phone: (profilesRaw.phone ?? null) as string | null,
+        }
+      : patient_name || patient_phone
+        ? { full_name: patient_name, phone: patient_phone }
+        : null,
+  };
+}
+
 function childListRows(body: unknown): Record<string, unknown>[] {
   if (Array.isArray(body)) return body.filter(isPlainObject);
   if (isPlainObject(body) && Array.isArray(body.children)) {
@@ -1031,24 +1145,35 @@ export function adaptBackendResponse(
 
   if (head === "appointments" && rest.length === 1 && rest[0] !== "stats" && upper === "GET") {
     if (isPlainObject(body) && "appointment" in body) {
+      const raw = isPlainObject(body.appointment) ? body.appointment : null;
       return {
-        appointment: body.appointment,
+        appointment: raw ? mapAppointmentRow(raw) : body.appointment,
         conversation: body.conversation ?? null,
         messages: Array.isArray(body.messages) ? body.messages : [],
       };
     }
     if (!Array.isArray(body)) {
       return isPlainObject(body)
-        ? { appointment: body, conversation: null, messages: [] }
+        ? {
+            appointment: mapAppointmentRow(body),
+            conversation: null,
+            messages: [],
+          }
         : body;
     }
     const appointment = findById(body, rest[0]);
     if (!appointment) return { error: "Appointment not found", stagingNotFound: true };
-    return { appointment, conversation: null, messages: [] };
+    return {
+      appointment: mapAppointmentRow(appointment),
+      conversation: null,
+      messages: [],
+    };
   }
 
   if (head === "appointments" && rest.length === 1 && upper === "PATCH") {
-    return isPlainObject(body) ? { appointment: body } : body;
+    return isPlainObject(body)
+      ? { appointment: mapAppointmentRow(body) }
+      : body;
   }
 
   if (head === "admins" && upper === "PATCH") {
@@ -1160,7 +1285,7 @@ export function adaptBackendResponse(
         if (rest[0] === "stats") {
           return deriveAppointmentStats(body);
         }
-        const appointments = appointmentListRows(body);
+        const appointments = appointmentListRows(body).map(mapAppointmentRow);
         return {
           appointments,
           pagination: listPageMeta(body, options.searchParams, appointments.length),
@@ -1302,7 +1427,7 @@ export function adaptBackendResponse(
 
   if (isPlainObject(body)) {
     if (head === "appointments" && rest.length === 0) {
-      const appointments = appointmentListRows(body);
+      const appointments = appointmentListRows(body).map(mapAppointmentRow);
       return {
         appointments,
         pagination: listPageMeta(body, options.searchParams, appointments.length),

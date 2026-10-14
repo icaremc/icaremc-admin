@@ -18,6 +18,7 @@ import {
   rewriteUserNotifyBody,
 } from "@/lib/backend/pushRewrite";
 import { signedAdminDocumentUrl } from "@/lib/adminDocuments/storage";
+import { slugifyCategoryName } from "@/lib/doctors/display";
 import { slugifyHospitalName } from "@/lib/hospitals/storage";
 import { saveNotification } from "@/lib/push/saveNotification";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
@@ -140,6 +141,91 @@ async function rewriteHospitalMultipart(
   }
 
   if (method === "POST") {
+    payload.is_active = true;
+  }
+
+  return {
+    method,
+    body: encodeJson(payload),
+    contentType: "application/json",
+  };
+}
+
+/** Admin speciality UI posts multipart; staging expects JSON CategoryIn/PatchIn + image_url. */
+async function rewriteDoctorCategoryMultipart(
+  method: string,
+  rawBody: ArrayBuffer,
+  contentType: string,
+  accessToken: string | null,
+): Promise<
+  | { method: string; body: ArrayBuffer; contentType: string }
+  | { error: string; status?: number }
+> {
+  if (!accessToken) {
+    return { error: "Not signed in to staging backend. Sign in again.", status: 401 };
+  }
+
+  const form = await new Request("http://local", {
+    method,
+    headers: { "content-type": contentType },
+    body: rawBody,
+  }).formData();
+
+  const nameEn = readFormText(form, "name_en") || readFormText(form, "name");
+  const payload: Record<string, unknown> = {};
+
+  if (nameEn) {
+    const slug = slugifyCategoryName(nameEn);
+    if (!slug) {
+      return { error: "Speciality name must contain letters or numbers", status: 400 };
+    }
+    payload.name = nameEn;
+    payload.slug = slug;
+  } else if (method === "POST") {
+    return { error: "English name is required", status: 400 };
+  }
+
+  const careFocus = readFormText(form, "care_focus");
+  if (careFocus) payload.care_focus = careFocus;
+
+  const sortOrderRaw = readFormText(form, "sort_order");
+  if (sortOrderRaw) {
+    const parsed = Number(sortOrderRaw);
+    if (Number.isFinite(parsed)) payload.sort_order = parsed;
+  }
+
+  const isActive = readFormText(form, "is_active");
+  if (isActive !== "") {
+    payload.is_active = isActive === "true" || isActive === "1";
+  }
+
+  if (readFormText(form, "remove_image") === "true") {
+    payload.image_url = null;
+  }
+
+  const translations: Array<{ language_code: string; name: string }> = [];
+  if (nameEn) translations.push({ language_code: "en", name: nameEn });
+  const nameAm = readFormText(form, "name_am");
+  const nameOm = readFormText(form, "name_om");
+  if (nameAm) translations.push({ language_code: "am", name: nameAm });
+  if (nameOm) translations.push({ language_code: "om", name: nameOm });
+  if (translations.length > 0) payload.translations = translations;
+
+  const image = form.get("image");
+  if (image instanceof File && image.size > 0) {
+    const uploaded = await uploadStagingImage(image, accessToken);
+    if (!uploaded.url) {
+      return {
+        error:
+          uploaded.error ??
+          "Could not upload speciality image. Try again without an image.",
+        status: 502,
+      };
+    }
+    payload.image_url = uploaded.url;
+  }
+
+  if (method === "POST" && payload.is_active === undefined) {
     payload.is_active = true;
   }
 

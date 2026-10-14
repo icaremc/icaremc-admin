@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { AppointmentDetailPayload } from "@/lib/types/chat";
+import type { DoctorProfile } from "@/lib/types/doctors";
 
 type AppointmentDetailState = {
   appointmentId: string | null;
@@ -24,6 +25,40 @@ async function readApiError(response: Response): Promise<string> {
   }
 }
 
+async function attachDoctorProfile(
+  detail: AppointmentDetailPayload,
+): Promise<AppointmentDetailPayload> {
+  const appointment = detail.appointment;
+  if (!appointment?.doctor_id) return detail;
+  const existing = appointment.doctor_profiles;
+  if (existing?.first_name || existing?.last_name) return detail;
+
+  try {
+    const response = await fetch("/api/admin/doctors");
+    if (!response.ok) return detail;
+    const body = (await response.json()) as { doctors?: DoctorProfile[] };
+    const doctor = (body.doctors ?? []).find(
+      (row) => row.id === appointment.doctor_id,
+    );
+    if (!doctor) return detail;
+    return {
+      ...detail,
+      appointment: {
+        ...appointment,
+        doctor_profiles: {
+          first_name: doctor.first_name,
+          last_name: doctor.last_name,
+          specialty:
+            doctor.doctor_categories?.name ?? doctor.specialty ?? "",
+          hospital: doctor.hospital ?? "",
+        },
+      },
+    };
+  } catch {
+    return detail;
+  }
+}
+
 export const fetchAppointmentDetail = createAsyncThunk(
   "appointmentDetail/fetch",
   async (id: string, { rejectWithValue }) => {
@@ -31,7 +66,8 @@ export const fetchAppointmentDetail = createAsyncThunk(
     if (!response.ok) {
       return rejectWithValue(await readApiError(response));
     }
-    return (await response.json()) as AppointmentDetailPayload;
+    const detail = (await response.json()) as AppointmentDetailPayload;
+    return attachDoctorProfile(detail);
   },
 );
 

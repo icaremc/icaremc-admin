@@ -137,10 +137,13 @@ describe("adaptBackendResponse", () => {
       200,
       [{ id: "a" }],
       { searchParams: new URLSearchParams("limit=50") },
-    );
-    assert.deepEqual(out, {
-      appointments: [{ id: "a" }],
-      pagination: { total: null, offset: 0, limit: 50, hasMore: false },
+    ) as { appointments: Array<{ id: string }>; pagination: unknown };
+    assert.equal(out.appointments[0]?.id, "a");
+    assert.deepEqual(out.pagination, {
+      total: null,
+      offset: 0,
+      limit: 50,
+      hasMore: false,
     });
   });
 
@@ -153,22 +156,51 @@ describe("adaptBackendResponse", () => {
         appointments: [{ id: "a", status: "confirmed" }],
       },
       { searchParams: new URLSearchParams("limit=50") },
-    );
-    assert.deepEqual(out, {
-      appointments: [{ id: "a", status: "confirmed" }],
-      pagination: { total: null, offset: 0, limit: 50, hasMore: false },
+    ) as {
+      appointments: Array<{ id: string; status: string }>;
+      pagination: unknown;
+    };
+    assert.equal(out.appointments[0]?.id, "a");
+    assert.equal(out.appointments[0]?.status, "confirmed");
+    assert.deepEqual(out.pagination, {
+      total: null,
+      offset: 0,
+      limit: 50,
+      hasMore: false,
     });
   });
 
   it("picks appointment detail from list", () => {
     const out = adaptBackendResponse("appointments/a1", "GET", 200, [
-      { id: "a1", status: "pending" },
-    ]);
-    assert.deepEqual(out, {
-      appointment: { id: "a1", status: "pending" },
-      conversation: null,
-      messages: [],
-    });
+      {
+        id: "a1",
+        status: "pending",
+        doctor_id: "d1",
+        patient_id: "p1",
+        appointment_date: "2026-09-14",
+        time_slot: "10:30",
+        doctor_name: "Dr. Abebe Kebede",
+        specialty: "Pediatrics",
+        hospital: "Black Lion",
+      },
+    ]) as {
+      appointment: {
+        id: string;
+        doctor_profiles: {
+          first_name: string;
+          last_name: string;
+          specialty: string;
+          hospital: string;
+        } | null;
+      };
+      conversation: null;
+      messages: unknown[];
+    };
+    assert.equal(out.appointment.id, "a1");
+    assert.equal(out.appointment.doctor_profiles?.first_name, "Abebe");
+    assert.equal(out.appointment.doctor_profiles?.last_name, "Kebede");
+    assert.equal(out.conversation, null);
+    assert.deepEqual(out.messages, []);
   });
 
   it("maps admin dashboard totals and charts", () => {

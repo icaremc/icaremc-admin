@@ -12,7 +12,10 @@ export function appointmentStatusClass(status: AppointmentStatus): string {
 
 export function doctorLabel(appt: Appointment): string {
   const doctor = appt.doctor_profiles;
-  return doctor ? `Dr. ${doctor.first_name} ${doctor.last_name}` : "Unknown doctor";
+  const first = doctor?.first_name?.trim() ?? "";
+  const last = doctor?.last_name?.trim() ?? "";
+  if (first || last) return `Dr. ${`${first} ${last}`.trim()}`;
+  return "Unknown doctor";
 }
 
 export function patientLabel(appt: Appointment): string {
