@@ -20,6 +20,7 @@ import {
 import { signedAdminDocumentUrl } from "@/lib/adminDocuments/storage";
 import { slugifyCategoryName } from "@/lib/doctors/display";
 import { slugifyHospitalName } from "@/lib/hospitals/storage";
+import { composePregnancyListsFromUsers } from "@/lib/backend/composePregnancies";
 import { saveNotification } from "@/lib/push/saveNotification";
 import { createServiceSupabaseClient } from "@/lib/supabase/service";
 
@@ -243,6 +244,13 @@ let pregnancyCmsEnrichCache: {
   byId: Map<string, Record<string, unknown>[]>;
 } | null = null;
 
+const CHILD_GROWTH_CMS_ENRICH_TTL_MS = 60_000;
+let childGrowthCmsEnrichCache: {
+  at: number;
+  byId: Map<string, Record<string, unknown>[]>;
+  rowsById: Map<string, Record<string, unknown>>;
+} | null = null;
+
 /** ponytail: backend document rows omit signed URLs; mint via Supabase when credentials exist */
 async function enrichDocumentsWithPreviewUrls(
   body: unknown,
@@ -340,6 +348,109 @@ async function enrichPregnancyWeeksFromPublicCms(
     if (!translations?.length) return week;
     return { ...week, pregnancy_week_translations: translations };
   });
+}
+
+async function loadChildGrowthCmsCache(): Promise<{
+  byId: Map<string, Record<string, unknown>[]>;
+  rowsById: Map<string, Record<string, unknown>>;
+}> {
+  const now = Date.now();
+  if (
+    childGrowthCmsEnrichCache &&
+    now - childGrowthCmsEnrichCache.at <= CHILD_GROWTH_CMS_ENRICH_TTL_MS
+  ) {
+    return childGrowthCmsEnrichCache;
+  }
+
+  const base = getBackendApiBaseUrl();
+  const byId = new Map<string, Record<string, unknown>[]>();
+  const rowsById = new Map<string, Record<string, unknown>>();
+  const localeRows = await Promise.all(
+    (["en", "am", "om"] as const).map(async (lang) => {
+      try {
+        const res = await fetch(
+          `${base}/api/v1/cms/child-growth-periods?lang=${lang}`,
+          { cache: "no-store" },
+        );
+        if (!res.ok) return [] as unknown[];
+        const rows = (await res.json()) as unknown;
+        return Array.isArray(rows) ? rows : [];
+      } catch {
+        return [] as unknown[];
+      }
+    }),
+  );
+
+  for (const rows of localeRows) {
+    for (const row of rows) {
+      if (!isPlainObject(row) || !isPlainObject(row.translation)) continue;
+      const id = String(row.id);
+      if (!rowsById.has(id)) rowsById.set(id, row);
+      const list = byId.get(id) ?? [];
+      list.push({
+        ...row.translation,
+        period_id: id,
+      });
+      byId.set(id, list);
+    }
+  }
+
+  childGrowthCmsEnrichCache = { at: now, byId, rowsById };
+  return childGrowthCmsEnrichCache;
+}
+
+/** Admin list often omits nested translations; CMS has checklist milestones. */
+async function enrichChildGrowthFromPublicCms(
+  periods: Record<string, unknown>[],
+): Promise<Record<string, unknown>[]> {
+  const { byId, rowsById } = await loadChildGrowthCmsCache();
+
+  if (periods.length === 0) {
+    // ponytail: admin empty → show CMS catalog until admin list is seeded
+    return [...rowsById.values()]
+      .map((row) => {
+        const id = String(row.id);
+        return {
+          ...row,
+          child_growth_period_translations: byId.get(id) ?? [],
+        };
+      })
+      .sort(
+        (a, b) =>
+          Number(a.age_months ?? a.ageMonths ?? 0) -
+          Number(b.age_months ?? b.ageMonths ?? 0),
+      );
+  }
+
+  const alreadyNested = periods.some((period) => {
+    const nested =
+      period.child_growth_period_translations ??
+      period.childGrowthPeriodTranslations ??
+      period.translations;
+    return Array.isArray(nested) && nested.length > 0;
+  });
+  if (alreadyNested) return periods;
+
+  return periods
+    .map((period) => {
+      const id = String(period.id);
+      const translations = byId.get(id);
+      if (!translations?.length) return period;
+      const cmsRow = rowsById.get(id);
+      return {
+        ...(cmsRow ?? {}),
+        ...period,
+        age_months: period.age_months ?? period.ageMonths ?? cmsRow?.age_months,
+        age_label: period.age_label ?? period.ageLabel ?? cmsRow?.age_label,
+        age_group: period.age_group ?? period.ageGroup ?? cmsRow?.age_group,
+        child_growth_period_translations: translations,
+      };
+    })
+    .sort(
+      (a, b) =>
+        Number(a.age_months ?? a.ageMonths ?? 0) -
+        Number(b.age_months ?? b.ageMonths ?? 0),
+    );
 }
 
 async function uploadStagingImage(
@@ -645,6 +756,39 @@ export async function proxyAdminRequestToBackend(
     );
   }
 
+  if (
+    backendPath === "__pregnancies_list__" ||
+    backendPath === "__pregnancy_logs_list__"
+  ) {
+    try {
+      const composed = await composePregnancyListsFromUsers({
+        baseUrl: getBackendApiBaseUrl(),
+        token,
+      });
+      const adapted = adaptBackendResponse(
+        adminPath,
+        method,
+        200,
+        backendPath === "__pregnancies_list__"
+          ? { pregnancies: composed.pregnancies }
+          : { logs: composed.logs },
+        { searchParams: incomingUrl.searchParams },
+      );
+      return NextResponse.json(adapted, { status: 200 });
+    } catch (error) {
+      return NextResponse.json(
+        {
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to compose pregnancies from staging backend",
+          stagingUnavailable: true,
+        },
+        { status: 502 },
+      );
+    }
+  }
+
   // Doctor detail = admin doctor list row + admin services endpoint
   if (backendPath === "__doctor_detail__") {
     const doctorId = rest[0] ?? "";
@@ -912,6 +1056,21 @@ export async function proxyAdminRequestToBackend(
       bodyForAdapt = await enrichPregnancyWeeksFromPublicCms(
         parsed.filter(isPlainObject),
       );
+    }
+    if (
+      upstream.ok &&
+      method === "GET" &&
+      head === "child-growth" &&
+      rest.length === 0
+    ) {
+      const rows = Array.isArray(parsed)
+        ? parsed.filter(isPlainObject)
+        : isPlainObject(parsed) && Array.isArray(parsed.periods)
+          ? parsed.periods.filter(isPlainObject)
+          : isPlainObject(parsed) && Array.isArray(parsed.items)
+            ? parsed.items.filter(isPlainObject)
+            : [];
+      bodyForAdapt = await enrichChildGrowthFromPublicCms(rows);
     }
     if (
       upstream.ok &&

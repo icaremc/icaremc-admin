@@ -120,11 +120,22 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     backendHint: "GET|POST|PATCH|DELETE /api/v1/admin/daily-tips (+ translations)",
   },
   {
+    pathPrefix: "/admin/pregnancy",
+    label: "Pregnancies",
+    backendHint:
+      "Compose GET /api/v1/admin/users + GET /users/{id} (no admin pregnancies list yet)",
+  },
+  {
     pathPrefix: "/admin/push",
     label: "Broadcast push",
     backendHint: null,
   },
-  { pathPrefix: "/admin/health-logs", label: "Health logs", backendHint: null },
+  {
+    pathPrefix: "/admin/health-logs",
+    label: "Health logs",
+    backendHint:
+      "Compose GET /api/v1/admin/users + GET /users/{id} pregnancy logs",
+  },
   {
     pathPrefix: "/admin/finance/payment-settings",
     label: "Payment settings (legacy URL)",
@@ -422,6 +433,13 @@ export function mapAdminApiToBackend(
         return `/api/v1/admin/daily-tips/${rest[0]}/translations`;
       }
       return null;
+    case "pregnancies":
+      if (rest.length === 0 && method === "GET") return "__pregnancies_list__";
+      return null;
+    case "pregnancy-logs":
+    case "health-logs":
+      if (rest.length === 0 && method === "GET") return "__pregnancy_logs_list__";
+      return null;
     default:
       return null;
   }
@@ -650,5 +668,20 @@ export const ADMIN_API_MAPPING_CASES: Array<{
     adminPath: "clinical-advice/abc",
     backendPath: "/api/v1/admin/clinical-advice/abc",
     method: "PATCH",
+  },
+  {
+    adminPath: "pregnancies",
+    backendPath: "__pregnancies_list__",
+    method: "GET",
+  },
+  {
+    adminPath: "pregnancy-logs",
+    backendPath: "__pregnancy_logs_list__",
+    method: "GET",
+  },
+  {
+    adminPath: "health-logs",
+    backendPath: "__pregnancy_logs_list__",
+    method: "GET",
   },
 ];

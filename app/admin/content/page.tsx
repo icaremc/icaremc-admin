@@ -15,8 +15,6 @@ import PageHero from "@/components/PageHero";
 import StatCard from "@/components/StatCard";
 import { Button } from "@/components/ui/button";
 import { CONTENT_SECTIONS } from "@/lib/constants";
-import { isBackendApiEnabled } from "@/lib/backend/config";
-import { supabase } from "@/lib/supabaseClient";
 import { cn } from "@/lib/utils";
 
 type SectionStats = {
@@ -46,103 +44,45 @@ const sectionMeta: Record<
   daily_tips: { icon: Lightbulb, accent: "teal" },
 };
 
-async function countRows(
-  table: string,
-  filters?: { column: string; value: string | boolean }[],
-): Promise<number> {
-  let query = supabase.from(table).select("*", { count: "exact", head: true });
-  for (const filter of filters ?? []) {
-    query = query.eq(filter.column, filter.value);
-  }
-  const { count, error } = await query;
-  if (error) throw error;
-  return count ?? 0;
-}
-
 async function fetchContentStats(): Promise<ContentOverviewStats> {
-  if (isBackendApiEnabled()) {
-    const [weeksRes, growthRes, tipsRes] = await Promise.all([
-      fetch("/api/admin/pregnancy-weeks"),
-      fetch("/api/admin/child-growth"),
-      fetch("/api/admin/daily-tips"),
-    ]);
-    const weeksBody = weeksRes.ok
-      ? ((await weeksRes.json()) as { weeks?: unknown[]; items?: unknown[] })
-      : { weeks: [] };
-    const growthBody = growthRes.ok
-      ? ((await growthRes.json()) as { periods?: unknown[]; items?: unknown[] })
-      : { periods: [] };
-    const tipsBody = tipsRes.ok
-      ? ((await tipsRes.json()) as { tips?: Array<{ week_number?: number; is_active?: boolean }>; items?: Array<{ week_number?: number; is_active?: boolean }> })
-      : { tips: [] };
-
-    const weeks = weeksBody.weeks ?? weeksBody.items ?? [];
-    const periods = growthBody.periods ?? growthBody.items ?? [];
-    const tips = tipsBody.tips ?? tipsBody.items ?? [];
-    const activeTips = tips.filter((tip) => tip.is_active !== false);
-    const weeksWithTips = new Set(activeTips.map((tip) => tip.week_number)).size;
-
-    return {
-      pregnancyWeeks: {
-        total: weeks.length,
-        active: weeks.length,
-        detail: `${weeks.length} weeks on staging API`,
-      },
-      childGrowth: {
-        total: periods.length,
-        active: periods.length,
-        detail: `${periods.length} milestone periods on staging API`,
-      },
-      dailyTips: {
-        total: tips.length,
-        active: activeTips.length,
-        detail: `${weeksWithTips} week${weeksWithTips === 1 ? "" : "s"} with tips`,
-      },
-    };
-  }
-
-  const [
-    pregnancyWeeksTotal,
-    pregnancyWeeksPublished,
-    childGrowthTotal,
-    childGrowthPublished,
-    followupTotal,
-    followupPublished,
-    dailyTipsTotal,
-    dailyTipsActive,
-    dailyTipsRows,
-  ] = await Promise.all([
-    countRows("pregnancy_weeks"),
-    countRows("pregnancy_weeks", [{ column: "is_published", value: true }]),
-    countRows("child_growth_periods"),
-    countRows("child_growth_periods", [{ column: "is_published", value: true }]),
-    countRows("child_followup_visit_templates"),
-    countRows("child_followup_visit_templates", [
-      { column: "is_published", value: true },
-    ]),
-    countRows("daily_tips"),
-    countRows("daily_tips", [{ column: "is_active", value: true }]),
-    supabase.from("daily_tips").select("week_number").eq("is_active", true),
+  const [weeksRes, growthRes, tipsRes] = await Promise.all([
+    fetch("/api/admin/pregnancy-weeks"),
+    fetch("/api/admin/child-growth"),
+    fetch("/api/admin/daily-tips"),
   ]);
+  const weeksBody = weeksRes.ok
+    ? ((await weeksRes.json()) as { weeks?: unknown[]; items?: unknown[] })
+    : { weeks: [] };
+  const growthBody = growthRes.ok
+    ? ((await growthRes.json()) as { periods?: unknown[]; items?: unknown[] })
+    : { periods: [] };
+  const tipsBody = tipsRes.ok
+    ? ((await tipsRes.json()) as {
+        tips?: Array<{ week_number?: number; is_active?: boolean }>;
+        items?: Array<{ week_number?: number; is_active?: boolean }>;
+      })
+    : { tips: [] };
 
-  const weeksWithTips = new Set(
-    (dailyTipsRows.data ?? []).map((row) => row.week_number),
-  ).size;
+  const weeks = weeksBody.weeks ?? weeksBody.items ?? [];
+  const periods = growthBody.periods ?? growthBody.items ?? [];
+  const tips = tipsBody.tips ?? tipsBody.items ?? [];
+  const activeTips = tips.filter((tip) => tip.is_active !== false);
+  const weeksWithTips = new Set(activeTips.map((tip) => tip.week_number)).size;
 
   return {
     pregnancyWeeks: {
-      total: pregnancyWeeksTotal,
-      active: pregnancyWeeksPublished,
-      detail: `${pregnancyWeeksPublished} published of 42 weeks`,
+      total: weeks.length,
+      active: weeks.length,
+      detail: `${weeks.length} weeks`,
     },
     childGrowth: {
-      total: childGrowthTotal + followupTotal,
-      active: childGrowthPublished + followupPublished,
-      detail: `${childGrowthPublished} milestones · ${followupPublished} check-ups`,
+      total: periods.length,
+      active: periods.length,
+      detail: `${periods.length} milestone periods`,
     },
     dailyTips: {
-      total: dailyTipsTotal,
-      active: dailyTipsActive,
+      total: tips.length,
+      active: activeTips.length,
       detail: `${weeksWithTips} week${weeksWithTips === 1 ? "" : "s"} with tips`,
     },
   };

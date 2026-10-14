@@ -1,5 +1,4 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { supabase } from "@/lib/supabaseClient";
 import type { Pregnancy } from "@/lib/types/database";
 
 type PregnanciesState = {
@@ -17,13 +16,15 @@ const initialState: PregnanciesState = {
 export const fetchPregnancies = createAsyncThunk(
   "pregnancies/fetchAll",
   async (_, { rejectWithValue }) => {
-    const { data, error } = await supabase
-      .from("pregnancies")
-      .select("*, profiles(full_name, phone)")
-      .order("updated_at", { ascending: false });
-
-    if (error) return rejectWithValue(error.message);
-    return (data ?? []) as Pregnancy[];
+    const response = await fetch("/api/admin/pregnancies");
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as {
+        error?: string;
+      };
+      return rejectWithValue(body.error ?? "Failed to load pregnancies");
+    }
+    const body = (await response.json()) as { pregnancies?: Pregnancy[] };
+    return (body.pregnancies ?? []) as Pregnancy[];
   },
 );
 

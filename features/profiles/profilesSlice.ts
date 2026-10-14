@@ -1,10 +1,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "@/app/store/store";
 import { DEFAULT_PAGE_SIZE } from "@/lib/listPagination";
-import { isBackendApiEnabled } from "@/lib/backend/config";
 import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
-import { supabase } from "@/lib/supabaseClient";
-import { accountTypeForRole, type CreateUserInput, type AppUserRole } from "@/lib/roles";
+import type { CreateUserInput, AppUserRole } from "@/lib/roles";
 import type { Profile } from "@/lib/types/database";
 
 type ProfilesState = {
@@ -49,55 +47,35 @@ export const fetchProfiles = createAsyncThunk(
     const limit = args?.limit ?? DEFAULT_PAGE_SIZE;
     const offset = args?.offset ?? 0;
 
-    if (isBackendApiEnabled()) {
-      const params = new URLSearchParams({
-        limit: String(limit),
-        offset: String(offset),
-      });
-      const response = await fetch(`/api/admin/users?${params.toString()}`);
-      if (!response.ok) {
-        const body = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(body.error ?? "Failed to load users from staging API");
-      }
-      const body = (await response.json()) as {
-        profiles?: Profile[];
-        items?: Profile[];
-        pagination?: {
-          total: number | null;
-          offset: number;
-          limit: number;
-          hasMore: boolean;
-        };
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
+    });
+    const response = await fetch(`/api/admin/users?${params.toString()}`);
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as {
+        error?: string;
       };
-      const profiles = (body.profiles ?? body.items ?? []) as Profile[];
-      const pagination = body.pagination ?? {
-        total: null,
-        offset,
-        limit,
-        hasMore: profiles.length >= limit,
-      };
-      return { profiles, pagination };
+      return rejectWithValue(body.error ?? "Failed to load users");
     }
-
-    const { data: profiles, error: profilesError } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("role", "mother")
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    if (profilesError) return rejectWithValue(profilesError.message);
-
-    const rows = (profiles ?? []) as Profile[];
-    return {
-      profiles: rows,
-      pagination: {
-        total: null,
-        offset,
-        limit,
-        hasMore: rows.length >= limit,
-      },
+    const body = (await response.json()) as {
+      profiles?: Profile[];
+      items?: Profile[];
+      pagination?: {
+        total: number | null;
+        offset: number;
+        limit: number;
+        hasMore: boolean;
+      };
     };
+    const profiles = (body.profiles ?? body.items ?? []) as Profile[];
+    const pagination = body.pagination ?? {
+      total: null,
+      offset,
+      limit,
+      hasMore: profiles.length >= limit,
+    };
+    return { profiles, pagination };
   },
 );
 
@@ -125,33 +103,22 @@ export const createUser = createAsyncThunk(
   },
 );
 
-export const updateProfileRole = createAsyncThunk(
-  "profiles/updateRole",
-  async (
-    payload: { id: string; role: AppUserRole },
-    { rejectWithValue, getState },
-  ) => {
-    const denied = rejectUnlessCanManage(
-      (getState() as RootState).auth.user?.adminRole,
-      "manage_users",
-    );
-    if (denied) return rejectWithValue(denied);
+export const updateProfileRole = createAsyncThunk<
+  Profile,
+  { id: string; role: AppUserRole },
+  { rejectValue: string }
+>("profiles/updateRole", async (payload, { rejectWithValue, getState }) => {
+  const denied = rejectUnlessCanManage(
+    (getState() as RootState).auth.user?.adminRole,
+    "manage_users",
+  );
+  if (denied) return rejectWithValue(denied);
 
-    const { data, error } = await supabase
-      .from("profiles")
-      .update({
-        role: payload.role,
-        account_type: accountTypeForRole(payload.role),
-        is_admin: false,
-      })
-      .eq("id", payload.id)
-      .select("*")
-      .single();
-
-    if (error) return rejectWithValue(error.message);
-    return data as Profile;
-  },
-);
+  void payload;
+  return rejectWithValue(
+    "Updating parent role is not available on api.icaremchealth.com yet.",
+  );
+});
 
 const profilesSlice = createSlice({
   name: "profiles",

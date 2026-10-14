@@ -2,11 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabaseClient";
-import { fetchAdminAccess } from "@/lib/adminAccess";
-import { isBackendApiEnabled } from "@/lib/backend/config";
 import { useAppDispatch } from "@/app/store/hooks";
-import { authActions, restoreSession } from "@/app/store/slices/authSlice";
+import { restoreSession } from "@/app/store/slices/authSlice";
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -14,7 +11,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
   const [checking, setChecking] = useState(true);
   const didNavigate = useRef(false);
-  const backendMode = isBackendApiEnabled();
 
   useEffect(() => {
     let mounted = true;
@@ -27,43 +23,11 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        if (backendMode) {
-          if (mounted && !didNavigate.current) {
-            didNavigate.current = true;
-            router.replace(
-              `/?error=auth&next=${encodeURIComponent(pathname || "/admin/dashboard")}`,
-            );
-          }
-          return;
-        }
-
-        const { data } = await supabase.auth.getSession();
-        const user = data.session?.user;
-        if (!user?.email) {
-          if (mounted && !didNavigate.current) {
-            didNavigate.current = true;
-            router.replace(
-              `/?error=auth&next=${encodeURIComponent(pathname || "/admin/dashboard")}`,
-            );
-          }
-          return;
-        }
-
-        const access = await fetchAdminAccess(
-          supabase,
-          user.id,
-          user.email,
-        );
-
-        if (!access.allowed) {
-          await supabase.auth.signOut();
-          dispatch(authActions.logout());
-          if (mounted && !didNavigate.current) {
-            didNavigate.current = true;
-            router.replace(
-              `/?error=unauthorized&next=${encodeURIComponent(pathname || "/admin/dashboard")}`,
-            );
-          }
+        if (mounted && !didNavigate.current) {
+          didNavigate.current = true;
+          router.replace(
+            `/?error=auth&next=${encodeURIComponent(pathname || "/admin/dashboard")}`,
+          );
         }
       } catch {
         if (mounted && !didNavigate.current) {
@@ -78,22 +42,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     };
 
     void check();
-
-    if (backendMode) {
-      return () => {
-        mounted = false;
-      };
-    }
-
-    const { data: sub } = supabase.auth.onAuthStateChange(() => {
-      void check();
-    });
-
     return () => {
       mounted = false;
-      sub.subscription.unsubscribe();
     };
-  }, [backendMode, dispatch, router, pathname]);
+  }, [dispatch, router, pathname]);
 
   if (checking) {
     return (

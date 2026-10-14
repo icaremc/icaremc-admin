@@ -1,10 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "@/app/store/store";
-import { isBackendApiEnabled } from "@/lib/backend/config";
 import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
-import { supabase } from "@/lib/supabaseClient";
-import { logContentDeleted, logContentSaved } from "@/lib/client/adminActivityEvents";
-import { syncLocaleTranslationRows } from "@/lib/content/syncLocaleRows";
 import type { DailyTip, DailyTipTranslation, Locale } from "@/lib/types/database";
 
 export type DailyTipFormTranslation = {
@@ -28,9 +24,6 @@ type DailyTipsState = {
   error: string | null;
   success: string | null;
 };
-
-const TIP_SELECT =
-  "*, daily_tip_translations!pregnancy_tip_translations_tip_id_fkey(id, tip_id, language_code, title, content, created_at, updated_at)";
 
 function normalizeDailyTip(row: DailyTip & { daily_tip_translations_1?: DailyTipTranslation[] }): DailyTip {
   const translations =
@@ -143,52 +136,29 @@ const initialState: DailyTipsState = {
 export const fetchDailyTips = createAsyncThunk(
   "dailyTips/fetchAll",
   async (_, { rejectWithValue }) => {
-    if (isBackendApiEnabled()) {
-      const response = await fetch("/api/admin/daily-tips");
-      if (!response.ok) {
-        const body = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(body.error ?? "Failed to load daily tips");
-      }
-      const body = (await response.json()) as { tips?: DailyTip[]; items?: DailyTip[] };
-      return sortTips((body.tips ?? body.items ?? []).map(normalizeDailyTip));
+    const response = await fetch("/api/admin/daily-tips");
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(body.error ?? "Failed to load daily tips");
     }
-
-    const { data, error } = await supabase
-      .from("daily_tips")
-      .select(TIP_SELECT)
-      .order("week_number", { ascending: true })
-      .order("day_number", { ascending: true, nullsFirst: false });
-
-    if (error) return rejectWithValue(error.message);
-    return sortTips(((data ?? []) as DailyTip[]).map(normalizeDailyTip));
+    const body = (await response.json()) as { tips?: DailyTip[]; items?: DailyTip[] };
+    return sortTips((body.tips ?? body.items ?? []).map(normalizeDailyTip));
   },
 );
 
 export const fetchDailyTip = createAsyncThunk(
   "dailyTips/fetchOne",
   async (id: string, { rejectWithValue }) => {
-    if (isBackendApiEnabled()) {
-      const response = await fetch("/api/admin/daily-tips");
-      if (!response.ok) {
-        const body = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(body.error ?? "Failed to load daily tip");
-      }
-      const body = (await response.json()) as { tips?: DailyTip[]; items?: DailyTip[] };
-      const tips = (body.tips ?? body.items ?? []).map(normalizeDailyTip);
-      const found = tips.find((tip) => tip.id === id);
-      if (!found) return rejectWithValue("Daily tip not found.");
-      return found;
+    const response = await fetch("/api/admin/daily-tips");
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(body.error ?? "Failed to load daily tip");
     }
-
-    const { data, error } = await supabase
-      .from("daily_tips")
-      .select(TIP_SELECT)
-      .eq("id", id)
-      .maybeSingle();
-
-    if (error) return rejectWithValue(error.message);
-    if (!data) return rejectWithValue("Daily tip not found.");
-    return normalizeDailyTip(data as DailyTip & { daily_tip_translations_1?: DailyTipTranslation[] });
+    const body = (await response.json()) as { tips?: DailyTip[]; items?: DailyTip[] };
+    const tips = (body.tips ?? body.items ?? []).map(normalizeDailyTip);
+    const found = tips.find((tip) => tip.id === id);
+    if (!found) return rejectWithValue("Daily tip not found.");
+    return found;
   },
 );
 
@@ -211,84 +181,29 @@ export const saveDailyTip = createAsyncThunk(
       ({ language_code, title, content }) => ({ language_code, title, content }),
     );
 
-    if (isBackendApiEnabled()) {
-      const body = {
-        week_number: payload.form.week_number,
-        day_number: payload.form.day_number,
-        category: payload.form.category.trim() || null,
-        is_active: payload.form.is_active,
-        translations,
-      };
-      const response = await fetch(
-        payload.id ? `/api/admin/daily-tips/${payload.id}` : "/api/admin/daily-tips",
-        {
-          method: payload.id ? "PATCH" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        },
-      );
-      if (!response.ok) {
-        const err = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(err.error ?? "Failed to save daily tip");
-      }
-      const result = (await response.json()) as { tip?: DailyTip; tips?: DailyTip[] };
-      const tip = result.tip ?? result.tips?.[0];
-      if (!tip) return rejectWithValue("Saved, but tip response was empty.");
-      return normalizeDailyTip(tip);
-    }
-
-    const tipPayload = {
+    const body = {
       week_number: payload.form.week_number,
       day_number: payload.form.day_number,
       category: payload.form.category.trim() || null,
       is_active: payload.form.is_active,
+      translations,
     };
-
-    let tipId = payload.id;
-
-    if (tipId) {
-      const { error } = await supabase
-        .from("daily_tips")
-        .update(tipPayload)
-        .eq("id", tipId);
-      if (error) return rejectWithValue(error.message);
-    } else {
-      const { data, error } = await supabase
-        .from("daily_tips")
-        .insert(tipPayload)
-        .select("id")
-        .single();
-      if (error) return rejectWithValue(error.message);
-      tipId = data.id;
-    }
-
-    const rows = formToTranslationRows(tipId!, payload.form);
-    const syncError = await syncLocaleTranslationRows({
-      table: "daily_tip_translations",
-      parentColumn: "tip_id",
-      parentId: tipId!,
-      onConflict: "tip_id,language_code",
-      rows,
-    });
-    if (syncError) return rejectWithValue(syncError);
-
-    const { data, error } = await supabase
-      .from("daily_tips")
-      .select(TIP_SELECT)
-      .eq("id", tipId)
-      .single();
-
-    if (error) return rejectWithValue(error.message);
-    logContentSaved(
-      "daily_tip",
-      tipId!,
-      `Saved daily tip: week ${payload.form.week_number}, day ${payload.form.day_number}`,
+    const response = await fetch(
+      payload.id ? `/api/admin/daily-tips/${payload.id}` : "/api/admin/daily-tips",
       {
-        week_number: payload.form.week_number,
-        day_number: payload.form.day_number,
+        method: payload.id ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       },
     );
-    return normalizeDailyTip(data as DailyTip & { daily_tip_translations_1?: DailyTipTranslation[] });
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(err.error ?? "Failed to save daily tip");
+    }
+    const result = (await response.json()) as { tip?: DailyTip; tips?: DailyTip[] };
+    const tip = result.tip ?? result.tips?.[0];
+    if (!tip) return rejectWithValue("Saved, but tip response was empty.");
+    return normalizeDailyTip(tip);
   },
 );
 
@@ -301,18 +216,11 @@ export const deleteDailyTip = createAsyncThunk(
     );
     if (denied) return rejectWithValue(denied);
 
-    if (isBackendApiEnabled()) {
-      const response = await fetch(`/api/admin/daily-tips/${id}`, { method: "DELETE" });
-      if (!response.ok) {
-        const err = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(err.error ?? "Failed to delete daily tip");
-      }
-      return id;
+    const response = await fetch(`/api/admin/daily-tips/${id}`, { method: "DELETE" });
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(err.error ?? "Failed to delete daily tip");
     }
-
-    const { error } = await supabase.from("daily_tips").delete().eq("id", id);
-    if (error) return rejectWithValue(error.message);
-    logContentDeleted("daily_tip", id, "Deleted daily tip", { resource_id: id });
     return id;
   },
 );

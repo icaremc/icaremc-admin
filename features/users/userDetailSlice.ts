@@ -1,6 +1,4 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { isBackendApiEnabled } from "@/lib/backend/config";
-import { supabase } from "@/lib/supabaseClient";
 import type { Child, Pregnancy, PregnancyLog, Profile } from "@/lib/types/database";
 
 export type UserDetailPayload = {
@@ -27,69 +25,25 @@ const initialState: UserDetailState = {
 export const fetchUserDetail = createAsyncThunk(
   "userDetail/fetch",
   async (userId: string, { rejectWithValue }) => {
-    if (isBackendApiEnabled()) {
-      const response = await fetch(`/api/admin/users/${userId}`);
-      if (!response.ok) {
-        const body = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(body.error ?? "Failed to load user from staging API");
-      }
-      const body = (await response.json()) as {
-        profile?: Profile;
-        pregnancies?: Pregnancy[];
-        children?: Child[];
-        logsByPregnancy?: Record<string, PregnancyLog[]>;
+    const response = await fetch(`/api/admin/users/${userId}`);
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as {
+        error?: string;
       };
-      if (!body.profile) return rejectWithValue("User not found");
-      return {
-        profile: body.profile,
-        pregnancies: body.pregnancies ?? [],
-        children: body.children ?? [],
-        logsByPregnancy: body.logsByPregnancy ?? {},
-      } satisfies UserDetailPayload;
+      return rejectWithValue(body.error ?? "Failed to load user");
     }
-
-    const [profileRes, pregnanciesRes, childrenRes] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", userId).single(),
-      supabase
-        .from("pregnancies")
-        .select("*")
-        .eq("user_id", userId)
-        .order("pregnancy_number", { ascending: true }),
-      supabase
-        .from("children")
-        .select("*")
-        .eq("user_id", userId)
-        .order("birth_date", { ascending: false }),
-    ]);
-
-    if (profileRes.error) return rejectWithValue(profileRes.error.message);
-    if (pregnanciesRes.error) return rejectWithValue(pregnanciesRes.error.message);
-    if (childrenRes.error) return rejectWithValue(childrenRes.error.message);
-
-    const pregnancies = (pregnanciesRes.data ?? []) as Pregnancy[];
-    const pregnancyIds = pregnancies.map((p) => p.id);
-
-    const logsByPregnancy: Record<string, PregnancyLog[]> = {};
-    if (pregnancyIds.length > 0) {
-      const { data: logs, error: logsError } = await supabase
-        .from("pregnancy_logs")
-        .select("*")
-        .in("pregnancy_id", pregnancyIds)
-        .order("week_number", { ascending: true });
-
-      if (logsError) return rejectWithValue(logsError.message);
-
-      for (const log of (logs ?? []) as PregnancyLog[]) {
-        logsByPregnancy[log.pregnancy_id] ??= [];
-        logsByPregnancy[log.pregnancy_id].push(log);
-      }
-    }
-
+    const body = (await response.json()) as {
+      profile?: Profile;
+      pregnancies?: Pregnancy[];
+      children?: Child[];
+      logsByPregnancy?: Record<string, PregnancyLog[]>;
+    };
+    if (!body.profile) return rejectWithValue("User not found");
     return {
-      profile: profileRes.data as Profile,
-      pregnancies,
-      logsByPregnancy,
-      children: (childrenRes.data ?? []) as Child[],
+      profile: body.profile,
+      pregnancies: body.pregnancies ?? [],
+      children: body.children ?? [],
+      logsByPregnancy: body.logsByPregnancy ?? {},
     } satisfies UserDetailPayload;
   },
 );
@@ -122,5 +76,5 @@ const userDetailSlice = createSlice({
   },
 });
 
-export const userDetailActions = userDetailSlice.actions;
+export const { clearUserDetail } = userDetailSlice.actions;
 export const userDetailReducer = userDetailSlice.reducer;

@@ -15,6 +15,32 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function groupUserDetailLogs(
+  body: Record<string, unknown>,
+): Record<string, unknown[]> {
+  const byKey =
+    body.logsByPregnancy ?? body.logs_by_pregnancy ?? body.pregnancy_logs_by_id;
+  if (isPlainObject(byKey)) {
+    const out: Record<string, unknown[]> = {};
+    for (const [key, value] of Object.entries(byKey)) {
+      if (Array.isArray(value)) out[key] = value;
+    }
+    return out;
+  }
+  const flat =
+    body.pregnancy_logs ?? body.pregnancyLogs ?? body.logs ?? body.health_logs;
+  if (!Array.isArray(flat)) return {};
+  const out: Record<string, unknown[]> = {};
+  for (const row of flat) {
+    if (!isPlainObject(row)) continue;
+    const pregnancyId = String(row.pregnancy_id ?? row.pregnancyId ?? "").trim();
+    if (!pregnancyId) continue;
+    out[pregnancyId] ??= [];
+    out[pregnancyId].push(row);
+  }
+  return out;
+}
+
 function asNumber(value: unknown): number {
   const n = typeof value === "number" ? value : Number(value);
   return Number.isFinite(n) ? n : 0;
@@ -234,9 +260,18 @@ function mapPregnancyWeekRow(row: Record<string, unknown>) {
 }
 
 function mapChildGrowthPeriodRow(row: Record<string, unknown>) {
-  const translations = translationList(row, [
+  const fromNested = translationList(row, [
     "child_growth_period_translations",
-  ]).map((item) => ({
+    "childGrowthPeriodTranslations",
+  ]);
+  // CMS shape: single `translation` per lang response — already folded into nested list by proxy
+  const translations = (
+    fromNested.length > 0
+      ? fromNested
+      : isPlainObject(row.translation)
+        ? [row.translation]
+        : []
+  ).map((item) => ({
     id: str(item.id),
     period_id: str(item.period_id ?? item.periodId ?? row.id),
     language_code: str(item.language_code ?? item.languageCode ?? "en"),
@@ -245,10 +280,12 @@ function mapChildGrowthPeriodRow(row: Record<string, unknown>) {
     growth: isPlainObject(item.growth) ? item.growth : {},
     vaccines: Array.isArray(item.vaccines) ? item.vaccines : [],
     milestones: Array.isArray(item.milestones) ? item.milestones : [],
-    red_flags: Array.isArray(item.red_flags) ? item.red_flags : [],
+    red_flags: Array.isArray(item.red_flags ?? item.redFlags)
+      ? ((item.red_flags ?? item.redFlags) as unknown[])
+      : [],
     nutrition: Array.isArray(item.nutrition) ? item.nutrition : [],
-    visit_reminders: Array.isArray(item.visit_reminders)
-      ? item.visit_reminders
+    visit_reminders: Array.isArray(item.visit_reminders ?? item.visitReminders)
+      ? ((item.visit_reminders ?? item.visitReminders) as unknown[])
       : [],
     created_at: str(item.created_at ?? item.createdAt),
     updated_at: str(item.updated_at ?? item.updatedAt),
@@ -1462,15 +1499,41 @@ export function adaptBackendResponse(
     }
     if (head === "users" && rest.length === 1) {
       if ("profile" in body || "pregnancies" in body || "children" in body) {
+        const logsByPregnancy = groupUserDetailLogs(body);
         return {
           profile: body.profile ?? body,
           pregnancies: Array.isArray(body.pregnancies) ? body.pregnancies : [],
           children: Array.isArray(body.children) ? body.children : [],
-          logsByPregnancy: {},
+          logsByPregnancy,
           user: body.profile ?? body,
         };
       }
-      return { profile: body, user: body, pregnancies: [], children: [], logsByPregnancy: {} };
+      return {
+        profile: body,
+        user: body,
+        pregnancies: [],
+        children: [],
+        logsByPregnancy: {},
+      };
+    }
+    if (head === "pregnancies" && rest.length === 0) {
+      const pregnancies = Array.isArray(body.pregnancies)
+        ? body.pregnancies
+        : Array.isArray(body.items)
+          ? body.items
+          : [];
+      return { pregnancies };
+    }
+    if (
+      (head === "pregnancy-logs" || head === "health-logs") &&
+      rest.length === 0
+    ) {
+      const logs = Array.isArray(body.logs)
+        ? body.logs
+        : Array.isArray(body.items)
+          ? body.items
+          : [];
+      return { logs };
     }
     if (head === "payout-requests" && rest.length === 1) {
       return { request: body, ...body };

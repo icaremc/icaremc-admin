@@ -1,11 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "@/app/store/store";
-import { isBackendApiEnabled } from "@/lib/backend/config";
 import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
-import { supabase } from "@/lib/supabaseClient";
-import { logContentDeleted, logContentSaved } from "@/lib/client/adminActivityEvents";
 import type { PregnancySectionFields } from "@/lib/content/formTypes";
-import { syncLocaleTranslationRows } from "@/lib/content/syncLocaleRows";
 import {
   ensureStandardPregnancySections,
   standardPregnancySections,
@@ -44,11 +40,6 @@ type PregnancyWeeksState = {
   error: string | null;
   success: string | null;
 };
-
-const TRANSLATION_SELECT =
-  "id, pregnancy_week_id, language_code, title, subtitle, baby, stage, mother_changes, recommendations, warning_signs, sections, created_at, updated_at";
-
-const WEEK_SELECT = `*, pregnancy_week_translations(${TRANSLATION_SELECT})`;
 
 export const emptyTranslation = (
   locale: Locale,
@@ -203,62 +194,40 @@ const initialState: PregnancyWeeksState = {
 export const fetchPregnancyWeeks = createAsyncThunk(
   "pregnancyWeeks/fetchAll",
   async (_, { rejectWithValue }) => {
-    if (isBackendApiEnabled()) {
-      const response = await fetch("/api/admin/pregnancy-weeks");
-      if (!response.ok) {
-        const body = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(body.error ?? "Failed to load pregnancy weeks");
-      }
-      const body = (await response.json()) as {
-        weeks?: PregnancyWeek[];
-        items?: PregnancyWeek[];
-      };
-      return (body.weeks ?? body.items ?? []) as PregnancyWeek[];
+    const response = await fetch("/api/admin/pregnancy-weeks");
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(body.error ?? "Failed to load pregnancy weeks");
     }
-
-    const { data, error } = await supabase
-      .from("pregnancy_weeks")
-      .select(WEEK_SELECT)
-      .order("week_number", { ascending: true });
-
-    if (error) return rejectWithValue(error.message);
-    return (data ?? []) as PregnancyWeek[];
+    const body = (await response.json()) as {
+      weeks?: PregnancyWeek[];
+      items?: PregnancyWeek[];
+    };
+    return (body.weeks ?? body.items ?? []) as PregnancyWeek[];
   },
 );
 
 export const fetchPregnancyWeek = createAsyncThunk(
   "pregnancyWeeks/fetchOne",
   async (weekNumber: number, { rejectWithValue, getState }) => {
-    if (isBackendApiEnabled()) {
-      const cached = (getState() as RootState).pregnancyWeeks.weeks.find(
-        (week) => week.week_number === weekNumber,
-      );
-      if (cached) return cached;
+    const cached = (getState() as RootState).pregnancyWeeks.weeks.find(
+      (week) => week.week_number === weekNumber,
+    );
+    if (cached) return cached;
 
-      const response = await fetch("/api/admin/pregnancy-weeks");
-      if (!response.ok) {
-        const body = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(body.error ?? "Failed to load pregnancy week");
-      }
-      const body = (await response.json()) as {
-        weeks?: PregnancyWeek[];
-        items?: PregnancyWeek[];
-      };
-      const weeks = body.weeks ?? body.items ?? [];
-      const found = weeks.find((week) => week.week_number === weekNumber);
-      if (!found) return rejectWithValue("Pregnancy week not found.");
-      return found;
+    const response = await fetch("/api/admin/pregnancy-weeks");
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(body.error ?? "Failed to load pregnancy week");
     }
-
-    const { data, error } = await supabase
-      .from("pregnancy_weeks")
-      .select(WEEK_SELECT)
-      .eq("week_number", weekNumber)
-      .maybeSingle();
-
-    if (error) return rejectWithValue(error.message);
-    if (!data) return rejectWithValue("Pregnancy week not found.");
-    return data as PregnancyWeek;
+    const body = (await response.json()) as {
+      weeks?: PregnancyWeek[];
+      items?: PregnancyWeek[];
+    };
+    const weeks = body.weeks ?? body.items ?? [];
+    const found = weeks.find((week) => week.week_number === weekNumber);
+    if (!found) return rejectWithValue("Pregnancy week not found.");
+    return found;
   },
 );
 
@@ -282,135 +251,84 @@ export const savePregnancyWeek = createAsyncThunk(
       is_published: form.is_published,
     };
 
-    if (isBackendApiEnabled()) {
-      let existing = (getState() as RootState).pregnancyWeeks.weeks.find(
+    let existing = (getState() as RootState).pregnancyWeeks.weeks.find(
+      (week) => week.week_number === form.week_number,
+    );
+    if (!existing) {
+      const listRes = await fetch("/api/admin/pregnancy-weeks");
+      if (!listRes.ok) {
+        const err = (await listRes.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(err.error ?? "Failed to load pregnancy weeks");
+      }
+      const listBody = (await listRes.json()) as {
+        weeks?: PregnancyWeek[];
+        items?: PregnancyWeek[];
+      };
+      existing = (listBody.weeks ?? listBody.items ?? []).find(
         (week) => week.week_number === form.week_number,
       );
-      if (!existing) {
-        const listRes = await fetch("/api/admin/pregnancy-weeks");
-        if (!listRes.ok) {
-          const err = (await listRes.json().catch(() => ({}))) as { error?: string };
-          return rejectWithValue(err.error ?? "Failed to load pregnancy weeks");
-        }
-        const listBody = (await listRes.json()) as {
-          weeks?: PregnancyWeek[];
-          items?: PregnancyWeek[];
-        };
-        existing = (listBody.weeks ?? listBody.items ?? []).find(
-          (week) => week.week_number === form.week_number,
-        );
-      }
-
-      const saveRes = await fetch(
-        existing ? `/api/admin/pregnancy-weeks/${existing.id}` : "/api/admin/pregnancy-weeks",
-        {
-          method: existing ? "PATCH" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(weekPayload),
-        },
-      );
-      if (!saveRes.ok) {
-        const err = (await saveRes.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(err.error ?? "Failed to save pregnancy week");
-      }
-      const saved = (await saveRes.json()) as {
-        week?: PregnancyWeek;
-        weeks?: PregnancyWeek[];
-      };
-      const week = saved.week ?? saved.weeks?.[0] ?? existing;
-      const weekId = week?.id;
-      if (!weekId) return rejectWithValue("Saved, but week id was missing.");
-
-      const rows = formToTranslationRows(weekId, form);
-      const translationResults = await Promise.all(
-        rows.map((row) =>
-          fetch(`/api/admin/pregnancy-weeks/${weekId}/translations`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              language_code: row.language_code,
-              title: row.title,
-              subtitle: row.subtitle,
-              baby: row.baby,
-              stage: row.stage,
-              mother_changes: row.mother_changes,
-              recommendations: row.recommendations,
-              warning_signs: row.warning_signs,
-              sections: row.sections,
-            }),
-          }),
-        ),
-      );
-      for (const trRes of translationResults) {
-        if (!trRes.ok) {
-          const err = (await trRes.json().catch(() => ({}))) as { error?: string };
-          return rejectWithValue(err.error ?? "Failed to save week translation");
-        }
-      }
-
-      return {
-        ...(week as PregnancyWeek),
-        id: weekId,
-        ...weekPayload,
-        image_url:
-          (week?.image_url ?? existing?.image_url ?? form.image_url) || null,
-        pregnancy_week_translations: rows.map((row) => ({
-          id: "",
-          created_at: "",
-          updated_at: "",
-          ...row,
-        })),
-      } as PregnancyWeek;
     }
 
-    const existing = await supabase
-      .from("pregnancy_weeks")
-      .select("id")
-      .eq("week_number", form.week_number)
-      .maybeSingle();
-
-    let weekId = existing.data?.id as string | undefined;
-
-    if (weekId) {
-      const { error } = await supabase
-        .from("pregnancy_weeks")
-        .update(weekPayload)
-        .eq("id", weekId);
-      if (error) return rejectWithValue(error.message);
-    } else {
-      const { data, error } = await supabase
-        .from("pregnancy_weeks")
-        .insert(weekPayload)
-        .select("id")
-        .single();
-      if (error) return rejectWithValue(error.message);
-      weekId = data.id;
-    }
-
-    const rows = formToTranslationRows(weekId!, form);
-    const syncError = await syncLocaleTranslationRows({
-      table: "pregnancy_week_translations",
-      parentColumn: "pregnancy_week_id",
-      parentId: weekId!,
-      onConflict: "pregnancy_week_id,language_code",
-      rows,
-    });
-    if (syncError) return rejectWithValue(syncError);
-
-    const { data, error } = await supabase
-      .from("pregnancy_weeks")
-      .select(WEEK_SELECT)
-      .eq("id", weekId)
-      .single();
-
-    if (error) return rejectWithValue(error.message);
-    logContentSaved(
-      "pregnancy_week",
-      weekId!,
-      `Saved pregnancy week ${form.week_number}`,
-      { week_number: form.week_number },
+    const saveRes = await fetch(
+      existing ? `/api/admin/pregnancy-weeks/${existing.id}` : "/api/admin/pregnancy-weeks",
+      {
+        method: existing ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(weekPayload),
+      },
     );
-    return data as PregnancyWeek;
+    if (!saveRes.ok) {
+      const err = (await saveRes.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(err.error ?? "Failed to save pregnancy week");
+    }
+    const saved = (await saveRes.json()) as {
+      week?: PregnancyWeek;
+      weeks?: PregnancyWeek[];
+    };
+    const week = saved.week ?? saved.weeks?.[0] ?? existing;
+    const weekId = week?.id;
+    if (!weekId) return rejectWithValue("Saved, but week id was missing.");
+
+    const rows = formToTranslationRows(weekId, form);
+    const translationResults = await Promise.all(
+      rows.map((row) =>
+        fetch(`/api/admin/pregnancy-weeks/${weekId}/translations`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            language_code: row.language_code,
+            title: row.title,
+            subtitle: row.subtitle,
+            baby: row.baby,
+            stage: row.stage,
+            mother_changes: row.mother_changes,
+            recommendations: row.recommendations,
+            warning_signs: row.warning_signs,
+            sections: row.sections,
+          }),
+        }),
+      ),
+    );
+    for (const trRes of translationResults) {
+      if (!trRes.ok) {
+        const err = (await trRes.json().catch(() => ({}))) as { error?: string };
+        return rejectWithValue(err.error ?? "Failed to save week translation");
+      }
+    }
+
+    return {
+      ...(week as PregnancyWeek),
+      id: weekId,
+      ...weekPayload,
+      image_url:
+        (week?.image_url ?? existing?.image_url ?? form.image_url) || null,
+      pregnancy_week_translations: rows.map((row) => ({
+        id: "",
+        created_at: "",
+        updated_at: "",
+        ...row,
+      })),
+    } as PregnancyWeek;
   },
 );
 
@@ -423,22 +341,13 @@ export const deletePregnancyWeek = createAsyncThunk(
     );
     if (denied) return rejectWithValue(denied);
 
-    if (isBackendApiEnabled()) {
-      const response = await fetch(`/api/admin/pregnancy-weeks/${id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) {
-        const err = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(err.error ?? "Failed to delete pregnancy week");
-      }
-      return id;
-    }
-
-    const { error } = await supabase.from("pregnancy_weeks").delete().eq("id", id);
-    if (error) return rejectWithValue(error.message);
-    logContentDeleted("pregnancy_week", id, `Deleted pregnancy week`, {
-      resource_id: id,
+    const response = await fetch(`/api/admin/pregnancy-weeks/${id}`, {
+      method: "DELETE",
     });
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(err.error ?? "Failed to delete pregnancy week");
+    }
     return id;
   },
 );

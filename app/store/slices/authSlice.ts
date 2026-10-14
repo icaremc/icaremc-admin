@@ -1,9 +1,4 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { supabase } from "@/lib/supabaseClient";
-import { fetchAdminAccess } from "@/lib/adminAccess";
-import { ADMIN_ACTIVITY_EVENTS } from "@/lib/activity/events";
-import { logAdminPortalEvent } from "@/lib/client/logAdminActivity";
-import { isBackendApiEnabled } from "@/lib/backend/config";
 import type { AdminRole } from "@/lib/types/database";
 
 type AuthUser = {
@@ -27,9 +22,6 @@ const initialState: AuthState = {
   error: null,
 };
 
-const UNAUTHORIZED_MESSAGE =
-  "This account is not authorized for admin access.";
-
 function asAdminRole(value: string | null | undefined): AdminRole | null {
   if (
     value === "super_admin" ||
@@ -43,25 +35,6 @@ function asAdminRole(value: string | null | undefined): AdminRole | null {
   return value ? "support" : null;
 }
 
-function authUserFromSession(
-  user: { id: string; email?: string | null; user_metadata?: Record<string, unknown> },
-  access: Awaited<ReturnType<typeof fetchAdminAccess>>,
-  emailFallback: string,
-): AuthUser {
-  const name =
-    access.fullName ??
-    (user.user_metadata?.full_name as string | undefined) ??
-    user.email?.split("@")[0] ??
-    "Admin";
-
-  return {
-    id: user.id,
-    name,
-    email: user.email ?? emailFallback,
-    adminRole: access.adminRole,
-  };
-}
-
 export const login = createAsyncThunk<
   { user: AuthUser; token: string },
   { email: string; password: string },
@@ -73,20 +46,49 @@ export const login = createAsyncThunk<
     return rejectWithValue("Email and password are required.");
   }
 
-  if (isBackendApiEnabled()) {
-    const response = await fetch("/api/backend/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: trimmed, password }),
+  const response = await fetch("/api/backend/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: trimmed, password }),
+  });
+  const payload = (await response.json()) as {
+    error?: string;
+    token?: string;
+    user?: { id: string; email: string; name: string; adminRole: string | null };
+  };
+  if (!response.ok || !payload.token || !payload.user) {
+    return rejectWithValue(payload.error ?? "Login failed.");
+  }
+  return {
+    token: payload.token,
+    user: {
+      id: payload.user.id,
+      email: payload.user.email,
+      name: payload.user.name,
+      adminRole: asAdminRole(payload.user.adminRole),
+    },
+  };
+});
+
+export const restoreSession = createAsyncThunk<
+  { user: AuthUser; token: string } | null,
+  void,
+  { rejectValue: string }
+>("auth/restoreSession", async (_, { rejectWithValue }) => {
+  try {
+    const response = await fetch("/api/backend/auth/session", {
+      cache: "no-store",
     });
     const payload = (await response.json()) as {
-      error?: string;
       token?: string;
-      user?: { id: string; email: string; name: string; adminRole: string | null };
+      user?: {
+        id: string;
+        email: string;
+        name: string;
+        adminRole: string | null;
+      };
     };
-    if (!response.ok || !payload.token || !payload.user) {
-      return rejectWithValue(payload.error ?? "Login failed.");
-    }
+    if (!payload.token || !payload.user) return null;
     return {
       token: payload.token,
       user: {
@@ -96,96 +98,11 @@ export const login = createAsyncThunk<
         adminRole: asAdminRole(payload.user.adminRole),
       },
     };
+  } catch (error) {
+    return rejectWithValue(
+      error instanceof Error ? error.message : "Failed to restore session",
+    );
   }
-
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: trimmed,
-    password,
-  });
-
-  if (error) {
-    return rejectWithValue(error.message);
-  }
-
-  if (!data.session || !data.user) {
-    return rejectWithValue("Login failed. No session returned.");
-  }
-
-  const access = await fetchAdminAccess(
-    supabase,
-    data.user.id,
-    data.user.email ?? trimmed,
-  );
-
-  if (!access.allowed) {
-    await supabase.auth.signOut();
-    return rejectWithValue(UNAUTHORIZED_MESSAGE);
-  }
-
-  void logAdminPortalEvent({
-    event_type: ADMIN_ACTIVITY_EVENTS.LOGIN,
-    event_label: "Signed in to admin portal",
-  });
-
-  return {
-    user: authUserFromSession(data.user, access, trimmed),
-    token: data.session.access_token,
-  };
-});
-
-export const restoreSession = createAsyncThunk<
-  { user: AuthUser; token: string } | null,
-  void,
-  { rejectValue: string }
->("auth/restoreSession", async (_, { rejectWithValue }) => {
-  if (isBackendApiEnabled()) {
-    try {
-      const response = await fetch("/api/backend/auth/session", { cache: "no-store" });
-      const payload = (await response.json()) as {
-        token?: string;
-        user?: { id: string; email: string; name: string; adminRole: string | null };
-      };
-      if (!payload.token || !payload.user) return null;
-      return {
-        token: payload.token,
-        user: {
-          id: payload.user.id,
-          email: payload.user.email,
-          name: payload.user.name,
-          adminRole: asAdminRole(payload.user.adminRole),
-        },
-      };
-    } catch (error) {
-      return rejectWithValue(
-        error instanceof Error ? error.message : "Failed to restore session",
-      );
-    }
-  }
-
-  const { data, error } = await supabase.auth.getSession();
-
-  if (error) {
-    return rejectWithValue(error.message);
-  }
-
-  const session = data.session;
-  if (!session?.user?.email) return null;
-
-  const access = await fetchAdminAccess(
-    supabase,
-    session.user.id,
-    session.user.email,
-  );
-
-  if (!access.allowed) {
-    await supabase.auth.signOut();
-    return null;
-  }
-
-  return {
-    user: authUserFromSession(session.user, access, session.user.email),
-    token: session.access_token,
-  };
 });
 
 const authSlice = createSlice({

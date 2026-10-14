@@ -20,14 +20,10 @@ import {
   learningPathItemHasContent,
   serializeLearningPathItemMedia,
 } from "@/lib/content/learningPathMedia";
-import { syncLocaleTranslationRows } from "@/lib/content/syncLocaleRows";
 import {
   ageGroupForMonths,
   type ChildAgeGroup,
 } from "@/lib/childGrowth/periods";
-import { isBackendApiEnabled } from "@/lib/backend/config";
-import { supabase } from "@/lib/supabaseClient";
-import { logContentDeleted, logContentSaved } from "@/lib/client/adminActivityEvents";
 import type {
   ChildGrowthGrowthData,
   ChildGrowthMetrics,
@@ -35,7 +31,6 @@ import type {
   ChildGrowthMilestoneCategory,
   ChildGrowthPeriod,
   ChildGrowthPeriodTranslation,
-  ChildGrowthVaccine,
   Locale,
   PregnancyWeekSection,
 } from "@/lib/types/database";
@@ -127,22 +122,6 @@ function parseVaccines(raw: unknown): VaccineFields[] {
         benefitsText,
       };
     });
-}
-
-function serializeVaccines(vaccines: VaccineFields[]): ChildGrowthVaccine[] {
-  return vaccines
-    .filter(
-      (vaccine) =>
-        vaccine.name.trim() || vaccine.route.trim() || vaccine.benefitsText.trim(),
-    )
-    .map((vaccine) => ({
-      name: vaccine.name.trim(),
-      route: vaccine.route.trim(),
-      benefits: vaccine.benefitsText
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(Boolean),
-    }));
 }
 
 function parseSections(raw: unknown): PregnancySectionFields[] {
@@ -361,19 +340,6 @@ function serializeSections(
     }));
 }
 
-function serializeGrowthFields(fields: GrowthFields) {
-  const hasValue = Object.values(fields).some((v) => v.trim());
-  if (!hasValue) return undefined;
-  return {
-    weight_range: fields.weight_range.trim() || undefined,
-    length_range: fields.length_range.trim() || undefined,
-    head_circumference_range: fields.head_circumference_range.trim() || undefined,
-    weight_average: fields.weight_average.trim() || undefined,
-    length_average: fields.length_average.trim() || undefined,
-    head_average: fields.head_average.trim() || undefined,
-  };
-}
-
 function serializeGrowth(growth: ChildGrowthFormGrowth): ChildGrowthGrowthData {
   // Boys/girls text ranges are deprecated — numeric growth_metrics is the source of truth.
   const notes = growth.notes.trim() || undefined;
@@ -496,9 +462,6 @@ function formToTranslationRows(
   >[];
 }
 
-const PERIOD_SELECT =
-  "*, child_growth_period_translations(id, period_id, language_code, title, subtitle, growth, vaccines, milestones, red_flags, nutrition, visit_reminders, created_at, updated_at)";
-
 const initialState: ChildGrowthState = {
   periods: [],
   selected: null,
@@ -511,58 +474,36 @@ const initialState: ChildGrowthState = {
 export const fetchChildGrowthPeriods = createAsyncThunk(
   "childGrowth/fetchAll",
   async (_, { rejectWithValue }) => {
-    if (isBackendApiEnabled()) {
-      const response = await fetch("/api/admin/child-growth");
-      if (!response.ok) {
-        const body = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(body.error ?? "Failed to load child growth periods");
-      }
-      const body = (await response.json()) as {
-        periods?: ChildGrowthPeriod[];
-        items?: ChildGrowthPeriod[];
-      };
-      const periods = (body.periods ?? body.items ?? []) as ChildGrowthPeriod[];
-      return [...periods].sort((a, b) => a.age_months - b.age_months);
+    const response = await fetch("/api/admin/child-growth");
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(body.error ?? "Failed to load child growth periods");
     }
-
-    const { data, error } = await supabase
-      .from("child_growth_periods")
-      .select(PERIOD_SELECT)
-      .order("age_months", { ascending: true });
-
-    if (error) return rejectWithValue(error.message);
-    return (data ?? []) as ChildGrowthPeriod[];
+    const body = (await response.json()) as {
+      periods?: ChildGrowthPeriod[];
+      items?: ChildGrowthPeriod[];
+    };
+    const periods = (body.periods ?? body.items ?? []) as ChildGrowthPeriod[];
+    return [...periods].sort((a, b) => a.age_months - b.age_months);
   },
 );
 
 export const fetchChildGrowthPeriod = createAsyncThunk(
   "childGrowth/fetchOne",
   async (ageMonths: number, { rejectWithValue }) => {
-    if (isBackendApiEnabled()) {
-      const response = await fetch("/api/admin/child-growth");
-      if (!response.ok) {
-        const body = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(body.error ?? "Failed to load child growth period");
-      }
-      const body = (await response.json()) as {
-        periods?: ChildGrowthPeriod[];
-        items?: ChildGrowthPeriod[];
-      };
-      const periods = body.periods ?? body.items ?? [];
-      const found = periods.find((period) => period.age_months === ageMonths);
-      if (!found) return rejectWithValue("Child growth period not found.");
-      return found;
+    const response = await fetch("/api/admin/child-growth");
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(body.error ?? "Failed to load child growth period");
     }
-
-    const { data, error } = await supabase
-      .from("child_growth_periods")
-      .select(PERIOD_SELECT)
-      .eq("age_months", ageMonths)
-      .maybeSingle();
-
-    if (error) return rejectWithValue(error.message);
-    if (!data) return rejectWithValue("Child growth period not found.");
-    return data as ChildGrowthPeriod;
+    const body = (await response.json()) as {
+      periods?: ChildGrowthPeriod[];
+      items?: ChildGrowthPeriod[];
+    };
+    const periods = body.periods ?? body.items ?? [];
+    const found = periods.find((period) => period.age_months === ageMonths);
+    if (!found) return rejectWithValue("Child growth period not found.");
+    return found;
   },
 );
 
@@ -594,101 +535,50 @@ export const saveChildGrowthPeriod = createAsyncThunk(
       is_published: form.is_published,
     };
 
-    if (isBackendApiEnabled()) {
-      const listRes = await fetch("/api/admin/child-growth");
-      if (!listRes.ok) {
-        const err = (await listRes.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(err.error ?? "Failed to load child growth periods");
-      }
-      const listBody = (await listRes.json()) as {
-        periods?: ChildGrowthPeriod[];
-        items?: ChildGrowthPeriod[];
-      };
-      const existing = (listBody.periods ?? listBody.items ?? []).find(
-        (period) => period.age_months === form.age_months,
-      );
-      const translations = formToTranslationRows("pending", form).map(
-        ({ language_code, title, subtitle, growth, vaccines, milestones, red_flags, nutrition, visit_reminders }) => ({
-          language_code,
-          title,
-          subtitle,
-          growth,
-          vaccines,
-          milestones,
-          red_flags,
-          nutrition,
-          visit_reminders,
-        }),
-      );
-      const response = await fetch(
-        existing ? `/api/admin/child-growth/${existing.id}` : "/api/admin/child-growth",
-        {
-          method: existing ? "PATCH" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...periodPayload, translations }),
-        },
-      );
-      if (!response.ok) {
-        const err = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(err.error ?? "Failed to save child growth period");
-      }
-      const result = (await response.json()) as {
-        period?: ChildGrowthPeriod;
-        periods?: ChildGrowthPeriod[];
-      };
-      const period = result.period ?? result.periods?.[0];
-      if (!period) return rejectWithValue("Saved, but period response was empty.");
-      return period;
+    const listRes = await fetch("/api/admin/child-growth");
+    if (!listRes.ok) {
+      const err = (await listRes.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(err.error ?? "Failed to load child growth periods");
     }
-
-    const existing = await supabase
-      .from("child_growth_periods")
-      .select("id")
-      .eq("age_months", form.age_months)
-      .maybeSingle();
-
-    let periodId = existing.data?.id as string | undefined;
-
-    if (periodId) {
-      const { error } = await supabase
-        .from("child_growth_periods")
-        .update(periodPayload)
-        .eq("id", periodId);
-      if (error) return rejectWithValue(error.message);
-    } else {
-      const { data, error } = await supabase
-        .from("child_growth_periods")
-        .insert(periodPayload)
-        .select("id")
-        .single();
-      if (error) return rejectWithValue(error.message);
-      periodId = data.id;
-    }
-
-    const rows = formToTranslationRows(periodId!, form);
-    const syncError = await syncLocaleTranslationRows({
-      table: "child_growth_period_translations",
-      parentColumn: "period_id",
-      parentId: periodId!,
-      onConflict: "period_id,language_code",
-      rows,
-    });
-    if (syncError) return rejectWithValue(syncError);
-
-    const { data, error } = await supabase
-      .from("child_growth_periods")
-      .select(PERIOD_SELECT)
-      .eq("id", periodId)
-      .single();
-
-    if (error) return rejectWithValue(error.message);
-    logContentSaved(
-      "child_growth_period",
-      periodId!,
-      `Saved child milestone: ${form.age_months} months`,
-      { age_months: form.age_months },
+    const listBody = (await listRes.json()) as {
+      periods?: ChildGrowthPeriod[];
+      items?: ChildGrowthPeriod[];
+    };
+    const existing = (listBody.periods ?? listBody.items ?? []).find(
+      (period) => period.age_months === form.age_months,
     );
-    return data as ChildGrowthPeriod;
+    const translations = formToTranslationRows("pending", form).map(
+      ({ language_code, title, subtitle, growth, vaccines, milestones, red_flags, nutrition, visit_reminders }) => ({
+        language_code,
+        title,
+        subtitle,
+        growth,
+        vaccines,
+        milestones,
+        red_flags,
+        nutrition,
+        visit_reminders,
+      }),
+    );
+    const response = await fetch(
+      existing ? `/api/admin/child-growth/${existing.id}` : "/api/admin/child-growth",
+      {
+        method: existing ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...periodPayload, translations }),
+      },
+    );
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(err.error ?? "Failed to save child growth period");
+    }
+    const result = (await response.json()) as {
+      period?: ChildGrowthPeriod;
+      periods?: ChildGrowthPeriod[];
+    };
+    const period = result.period ?? result.periods?.[0];
+    if (!period) return rejectWithValue("Saved, but period response was empty.");
+    return period;
   },
 );
 
@@ -701,23 +591,11 @@ export const deleteChildGrowthPeriod = createAsyncThunk(
     );
     if (denied) return rejectWithValue(denied);
 
-    if (isBackendApiEnabled()) {
-      const response = await fetch(`/api/admin/child-growth/${id}`, { method: "DELETE" });
-      if (!response.ok) {
-        const err = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(err.error ?? "Failed to delete child growth period");
-      }
-      return id;
+    const response = await fetch(`/api/admin/child-growth/${id}`, { method: "DELETE" });
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(err.error ?? "Failed to delete child growth period");
     }
-
-    const { error } = await supabase
-      .from("child_growth_periods")
-      .delete()
-      .eq("id", id);
-    if (error) return rejectWithValue(error.message);
-    logContentDeleted("child_growth_period", id, "Deleted child milestone period", {
-      resource_id: id,
-    });
     return id;
   },
 );

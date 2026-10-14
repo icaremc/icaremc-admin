@@ -1,25 +1,13 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "@/app/store/store";
-import { dailyTipDayNumber, dailyTipWeekNumber } from "@/lib/content/contentLabels";
 import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
-import { supabase } from "@/lib/supabaseClient";
-import { logContentDeleted, logContentSaved } from "@/lib/client/adminActivityEvents";
 import type {
   ContentNamespace,
   ContentTranslation,
 } from "@/lib/types/database";
 
-function sortDailyTips(items: ContentTranslation[]): ContentTranslation[] {
-  return [...items].sort((a, b) => {
-    const weekA = dailyTipWeekNumber(a) ?? 999;
-    const weekB = dailyTipWeekNumber(b) ?? 999;
-    if (weekA !== weekB) return weekA - weekB;
-    const dayA = dailyTipDayNumber(a) ?? 999;
-    const dayB = dailyTipDayNumber(b) ?? 999;
-    if (dayA !== dayB) return dayA - dayB;
-    return a.created_at.localeCompare(b.created_at);
-  });
-}
+const CONTENT_API_UNAVAILABLE =
+  "Content translations are not available on the admin API yet.";
 
 type ContentState = {
   items: ContentTranslation[];
@@ -39,116 +27,55 @@ const initialState: ContentState = {
   success: null,
 };
 
-export const fetchContentByNamespace = createAsyncThunk(
-  "content/fetchByNamespace",
-  async (namespace: ContentNamespace, { rejectWithValue }) => {
-    const query = supabase
-      .from("content_translations")
-      .select("*")
-      .eq("namespace", namespace);
+export const fetchContentByNamespace = createAsyncThunk<
+  ContentTranslation[],
+  ContentNamespace,
+  { rejectValue: string }
+>("content/fetchByNamespace", async (_namespace, { rejectWithValue }) => {
+  return rejectWithValue(CONTENT_API_UNAVAILABLE);
+});
 
-    const { data, error } = await query.order("created_at", { ascending: true });
+export const fetchContentItem = createAsyncThunk<
+  ContentTranslation,
+  { namespace: ContentNamespace; entityId: string },
+  { rejectValue: string }
+>("content/fetchItem", async (_payload, { rejectWithValue }) => {
+  return rejectWithValue(CONTENT_API_UNAVAILABLE);
+});
 
-    if (error) return rejectWithValue(error.message);
-    const items = (data ?? []) as ContentTranslation[];
-    return namespace === "daily_tip" ? sortDailyTips(items) : items;
+export const saveContentItem = createAsyncThunk<
+  ContentTranslation,
+  {
+    id?: string;
+    namespace: ContentNamespace;
+    entityId: string;
+    translations: Record<string, Record<string, unknown>>;
+    isPublished: boolean;
   },
-);
+  { rejectValue: string }
+>("content/saveItem", async (_payload, { rejectWithValue, getState }) => {
+  const denied = rejectUnlessCanManage(
+    (getState() as RootState).auth.user?.adminRole,
+    "manage_content",
+  );
+  if (denied) return rejectWithValue(denied);
 
-export const fetchContentItem = createAsyncThunk(
-  "content/fetchItem",
-  async (
-    { namespace, entityId }: { namespace: ContentNamespace; entityId: string },
-    { rejectWithValue },
-  ) => {
-    const { data, error } = await supabase
-      .from("content_translations")
-      .select("*")
-      .eq("namespace", namespace)
-      .eq("entity_id", entityId)
-      .maybeSingle();
+  return rejectWithValue(CONTENT_API_UNAVAILABLE);
+});
 
-    if (error) return rejectWithValue(error.message);
-    if (!data) return rejectWithValue("Content item not found.");
-    return data as ContentTranslation;
-  },
-);
-
-export const saveContentItem = createAsyncThunk(
-  "content/saveItem",
-  async (
-    payload: {
-      id?: string;
-      namespace: ContentNamespace;
-      entityId: string;
-      translations: Record<string, Record<string, unknown>>;
-      isPublished: boolean;
-    },
-    { rejectWithValue, getState },
-  ) => {
+export const deleteContentItem = createAsyncThunk<
+  string,
+  string,
+  { rejectValue: string }
+>("content/deleteItem", async (_id, { rejectWithValue, getState }) => {
     const denied = rejectUnlessCanManage(
       (getState() as RootState).auth.user?.adminRole,
       "manage_content",
     );
     if (denied) return rejectWithValue(denied);
 
-    const row = {
-      namespace: payload.namespace,
-      entity_id: payload.entityId,
-      translations: payload.translations,
-      is_published: payload.isPublished,
-    };
-
-    const { data, error } = payload.id
-      ? await supabase
-          .from("content_translations")
-          .update(row)
-          .eq("id", payload.id)
-          .select("*")
-          .single()
-      : await supabase
-          .from("content_translations")
-          .insert(row)
-          .select("*")
-          .single();
-
-    if (error) return rejectWithValue(error.message);
-    const item = data as ContentTranslation;
-    logContentSaved(
-      "content_translation",
-      item.id,
-      `Saved ${payload.namespace} content`,
-      {
-        namespace: payload.namespace,
-        entity_id: payload.entityId,
-        is_published: payload.isPublished,
-      },
-    );
-    return item;
-  },
-);
-
-export const deleteContentItem = createAsyncThunk(
-  "content/deleteItem",
-  async (id: string, { rejectWithValue, getState }) => {
-    const denied = rejectUnlessCanManage(
-      (getState() as RootState).auth.user?.adminRole,
-      "manage_content",
-    );
-    if (denied) return rejectWithValue(denied);
-
-    const { error } = await supabase
-      .from("content_translations")
-      .delete()
-      .eq("id", id);
-
-    if (error) return rejectWithValue(error.message);
-    logContentDeleted("content_translation", id, "Deleted content item", {
-      resource_id: id,
-    });
-    return id;
-  },
-);
+  return rejectWithValue(CONTENT_API_UNAVAILABLE);
+});
 
 const contentSlice = createSlice({
   name: "content",

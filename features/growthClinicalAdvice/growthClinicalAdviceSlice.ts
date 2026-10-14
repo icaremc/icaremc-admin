@@ -1,11 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "@/app/store/store";
-import { isBackendApiEnabled } from "@/lib/backend/config";
-import { logContentSaved } from "@/lib/client/adminActivityEvents";
 import { LOCALES } from "@/lib/constants";
-import { syncLocaleTranslationRows } from "@/lib/content/syncLocaleRows";
 import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
-import { supabase } from "@/lib/supabaseClient";
 import type {
   GrowthClinicalAdvice,
   Locale,
@@ -37,9 +33,6 @@ type GrowthClinicalAdviceState = {
   error: string | null;
   success: string | null;
 };
-
-const ADVICE_SELECT =
-  "*, growth_clinical_advice_translations(id, advice_id, language_code, explain_text, causes, recommendations)";
 
 const emptyTranslation = (): ClinicalAdviceTranslationForm => ({
   explain_text: "",
@@ -128,57 +121,35 @@ const initialState: GrowthClinicalAdviceState = {
 export const fetchGrowthClinicalAdvice = createAsyncThunk(
   "growthClinicalAdvice/fetchAll",
   async (_, { rejectWithValue }) => {
-    if (isBackendApiEnabled()) {
-      const response = await fetch("/api/admin/clinical-advice");
-      if (!response.ok) {
-        const body = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(body.error ?? "Failed to load clinical advice");
-      }
-      const body = (await response.json()) as {
-        items?: GrowthClinicalAdvice[];
-        advice?: GrowthClinicalAdvice[];
-      };
-      const items = body.items ?? body.advice ?? [];
-      return [...items].sort((a, b) => a.sort_order - b.sort_order);
+    const response = await fetch("/api/admin/clinical-advice");
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(body.error ?? "Failed to load clinical advice");
     }
-
-    const { data, error } = await supabase
-      .from("growth_clinical_advice")
-      .select(ADVICE_SELECT)
-      .order("sort_order", { ascending: true });
-
-    if (error) return rejectWithValue(error.message);
-    return (data ?? []) as GrowthClinicalAdvice[];
+    const body = (await response.json()) as {
+      items?: GrowthClinicalAdvice[];
+      advice?: GrowthClinicalAdvice[];
+    };
+    const items = body.items ?? body.advice ?? [];
+    return [...items].sort((a, b) => a.sort_order - b.sort_order);
   },
 );
 
 export const fetchGrowthClinicalAdviceById = createAsyncThunk(
   "growthClinicalAdvice/fetchOne",
   async (id: string, { rejectWithValue }) => {
-    if (isBackendApiEnabled()) {
-      const response = await fetch("/api/admin/clinical-advice");
-      if (!response.ok) {
-        const body = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(body.error ?? "Failed to load clinical advice");
-      }
-      const body = (await response.json()) as {
-        items?: GrowthClinicalAdvice[];
-        advice?: GrowthClinicalAdvice[];
-      };
-      const found = (body.items ?? body.advice ?? []).find((item) => item.id === id);
-      if (!found) return rejectWithValue("Clinical advice not found.");
-      return found;
+    const response = await fetch("/api/admin/clinical-advice");
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(body.error ?? "Failed to load clinical advice");
     }
-
-    const { data, error } = await supabase
-      .from("growth_clinical_advice")
-      .select(ADVICE_SELECT)
-      .eq("id", id)
-      .maybeSingle();
-
-    if (error) return rejectWithValue(error.message);
-    if (!data) return rejectWithValue("Clinical advice not found.");
-    return data as GrowthClinicalAdvice;
+    const body = (await response.json()) as {
+      items?: GrowthClinicalAdvice[];
+      advice?: GrowthClinicalAdvice[];
+    };
+    const found = (body.items ?? body.advice ?? []).find((item) => item.id === id);
+    if (!found) return rejectWithValue("Clinical advice not found.");
+    return found;
   },
 );
 
@@ -210,109 +181,41 @@ export const saveGrowthClinicalAdvice = createAsyncThunk(
     if (!metric) return rejectWithValue("Metric is required.");
     if (!condition) return rejectWithValue("Condition is required.");
 
-    if (isBackendApiEnabled()) {
-      const translations = formToTranslationRows(form.id || "pending", form).map(
-        ({ language_code, explain_text, causes, recommendations }) => ({
-          language_code,
-          explain_text,
-          causes,
-          recommendations,
-        }),
-      );
-      const payload = {
-        code,
-        metric,
-        condition,
-        min_age_months: form.min_age_months,
-        max_age_months: form.max_age_months,
-        sort_order: form.sort_order,
-        is_active: form.is_active,
-        translations,
-      };
-      const response = await fetch(
-        form.id
-          ? `/api/admin/clinical-advice/${form.id}`
-          : "/api/admin/clinical-advice",
-        {
-          method: form.id ? "PATCH" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        },
-      );
-      if (!response.ok) {
-        const err = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(err.error ?? "Failed to save clinical advice");
-      }
-      const body = (await response.json()) as {
-        item?: GrowthClinicalAdvice;
-        items?: GrowthClinicalAdvice[];
-      };
-      return body.item ?? body.items?.[0] ?? (body as GrowthClinicalAdvice);
-    }
-
-    let adviceId = form.id;
-
-    if (!adviceId) {
-      const { data: created, error: insertError } = await supabase
-        .from("growth_clinical_advice")
-        .insert({
-          code,
-          metric,
-          condition,
-          min_age_months: form.min_age_months,
-          max_age_months: form.max_age_months,
-          sort_order: form.sort_order,
-          is_active: form.is_active,
-        })
-        .select("id")
-        .single();
-
-      if (insertError) return rejectWithValue(insertError.message);
-      if (!created?.id) return rejectWithValue("Failed to create clinical advice.");
-      adviceId = created.id as string;
-    } else {
-      const { error: updateError } = await supabase
-        .from("growth_clinical_advice")
-        .update({
-          min_age_months: form.min_age_months,
-          max_age_months: form.max_age_months,
-          sort_order: form.sort_order,
-          is_active: form.is_active,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", adviceId);
-
-      if (updateError) return rejectWithValue(updateError.message);
-    }
-
-    const rows = formToTranslationRows(adviceId, form);
-    const syncError = await syncLocaleTranslationRows({
-      table: "growth_clinical_advice_translations",
-      parentColumn: "advice_id",
-      parentId: adviceId,
-      onConflict: "advice_id,language_code",
-      rows,
-    });
-    if (syncError) return rejectWithValue(syncError);
-
-    const { data, error } = await supabase
-      .from("growth_clinical_advice")
-      .select(ADVICE_SELECT)
-      .eq("id", adviceId)
-      .single();
-
-    if (error) return rejectWithValue(error.message);
-
-    logContentSaved(
-      "growth_clinical_advice",
-      adviceId,
-      form.id
-        ? `Saved growth clinical advice: ${code}`
-        : `Created growth clinical advice: ${code}`,
-      { code },
+    const translations = formToTranslationRows(form.id || "pending", form).map(
+      ({ language_code, explain_text, causes, recommendations }) => ({
+        language_code,
+        explain_text,
+        causes,
+        recommendations,
+      }),
     );
-
-    return data as GrowthClinicalAdvice;
+    const payload = {
+      code,
+      metric,
+      condition,
+      min_age_months: form.min_age_months,
+      max_age_months: form.max_age_months,
+      sort_order: form.sort_order,
+      is_active: form.is_active,
+      translations,
+    };
+    const response = await fetch(
+      form.id ? `/api/admin/clinical-advice/${form.id}` : "/api/admin/clinical-advice",
+      {
+        method: form.id ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      },
+    );
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(err.error ?? "Failed to save clinical advice");
+    }
+    const body = (await response.json()) as {
+      item?: GrowthClinicalAdvice;
+      items?: GrowthClinicalAdvice[];
+    };
+    return body.item ?? body.items?.[0] ?? (body as GrowthClinicalAdvice);
   },
 );
 

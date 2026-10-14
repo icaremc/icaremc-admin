@@ -9,8 +9,6 @@ import {
   type NameTranslationsForm,
 } from "@/lib/i18n/nameTranslations";
 import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
-import { isBackendApiEnabled } from "@/lib/backend/config";
-import { supabase } from "@/lib/supabaseClient";
 import type {
   ChildFollowupVisitTemplate,
   FollowupVisitModules,
@@ -37,9 +35,6 @@ type FollowupVisitsState = {
   error: string | null;
   success: string | null;
 };
-
-const TEMPLATE_SELECT =
-  "*, child_growth_periods(id, age_months, age_label)";
 
 export const vaccinesOnlyModules = (): Required<FollowupVisitModules> => ({
   growth: false,
@@ -130,64 +125,38 @@ function formToPayload(form: FollowupVisitTemplateFormState, opts?: { includeCod
   return payload;
 }
 
-async function fetchTemplateById(id: string) {
-  const { data, error } = await supabase
-    .from("child_followup_visit_templates")
-    .select(TEMPLATE_SELECT)
-    .eq("id", id)
-    .maybeSingle();
-  return { data: data as ChildFollowupVisitTemplate | null, error };
-}
-
 export const fetchFollowupVisitTemplates = createAsyncThunk(
   "followupVisits/fetchAll",
   async (_, { rejectWithValue }) => {
-    if (isBackendApiEnabled()) {
-      const response = await fetch("/api/admin/followup-visits");
-      if (!response.ok) {
-        const body = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(body.error ?? "Failed to load follow-up templates");
-      }
-      const body = (await response.json()) as {
-        templates?: ChildFollowupVisitTemplate[];
-        items?: ChildFollowupVisitTemplate[];
-      };
-      return (body.templates ?? body.items ?? []) as ChildFollowupVisitTemplate[];
+    const response = await fetch("/api/admin/followup-visits");
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(body.error ?? "Failed to load follow-up templates");
     }
-
-    const { data, error } = await supabase
-      .from("child_followup_visit_templates")
-      .select(TEMPLATE_SELECT)
-      .order("sort_order", { ascending: true });
-
-    if (error) return rejectWithValue(error.message);
-    return (data ?? []) as ChildFollowupVisitTemplate[];
+    const body = (await response.json()) as {
+      templates?: ChildFollowupVisitTemplate[];
+      items?: ChildFollowupVisitTemplate[];
+    };
+    return (body.templates ?? body.items ?? []) as ChildFollowupVisitTemplate[];
   },
 );
 
 export const fetchFollowupVisitTemplate = createAsyncThunk(
   "followupVisits/fetchOne",
   async (id: string, { rejectWithValue }) => {
-    if (isBackendApiEnabled()) {
-      const response = await fetch("/api/admin/followup-visits");
-      if (!response.ok) {
-        const body = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(body.error ?? "Failed to load follow-up template");
-      }
-      const body = (await response.json()) as {
-        templates?: ChildFollowupVisitTemplate[];
-        items?: ChildFollowupVisitTemplate[];
-      };
-      const templates = body.templates ?? body.items ?? [];
-      const found = templates.find((template) => template.id === id);
-      if (!found) return rejectWithValue("Template not found");
-      return found;
+    const response = await fetch("/api/admin/followup-visits");
+    if (!response.ok) {
+      const body = (await response.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(body.error ?? "Failed to load follow-up template");
     }
-
-    const { data, error } = await fetchTemplateById(id);
-    if (error) return rejectWithValue(error.message);
-    if (!data) return rejectWithValue("Template not found");
-    return data;
+    const body = (await response.json()) as {
+      templates?: ChildFollowupVisitTemplate[];
+      items?: ChildFollowupVisitTemplate[];
+    };
+    const templates = body.templates ?? body.items ?? [];
+    const found = templates.find((template) => template.id === id);
+    if (!found) return rejectWithValue("Template not found");
+    return found;
   },
 );
 
@@ -207,40 +176,20 @@ export const createFollowupVisitTemplate = createAsyncThunk(
       return rejectWithValue("English visit name is required.");
     }
 
-    if (isBackendApiEnabled()) {
-      const response = await fetch("/api/admin/followup-visits", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formToPayload(form, { includeCode: true })),
-      });
-      if (!response.ok) {
-        const err = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(err.error ?? "Failed to create follow-up template");
-      }
-      const body = (await response.json()) as {
-        template?: ChildFollowupVisitTemplate;
-        templates?: ChildFollowupVisitTemplate[];
-      };
-      return body.template ?? body.templates?.[0] ?? (body as ChildFollowupVisitTemplate);
+    const response = await fetch("/api/admin/followup-visits", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formToPayload(form, { includeCode: true })),
+    });
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(err.error ?? "Failed to create follow-up template");
     }
-
-    const { data: inserted, error: insertError } = await supabase
-      .from("child_followup_visit_templates")
-      .insert(formToPayload(form, { includeCode: true }))
-      .select("id")
-      .maybeSingle();
-
-    if (insertError) return rejectWithValue(insertError.message);
-    if (!inserted?.id) {
-      return rejectWithValue(
-        "Could not create template. Check you are signed in as an active portal admin.",
-      );
-    }
-
-    const { data, error } = await fetchTemplateById(inserted.id);
-    if (error) return rejectWithValue(error.message);
-    if (!data) return rejectWithValue("Template created but could not be reloaded.");
-    return data;
+    const body = (await response.json()) as {
+      template?: ChildFollowupVisitTemplate;
+      templates?: ChildFollowupVisitTemplate[];
+    };
+    return body.template ?? body.templates?.[0] ?? (body as ChildFollowupVisitTemplate);
   },
 );
 
@@ -260,43 +209,20 @@ export const updateFollowupVisitTemplate = createAsyncThunk(
       return rejectWithValue("English visit name is required.");
     }
 
-    if (isBackendApiEnabled()) {
-      const response = await fetch(`/api/admin/followup-visits/${payload.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formToPayload(payload.form, { includeCode: false })),
-      });
-      if (!response.ok) {
-        const err = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(err.error ?? "Failed to update follow-up template");
-      }
-      const body = (await response.json()) as {
-        template?: ChildFollowupVisitTemplate;
-        templates?: ChildFollowupVisitTemplate[];
-      };
-      return body.template ?? body.templates?.[0] ?? (body as ChildFollowupVisitTemplate);
+    const response = await fetch(`/api/admin/followup-visits/${payload.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formToPayload(payload.form, { includeCode: false })),
+    });
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(err.error ?? "Failed to update follow-up template");
     }
-
-    // Update without nested embed + .single() (that caused the coerce error
-    // when RLS returned 0 rows). Code is immutable after create.
-    const { data: updated, error: updateError } = await supabase
-      .from("child_followup_visit_templates")
-      .update(formToPayload(payload.form, { includeCode: false }))
-      .eq("id", payload.id)
-      .select("id")
-      .maybeSingle();
-
-    if (updateError) return rejectWithValue(updateError.message);
-    if (!updated?.id) {
-      return rejectWithValue(
-        "Update blocked by database permissions. Run child_followup_admin_rls_fix.sql, and ensure your user is in admin_users (active).",
-      );
-    }
-
-    const { data, error } = await fetchTemplateById(payload.id);
-    if (error) return rejectWithValue(error.message);
-    if (!data) return rejectWithValue("Saved, but template could not be reloaded.");
-    return data;
+    const body = (await response.json()) as {
+      template?: ChildFollowupVisitTemplate;
+      templates?: ChildFollowupVisitTemplate[];
+    };
+    return body.template ?? body.templates?.[0] ?? (body as ChildFollowupVisitTemplate);
   },
 );
 
@@ -309,23 +235,13 @@ export const deleteFollowupVisitTemplate = createAsyncThunk(
     );
     if (denied) return rejectWithValue(denied);
 
-    if (isBackendApiEnabled()) {
-      const response = await fetch(`/api/admin/followup-visits/${id}`, {
-        method: "DELETE",
-      });
-      if (!response.ok) {
-        const err = (await response.json().catch(() => ({}))) as { error?: string };
-        return rejectWithValue(err.error ?? "Failed to delete follow-up template");
-      }
-      return id;
+    const response = await fetch(`/api/admin/followup-visits/${id}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) {
+      const err = (await response.json().catch(() => ({}))) as { error?: string };
+      return rejectWithValue(err.error ?? "Failed to delete follow-up template");
     }
-
-    const { error } = await supabase
-      .from("child_followup_visit_templates")
-      .delete()
-      .eq("id", id);
-
-    if (error) return rejectWithValue(error.message);
     return id;
   },
 );

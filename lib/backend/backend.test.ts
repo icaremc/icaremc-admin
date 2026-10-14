@@ -76,6 +76,53 @@ describe("staging capabilities", () => {
     assert.equal(isStagingFeatureAvailable("/admin/dashboard"), true);
   });
 
+  it("marks pregnancies and health-logs available via users compose", () => {
+    assert.equal(isStagingFeatureAvailable("/admin/pregnancy"), true);
+    assert.equal(isStagingFeatureAvailable("/admin/health-logs"), true);
+    assert.ok(getStagingCapability("/admin/pregnancy")?.backendHint);
+    assert.ok(getStagingCapability("/admin/health-logs")?.backendHint);
+  });
+
+  it("adapts composed pregnancies and pregnancy-logs lists", () => {
+    const pregnancies = adaptBackendResponse(
+      "pregnancies",
+      "GET",
+      200,
+      {
+        pregnancies: [
+          {
+            id: "p1",
+            user_id: "u1",
+            status: "active",
+            pregnancy_number: 1,
+            profiles: { full_name: "Fozia Kassa", phone: "09" },
+          },
+        ],
+      },
+    ) as { pregnancies: Array<{ id: string }> };
+    assert.equal(pregnancies.pregnancies[0]?.id, "p1");
+
+    const logs = adaptBackendResponse(
+      "pregnancy-logs",
+      "GET",
+      200,
+      {
+        logs: [
+          {
+            id: "l1",
+            pregnancy_id: "p1",
+            week_number: 12,
+            pregnancies: {
+              user_id: "u1",
+              profiles: { full_name: "Fozia Kassa" },
+            },
+          },
+        ],
+      },
+    ) as { logs: Array<{ id: string }> };
+    assert.equal(logs.logs[0]?.id, "l1");
+  });
+
   it("allows doctor and appointment detail via list synthesis", () => {
     const id = "11111111-1111-4111-8111-111111111111";
     assert.equal(isStagingDetailUnsupported(`/admin/doctors/${id}`), false);
@@ -976,6 +1023,54 @@ describe("adaptBackendResponse", () => {
     assert.equal(out.children[0]?.gestational_age_weeks, null);
     assert.equal(out.children[0]?.profiles?.full_name, "Meron Asfaw");
     assert.equal(out.children[0]?.profiles?.phone, "+251937254403");
+  });
+
+  it("nests child growth translations and sorts by age_months", () => {
+    const out = adaptBackendResponse("child-growth", "GET", 200, [
+      {
+        id: "p12",
+        age_months: 12,
+        age_label: "12 months",
+        age_group: "infant",
+        child_growth_period_translations: [
+          {
+            id: "t1",
+            language_code: "en",
+            title: "12 months",
+            milestones: [{ items: [{ label: "Walks" }, { label: "Waves" }] }],
+          },
+        ],
+      },
+      {
+        id: "p4",
+        ageMonths: 4,
+        ageLabel: "4 months",
+        ageGroup: "infant",
+        translation: {
+          id: "t2",
+          language_code: "en",
+          title: "4 months",
+          milestones: [{ items: [{ label: "Coos" }] }],
+        },
+      },
+    ]) as {
+      periods: Array<{
+        id: string;
+        age_months: number;
+        child_growth_period_translations?: Array<{
+          milestones?: Array<{ items?: unknown[] }>;
+        }>;
+      }>;
+    };
+    assert.equal(out.periods.length, 2);
+    assert.equal(out.periods[0]?.id, "p4");
+    assert.equal(out.periods[0]?.age_months, 4);
+    assert.equal(
+      out.periods[0]?.child_growth_period_translations?.[0]?.milestones?.[0]
+        ?.items?.length,
+      1,
+    );
+    assert.equal(out.periods[1]?.id, "p12");
   });
 
   it("nests pregnancy week translations for admin UI", () => {
