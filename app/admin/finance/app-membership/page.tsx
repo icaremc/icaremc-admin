@@ -23,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { enrichMembershipParents } from "@/lib/appMembership/enrichParents";
 import {
   matchesMembershipStatusFilter,
   membershipExpiringWithinDays,
@@ -120,7 +121,7 @@ export default function FinanceAppMembershipPage() {
         };
       };
       if (!res.ok) throw new Error(payload.error ?? "Failed to load payments");
-      setMembers(payload.members ?? []);
+      setMembers(await enrichMembershipParents(payload.members ?? []));
       setListMeta(payload.meta ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load payments");
@@ -183,7 +184,7 @@ export default function FinanceAppMembershipPage() {
     setMessage(null);
     try {
       const res = await fetch("/api/admin/app-membership-settings", {
-        method: "PATCH",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ appMembershipSettings: settings }),
       });

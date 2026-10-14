@@ -34,7 +34,7 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     pathPrefix: "/admin/users",
     label: "Parents",
     backendHint:
-      "GET /api/v1/admin/users + GET /users/{id} + referral GET|POST + POST /push/notify",
+      "GET /api/v1/admin/users + GET /users/{id} + referral GET|POST + POST /users/{id}/notify",
   },
   { pathPrefix: "/admin/documents", label: "Internal docs", backendHint: "GET|POST /api/v1/admin/documents + deliver + delivery history" },
   {
@@ -239,7 +239,10 @@ export function mapAdminApiToBackend(
     case "users":
       if (rest.length === 0) return "/api/v1/admin/users";
       if (rest.length === 2 && rest[1] === "push") {
-        if (method === "POST") return "/api/v1/push/notify";
+        // OpenAPI: POST /admin/users/{id}/notify (user_id in path)
+        if (method === "POST") {
+          return `/api/v1/admin/users/${rest[0]}/notify`;
+        }
         if (method === "GET") return `/api/v1/admin/users/${rest[0]}`;
         return null;
       }
@@ -495,7 +498,7 @@ export const ADMIN_API_MAPPING_CASES: Array<{
   { adminPath: "users/u1", backendPath: "/api/v1/admin/users/u1" },
   {
     adminPath: "users/u1/push",
-    backendPath: "/api/v1/push/notify",
+    backendPath: "/api/v1/admin/users/u1/notify",
     method: "POST",
   },
   { adminPath: "documents", backendPath: "/api/v1/admin/documents", method: "GET" },

@@ -306,6 +306,19 @@ describe("adaptBackendResponse", () => {
     assert.equal(out.members[0]?.status, "active");
     assert.equal(out.members[1]?.patient_name, "Past Parent");
     assert.equal(out.members[1]?.has_access, false);
+
+    const nested = adaptBackendResponse("app-membership-members", "GET", 200, [
+      {
+        id: "s3",
+        patient_id: "p3",
+        status: "active",
+        ends_at: "2099-01-01T00:00:00Z",
+        starts_at: "2026-01-01T00:00:00Z",
+        user: { full_name: "Nested Parent", phone: "+2511" },
+      },
+    ]) as { members: Array<{ patient_name: string | null; patient_phone: string | null }> };
+    assert.equal(nested.members[0]?.patient_name, "Nested Parent");
+    assert.equal(nested.members[0]?.patient_phone, "+2511");
   });
 
   it("adapts app-membership-settings as appMembershipSettings", () => {

@@ -66,6 +66,22 @@ function groupLabel(period: ChildGrowthPeriod) {
   );
 }
 
+function normalizeLabel(value: string | null | undefined) {
+  return (value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+/** Extra EN title only when it adds something beyond age_label. */
+function distinctTitle(period: ChildGrowthPeriod) {
+  const title = englishTranslation(period)?.title?.trim();
+  if (!title) return null;
+  if (normalizeLabel(title) === normalizeLabel(period.age_label)) return null;
+  return title;
+}
+
+function monthsLabel(ageMonths: number) {
+  return `${ageMonths} month${ageMonths === 1 ? "" : "s"}`;
+}
+
 export default function ChildGrowthPeriodsList({
   periods,
   loading,
@@ -194,7 +210,7 @@ export default function ChildGrowthPeriodsList({
       ) : view === "cards" ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((period) => {
-            const title = englishTranslation(period)?.title;
+            const extraTitle = distinctTitle(period);
             const items = checklistCount(period);
             const languages =
               period.child_growth_period_translations?.length ?? 0;
@@ -224,9 +240,8 @@ export default function ChildGrowthPeriodsList({
                       {period.age_label}
                     </h3>
                     <p className="mt-0.5 text-sm text-gray-500">
-                      {period.age_months} month
-                      {period.age_months === 1 ? "" : "s"}
-                      {title ? ` · ${title}` : null}
+                      {monthsLabel(period.age_months)}
+                      {extraTitle ? ` · ${extraTitle}` : null}
                     </p>
                   </div>
                   <StatusBadge published={period.is_published} />
@@ -297,7 +312,7 @@ export default function ChildGrowthPeriodsList({
             </TableHeader>
             <TableBody>
               {filtered.map((period) => {
-                const translation = englishTranslation(period);
+                const extraTitle = distinctTitle(period);
                 const items = checklistCount(period);
                 return (
                   <TableRow
@@ -312,10 +327,8 @@ export default function ChildGrowthPeriodsList({
                         <p className="font-medium text-gray-900">
                           {period.age_label}
                         </p>
-                        {translation?.title ? (
-                          <p className="text-xs text-gray-500">
-                            {translation.title}
-                          </p>
+                        {extraTitle ? (
+                          <p className="text-xs text-gray-500">{extraTitle}</p>
                         ) : null}
                       </div>
                     </TableCell>

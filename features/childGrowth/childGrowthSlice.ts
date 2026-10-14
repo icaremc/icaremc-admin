@@ -521,7 +521,8 @@ export const fetchChildGrowthPeriods = createAsyncThunk(
         periods?: ChildGrowthPeriod[];
         items?: ChildGrowthPeriod[];
       };
-      return (body.periods ?? body.items ?? []) as ChildGrowthPeriod[];
+      const periods = (body.periods ?? body.items ?? []) as ChildGrowthPeriod[];
+      return [...periods].sort((a, b) => a.age_months - b.age_months);
     }
 
     const { data, error } = await supabase
@@ -738,7 +739,9 @@ const childGrowthSlice = createSlice({
       })
       .addCase(fetchChildGrowthPeriods.fulfilled, (state, action) => {
         state.loading = false;
-        state.periods = action.payload;
+        state.periods = [...action.payload].sort(
+          (a, b) => a.age_months - b.age_months,
+        );
       })
       .addCase(fetchChildGrowthPeriods.rejected, (state, action) => {
         state.loading = false;

@@ -8,6 +8,7 @@ import {
   type AppSubscriptionStatus,
 } from "../appMembership/members.ts";
 import { parseAppMembershipSettingsData } from "../appMembership/subscriptionSettings.ts";
+import { parseFinanceSettings } from "../payment/financeSettings.ts";
 import { resolveBackendMediaUrl } from "./config.ts";
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -371,7 +372,11 @@ function mapMembershipMember(row: Record<string, unknown>) {
       ? row.profile
       : isPlainObject(row.patient)
         ? row.patient
-        : null;
+        : isPlainObject(row.user)
+          ? row.user
+          : isPlainObject(row.mother)
+            ? row.mother
+            : null;
   const statusRaw = normalizeSubscriptionStatus(
     (row.status ?? null) as string | null,
   );
@@ -388,6 +393,29 @@ function mapMembershipMember(row: Record<string, unknown>) {
     typeof hasAccessExplicit === "boolean"
       ? hasAccessExplicit
       : subscriptionHasAccess(status, endsAt);
+
+  const rawName =
+    row.patient_name ??
+    row.patientName ??
+    row.parent_name ??
+    row.parentName ??
+    row.full_name ??
+    row.fullName ??
+    profile?.full_name ??
+    profile?.fullName ??
+    profile?.name ??
+    null;
+  const rawPhone =
+    row.patient_phone ??
+    row.patientPhone ??
+    row.parent_phone ??
+    row.parentPhone ??
+    profile?.phone ??
+    null;
+  const patient_name =
+    typeof rawName === "string" && rawName.trim() ? rawName.trim() : null;
+  const patient_phone =
+    typeof rawPhone === "string" && rawPhone.trim() ? rawPhone.trim() : null;
 
   return {
     id: str(row.id),
@@ -409,19 +437,8 @@ function mapMembershipMember(row: Record<string, unknown>) {
     ),
     created_at: str(row.created_at ?? row.createdAt),
     updated_at: str(row.updated_at ?? row.updatedAt),
-    patient_name: (row.patient_name ??
-      row.patientName ??
-      row.parent_name ??
-      row.parentName ??
-      profile?.full_name ??
-      profile?.fullName ??
-      null) as string | null,
-    patient_phone: (row.patient_phone ??
-      row.patientPhone ??
-      row.parent_phone ??
-      row.parentPhone ??
-      profile?.phone ??
-      null) as string | null,
+    patient_name,
+    patient_phone,
     has_access,
   };
 }
@@ -1228,7 +1245,13 @@ export function adaptBackendResponse(
         return { weeks, items: weeks };
       }
       case "child-growth": {
-        const periods = body.filter(isPlainObject).map(mapChildGrowthPeriodRow);
+        const periods = body
+          .filter(isPlainObject)
+          .map(mapChildGrowthPeriodRow)
+          .sort(
+            (a, b) =>
+              Number(a.age_months ?? 0) - Number(b.age_months ?? 0),
+          );
         return { periods, items: periods };
       }
       case "clinical-advice": {
@@ -1373,7 +1396,9 @@ export function adaptBackendResponse(
     }
     if (head === "finance-settings") {
       return {
-        financeSettings: settingsData(body, "financeSettings"),
+        financeSettings: parseFinanceSettings(
+          settingsData(body, "financeSettings"),
+        ),
         updatedAt: settingsUpdatedAt(body),
       };
     }

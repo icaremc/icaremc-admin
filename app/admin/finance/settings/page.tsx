@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   defaultFinanceSettings,
+  parseFinanceSettings,
   type FinanceSettings,
 } from "@/lib/payment/financeSettings";
 import {
@@ -80,7 +81,7 @@ export default function FinanceSettingsPage() {
         throw new Error(paymentData.error ?? "Could not load payment settings");
       }
 
-      setSettings(financeData.financeSettings ?? defaultFinanceSettings());
+      setSettings(parseFinanceSettings(financeData.financeSettings));
       setFinanceUpdatedAt(financeData.updatedAt ?? null);
       setChapa(paymentData.paymentSettings?.chapa ?? defaultChapaSettings());
       setPaymentUpdatedAt(paymentData.updatedAt ?? null);
@@ -102,7 +103,7 @@ export default function FinanceSettingsPage() {
     try {
       if (tab === "platform") {
         const financeRes = await fetch("/api/admin/finance-settings", {
-          method: "PATCH",
+          method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ financeSettings: settings }),
         });
@@ -110,11 +111,13 @@ export default function FinanceSettingsPage() {
         if (!financeRes.ok) {
           throw new Error(financeData.error ?? "Could not save finance settings");
         }
-        setSettings(financeData.financeSettings ?? settings);
+        setSettings(
+          parseFinanceSettings(financeData.financeSettings ?? settings),
+        );
         setFinanceUpdatedAt(financeData.updatedAt ?? null);
       } else {
         const paymentRes = await fetch("/api/admin/payment-settings", {
-          method: "PATCH",
+          method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ paymentSettings: { chapa } }),
         });
@@ -294,7 +297,7 @@ export default function FinanceSettingsPage() {
               <label className="flex items-center gap-2 text-sm text-gray-700">
                 <input
                   type="checkbox"
-                  checked={settings.doctorCancelPenaltyEnabled}
+                  checked={Boolean(settings.doctorCancelPenaltyEnabled)}
                   onChange={(event) =>
                     setSettings((current) => ({
                       ...current,

@@ -10,6 +10,16 @@ import {
   getBackendApiBaseUrl,
   isBackendApiEnabled,
 } from "@/lib/backend/config";
+import {
+  isSettingsAdminPath,
+  rewriteSettingsPutBody,
+  shouldRewriteSettingsMethod,
+} from "@/lib/backend/settingsRewrite";
+import {
+  parsePushAdminPath,
+  rewritePushNotifyBody,
+  rewriteUserNotifyBody,
+} from "@/lib/backend/pushRewrite";
 
 let cachedToken: string | null = null;
 let installed = false;
@@ -84,9 +94,14 @@ export function installBackendDirectFetch(): () => void {
       new Headers(init?.headers).get("content-type") ??
       (input instanceof Request ? input.headers.get("content-type") : null) ??
       "";
+    const bodyIsFormData =
+      typeof FormData !== "undefined" &&
+      (init?.body instanceof FormData ||
+        (input instanceof Request && input.headers.get("content-type")?.includes("multipart")));
 
-    // Multipart / upload rewrites stay on the bridge
-    if (contentType.includes("multipart/form-data")) {
+    // Multipart / FormData rewrites (hospitals, membership grant, …) stay on the bridge
+    // ponytail: browser sets multipart Content-Type later; FormData itself is the signal
+    if (bodyIsFormData || contentType.includes("multipart/form-data")) {
       return originalFetch(input, init);
     }
 
@@ -103,18 +118,58 @@ export function installBackendDirectFetch(): () => void {
 
     const target = new URL(`${getBackendApiBaseUrl()}${backendPath}`);
     parsed.searchParams.forEach((value, key) => {
+      // ponytail: app selects settings row id; not a backend query param
+      if (
+        key === "app" &&
+        parsed.adminPath.replace(/^\/+/, "").startsWith("app-version-settings")
+      ) {
+        return;
+      }
       target.searchParams.set(key, value);
     });
 
+    let upstreamMethod = method;
+    let upstreamBody = init?.body;
+    if (
+      isSettingsAdminPath(parsed.adminPath) &&
+      shouldRewriteSettingsMethod(method) &&
+      typeof init?.body === "string"
+    ) {
+      try {
+        upstreamMethod = "PUT";
+        upstreamBody = JSON.stringify(
+          rewriteSettingsPutBody(JSON.parse(init.body)),
+        );
+      } catch {
+        upstreamMethod = "PUT";
+      }
+    }
+
+    const pushPath =
+      method === "POST" ? parsePushAdminPath(parsed.adminPath) : null;
+    if (pushPath && typeof init?.body === "string") {
+      try {
+        const parsedBody = JSON.parse(init.body) as unknown;
+        upstreamBody = JSON.stringify(
+          pushPath.kind === "user"
+            ? rewriteUserNotifyBody(parsedBody)
+            : rewritePushNotifyBody(pushPath.id, parsedBody),
+        );
+      } catch {
+        // keep original body
+      }
+    }
+
     const headers = new Headers(init?.headers);
     headers.set("Authorization", `Bearer ${token}`);
-    if (init?.body && !headers.has("Content-Type") && !contentType) {
+    if (upstreamBody && !headers.has("Content-Type") && !contentType) {
       headers.set("Content-Type", "application/json");
     }
 
     const upstream = await originalFetch(target.href, {
       ...init,
-      method,
+      method: upstreamMethod,
+      body: upstreamBody,
       headers,
       credentials: "omit",
       cache: "no-store",
@@ -146,7 +201,7 @@ export function installBackendDirectFetch(): () => void {
 
     const adapted = adaptBackendResponse(
       parsed.adminPath,
-      method,
+      upstreamMethod,
       upstream.status,
       parsedBody,
       { searchParams: parsed.searchParams },

@@ -57,7 +57,7 @@ export default function ReferralSettingsPanel() {
     setError(null);
     try {
       const response = await fetch("/api/admin/referral-settings", {
-        method: "PATCH",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ referralSettings: settings }),
       });

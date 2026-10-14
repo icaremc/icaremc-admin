@@ -52,7 +52,7 @@ export default function AppVersionSettingsPage() {
     setSuccess(null);
     try {
       const res = await fetch(`/api/admin/app-version-settings?app=${app}`, {
-        method: "PATCH",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ appVersionSettings: form }),
       });

@@ -7,6 +7,16 @@ import {
   resolveBackendMediaUrl,
 } from "@/lib/backend/config";
 import { mapAdminApiToBackend } from "@/lib/backend/capabilities";
+import {
+  isSettingsAdminPath,
+  rewriteSettingsPutBody,
+  shouldRewriteSettingsMethod,
+} from "@/lib/backend/settingsRewrite";
+import {
+  parsePushAdminPath,
+  rewritePushNotifyBody,
+  rewriteUserNotifyBody,
+} from "@/lib/backend/pushRewrite";
 import { signedAdminDocumentUrl } from "@/lib/adminDocuments/storage";
 import { slugifyHospitalName } from "@/lib/hospitals/storage";
 import { saveNotification } from "@/lib/push/saveNotification";
@@ -391,74 +401,34 @@ async function rewriteUpstreamRequest(
     }
   }
 
-  // POST /users|:id/push or /doctors/:id/push → /push/notify
+  // POST users/:id/push → UserNotificationIn; doctors/:id/push → PushIn (+ user_id)
   if (
     (head === "users" || head === "doctors") &&
     rest.length === 2 &&
     rest[1] === "push" &&
     upper === "POST"
   ) {
-    if (isPlainObject(parsed)) {
-      const type =
-        typeof parsed.type === "string" && parsed.type.trim()
-          ? parsed.type.trim()
-          : "chat";
-      const route =
-        typeof parsed.route === "string" && parsed.route.trim()
-          ? parsed.route.trim()
-          : undefined;
-      const rewritten = {
-        user_id: rest[0],
-        title: typeof parsed.title === "string" ? parsed.title : "",
-        body: typeof parsed.body === "string" ? parsed.body : "",
-        type,
-        data: {
-          type,
-          ...(route ? { route } : {}),
-        },
-      };
+    const pushPath = parsePushAdminPath(`${head}/${rest[0]}/push`);
+    if (pushPath) {
       return {
         method: "POST",
-        body: encodeJson(rewritten),
+        body: encodeJson(
+          pushPath.kind === "user"
+            ? rewriteUserNotifyBody(parsed)
+            : rewritePushNotifyBody(pushPath.id, parsed),
+        ),
         contentType: "application/json",
       };
     }
   }
 
-  // PATCH app-version-settings → PUT settings { data }
-  if (head === "app-version-settings" && (upper === "PATCH" || upper === "PUT")) {
-    if (isPlainObject(parsed)) {
-      const data = parsed.appVersionSettings ?? parsed.data ?? parsed;
-      return {
-        method: "PUT",
-        body: encodeJson({ data }),
-        contentType: "application/json",
-      };
-    }
-  }
-
-  // PATCH finance/payment/app-membership/referral settings → PUT { data }
-  if (
-    (head === "finance-settings" ||
-      head === "payment-settings" ||
-      head === "app-membership-settings" ||
-      head === "referral-settings") &&
-    (upper === "PATCH" || upper === "PUT")
-  ) {
-    if (isPlainObject(parsed)) {
-      const data =
-        parsed.financeSettings ??
-        parsed.paymentSettings ??
-        parsed.appMembershipSettings ??
-        parsed.referralSettings ??
-        parsed.data ??
-        parsed;
-      return {
-        method: "PUT",
-        body: encodeJson({ data }),
-        contentType: "application/json",
-      };
-    }
+  // PATCH/PUT *settings → PUT /api/v1/admin/settings/{id} { data }
+  if (isSettingsAdminPath(head) && shouldRewriteSettingsMethod(upper)) {
+    return {
+      method: "PUT",
+      body: encodeJson(rewriteSettingsPutBody(parsed)),
+      contentType: "application/json",
+    };
   }
 
   // PATCH /admins { id, fields } → strip id (path carries it)
@@ -901,6 +871,7 @@ export async function proxyAdminRequestToBackend(
           title?: string;
           body?: string;
           type?: string;
+          route?: string;
           data?: { route?: string };
         };
         const userId = String(pushBody.user_id ?? rest[0] ?? "").trim();
@@ -911,7 +882,7 @@ export async function proxyAdminRequestToBackend(
             userId,
             title: title || "Notification",
             body,
-            route: pushBody.data?.route,
+            route: pushBody.route ?? pushBody.data?.route,
           });
         }
       } catch (error) {
