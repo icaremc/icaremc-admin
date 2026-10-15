@@ -24,6 +24,7 @@ import {
   ADMIN_DOCUMENT_MAX_BYTES,
   adminDocumentMaxSizeLabel,
 } from "@/lib/adminDocuments/storage";
+import { uploadAdminDocumentViaBackend } from "@/lib/adminDocuments/uploadViaBackend";
 import { formatDateTime } from "@/lib/format";
 import { useIsSuperAdmin } from "@/lib/useAdminPermissions";
 
@@ -82,17 +83,11 @@ export default function InternalDocumentsPage() {
     setError(null);
     setMessage(null);
     try {
-      const formData = new FormData();
-      formData.set("title", title.trim());
-      formData.set("category", category);
-      formData.set("file", file);
-
-      const res = await fetch("/api/admin/documents", {
-        method: "POST",
-        body: formData,
+      await uploadAdminDocumentViaBackend({
+        title: title.trim(),
+        category,
+        file,
       });
-      const payload = (await res.json()) as { error?: string };
-      if (!res.ok) throw new Error(payload.error ?? "Upload failed");
 
       setTitle("");
       setCategory("agreement");

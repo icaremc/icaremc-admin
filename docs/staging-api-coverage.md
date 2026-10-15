@@ -20,7 +20,7 @@ Admin staging mode (`NEXT_PUBLIC_USE_BACKEND_API=true`) proxies `/api/admin/*` t
 | Parents | `/admin/users` | list + detail + push | |
 | Children | `/admin/children` | `GET` list + detail | Nested growth/vaccines/edit not on staging |
 | Referrals | `/admin/referrals` | referrals, commissions, settings, doctor stats | |
-| Internal docs | `/admin/documents` | list, create metadata, deliver, delivery history | Multipart PDF limited |
+| Internal docs | `/admin/documents` | list, create, deliver, delivery history | Create = `/uploads/` + JSON `DocumentIn` (uploads is **image-only**; PDF blocked upstream) |
 | Payouts / wallet ledger | `/admin/finance/*` | payouts + wallet-transactions | |
 | App membership | `/admin/finance/app-membership` | membership + subscription settings | Receipt file dropped on grant |
 | Finance / payment settings | `/admin/finance/settings` | settings/finance + payment | |
@@ -41,7 +41,6 @@ Admin staging mode (`NEXT_PUBLIC_USE_BACKEND_API=true`) proxies `/api/admin/*` t
 | Clinical advice **writes** | Public CMS GET only |
 | Broadcast push (`/admin/push`) | Only per-user `/push/notify` exists |
 | Health logs | No admin health-log API |
-| Multipart PDF document upload | Staging uploads API is image-only |
 | Children edit / nested growth detail | Admin GET returns bare child row |
 | Speciality image upload | No category image upload on staging |
 
@@ -49,7 +48,7 @@ Admin staging mode (`NEXT_PUBLIC_USE_BACKEND_API=true`) proxies `/api/admin/*` t
 
 1. Merge/deploy pregnancy week nested translations on admin GET (PR #8) — FE already enriches from public CMS as a bridge
 2. Admin clinical-advice write APIs (if CMS stays in this portal)
-3. Non-image upload support for admin documents
+3. PDF (or generic file) upload endpoint — `/uploads/` returns `File provided is not an image.`
 4. Child nested detail joins (growth/vaccines on children)
 5. Health-log / broadcast push admin APIs (if needed)
 

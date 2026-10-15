@@ -15,6 +15,7 @@ import {
   isBackendApiEnabled,
   getBackendApiBaseUrl,
   resolveBackendMediaUrl,
+  storagePathFromUploadUrl,
 } from "./config.ts";
 import { STAGING_BACKEND_ADMIN_ROUTES } from "./routes.ts";
 
@@ -35,6 +36,19 @@ describe("backend config", () => {
     assert.equal(
       resolveBackendMediaUrl("https://cdn.example/a.jpg"),
       "https://cdn.example/a.jpg",
+    );
+  });
+
+  it("strips API host for DocumentIn storage_path", () => {
+    assert.equal(
+      storagePathFromUploadUrl(
+        "https://api.icaremchealth.com/static/uploads/docs/a.pdf",
+      ),
+      "static/uploads/docs/a.pdf",
+    );
+    assert.equal(
+      storagePathFromUploadUrl("/static/uploads/docs/a.pdf"),
+      "static/uploads/docs/a.pdf",
     );
   });
 

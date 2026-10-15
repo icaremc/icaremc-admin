@@ -5,6 +5,7 @@ import {
   getBackendApiBaseUrl,
   isBackendApiEnabled,
   resolveBackendMediaUrl,
+  storagePathFromUploadUrl,
 } from "@/lib/backend/config";
 import { mapAdminApiToBackend } from "@/lib/backend/capabilities";
 import {
@@ -454,26 +455,115 @@ async function enrichChildGrowthFromPublicCms(
     );
 }
 
+function upstreamErrorMessage(body: unknown, fallback: string): string {
+  if (!body || typeof body !== "object") return fallback;
+  const row = body as Record<string, unknown>;
+  if (typeof row.error === "string" && row.error.trim()) return row.error;
+  const detail = row.detail;
+  if (typeof detail === "string" && detail.trim()) return detail;
+  if (Array.isArray(detail)) {
+    const parts = detail
+      .map((item) => {
+        if (typeof item === "string") return item;
+        if (item && typeof item === "object" && "msg" in item) {
+          return String((item as { msg: unknown }).msg);
+        }
+        return null;
+      })
+      .filter((part): part is string => Boolean(part));
+    if (parts.length > 0) return parts.join("; ");
+  }
+  return fallback;
+}
+
 async function uploadStagingImage(
   file: File,
   accessToken: string,
 ): Promise<{ url?: string; error?: string }> {
+  const uploadUrl = `${getBackendApiBaseUrl()}/api/v1/uploads/`;
   const uploadForm = new FormData();
   uploadForm.set("file", file);
-  const uploadRes = await fetch(`${getBackendApiBaseUrl()}/api/v1/uploads/`, {
+  const uploadRes = await fetch(uploadUrl, {
     method: "POST",
     headers: { Authorization: `Bearer ${accessToken}` },
     body: uploadForm,
   });
-  const uploadBody = (await uploadRes.json().catch(() => null)) as
-    | { url?: string; error?: string }
-    | null;
-  if (!uploadRes.ok || !uploadBody?.url) {
+  const uploadBody = (await uploadRes.json().catch(() => null)) as unknown;
+  const url =
+    uploadBody &&
+    typeof uploadBody === "object" &&
+    typeof (uploadBody as { url?: unknown }).url === "string"
+      ? (uploadBody as { url: string }).url
+      : "";
+  if (!uploadRes.ok || !url) {
+    const detail = upstreamErrorMessage(
+      uploadBody,
+      `Could not upload file (${uploadRes.status})`,
+    );
     return {
-      error: uploadBody?.error ?? "Could not upload image to staging.",
+      error: `${detail} — POST ${uploadUrl}`,
     };
   }
-  return { url: resolveBackendMediaUrl(uploadBody.url) ?? uploadBody.url };
+  return { url: resolveBackendMediaUrl(url) ?? url };
+}
+
+/** Admin documents UI posts multipart; staging expects upload + JSON DocumentIn. */
+async function rewriteDocumentMultipart(
+  rawBody: ArrayBuffer,
+  contentType: string,
+  accessToken: string | null,
+): Promise<
+  | { method: string; body: ArrayBuffer; contentType: string }
+  | { error: string; status?: number }
+> {
+  if (!accessToken) {
+    return {
+      error: "Not signed in to staging backend. Sign in again.",
+      status: 401,
+    };
+  }
+
+  const form = await new Request("http://local", {
+    method: "POST",
+    headers: { "content-type": contentType },
+    body: rawBody,
+  }).formData();
+
+  const title = readFormText(form, "title");
+  if (!title) return { error: "Title is required", status: 400 };
+
+  const category = readFormText(form, "category") || "other";
+  const file = form.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "PDF file is required", status: 400 };
+  }
+
+  const uploaded = await uploadStagingImage(file, accessToken);
+  if (!uploaded.url) {
+    return {
+      error:
+        uploaded.error ??
+        "Could not upload PDF to staging. The uploads API may still reject non-image files.",
+      status: 502,
+    };
+  }
+
+  const storage_path = storagePathFromUploadUrl(uploaded.url);
+  if (!storage_path) {
+    return { error: "Upload succeeded but returned an empty storage path", status: 502 };
+  }
+
+  return {
+    method: "POST",
+    body: encodeJson({
+      title,
+      category,
+      storage_path,
+      file_name: file.name || "document.pdf",
+      mime_type: file.type || "application/pdf",
+    }),
+    contentType: "application/json",
+  };
 }
 
 /** Rewrite admin request bodies/methods to match Render admin API shapes. */
@@ -505,17 +595,12 @@ async function rewriteUpstreamRequest(
     return rewriteHospitalMultipart(upper, rawBody, contentType, accessToken);
   }
 
-  // Staging uploads API is image-only; PDF multipart document create stays unsupported.
   if (
     head === "documents" &&
     upper === "POST" &&
     contentType?.includes("multipart/form-data")
   ) {
-    return {
-      error:
-        "Staging document upload expects JSON DocumentIn after a separate file host. Multipart PDF upload is not on the staging uploads API yet.",
-      status: 501,
-    };
+    return rewriteDocumentMultipart(rawBody, contentType, accessToken);
   }
 
   // Grant membership: admin posts multipart with receipt; staging expects JSON SubscriptionGrantIn
@@ -638,9 +723,6 @@ async function rewriteUpstreamRequest(
       contentType: "application/json",
     };
   }
-
-  // POST documents multipart is not supported on staging uploads (images only).
-  // JSON DocumentIn is accepted as-is.
 
   // Legal docs: admin UI PATCHes; OpenAPI only accepts PUT LegalIn
   if (head === "legal-documents" && (upper === "PATCH" || upper === "PUT")) {

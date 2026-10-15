@@ -36,7 +36,12 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     backendHint:
       "GET /api/v1/admin/users + GET /users/{id} + referral GET|POST + POST /users/{id}/notify",
   },
-  { pathPrefix: "/admin/documents", label: "Internal docs", backendHint: "GET|POST /api/v1/admin/documents + deliver + delivery history" },
+  {
+    pathPrefix: "/admin/documents",
+    label: "Internal docs",
+    backendHint:
+      "GET|POST /api/v1/admin/documents (multipart → /uploads + DocumentIn) + deliver",
+  },
   {
     pathPrefix: "/admin/finance/payout-request",
     label: "Payout requests",

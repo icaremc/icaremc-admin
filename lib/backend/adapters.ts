@@ -808,17 +808,21 @@ function settingsUpdatedAt(body: Record<string, unknown>): string | null {
 }
 
 function mapDocumentRow(row: Record<string, unknown>) {
+  const storage_path = str(row.storage_path ?? row.storagePath);
+  const previewRaw = (row.preview_url ?? row.previewUrl ?? null) as string | null;
   return {
     id: str(row.id),
     title: str(row.title),
     category: str(row.category || "other"),
-    storage_path: str(row.storage_path ?? row.storagePath),
+    storage_path,
     file_name: str(row.file_name ?? row.fileName),
     mime_type: str(row.mime_type ?? row.mimeType ?? "application/pdf"),
     uploaded_by: (row.uploaded_by ?? row.uploadedBy ?? null) as string | null,
     created_at: str(row.created_at ?? row.createdAt),
     updated_at: str(row.updated_at ?? row.updatedAt),
-    preview_url: (row.preview_url ?? row.previewUrl ?? null) as string | null,
+    preview_url:
+      resolveBackendMediaUrl(previewRaw) ??
+      (storage_path ? resolveBackendMediaUrl(storage_path) : null),
   };
 }
 

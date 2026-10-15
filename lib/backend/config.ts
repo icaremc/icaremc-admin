@@ -28,5 +28,19 @@ export function resolveBackendMediaUrl(
   return trimmed.startsWith("/") ? `${base}${trimmed}` : `${base}/${trimmed}`;
 }
 
+/** DocumentIn.storage_path wants a host-relative path, not the absolute CDN/API URL. */
+export function storagePathFromUploadUrl(url: string): string {
+  const trimmed = url.trim();
+  if (!trimmed) return "";
+  const absolute = resolveBackendMediaUrl(trimmed) ?? trimmed;
+  const base = getBackendApiBaseUrl();
+  if (absolute.startsWith(`${base}/`)) return absolute.slice(base.length + 1);
+  try {
+    return new URL(absolute).pathname.replace(/^\//, "");
+  } catch {
+    return absolute.replace(/^\//, "");
+  }
+}
+
 export const BACKEND_ACCESS_COOKIE = "icare_be_access";
 export const BACKEND_REFRESH_COOKIE = "icare_be_refresh";
