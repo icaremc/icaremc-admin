@@ -11,6 +11,11 @@ export const STAGING_BACKEND_ADMIN_ROUTES = [
   { method: "POST", path: "/api/v1/admin/documents", label: "documents-create" },
   { method: "GET", path: "/api/v1/admin/membership", label: "membership" },
   { method: "GET", path: "/api/v1/admin/payout-requests", label: "payout-requests" },
+  {
+    method: "GET",
+    path: "/api/v1/admin/payout-requests/{id}",
+    label: "payout-request-review",
+  },
   { method: "GET", path: "/api/v1/admin/wallet-transactions", label: "wallet-transactions" },
   { method: "GET", path: "/api/v1/admin/admins", label: "admins" },
   { method: "GET", path: "/api/v1/admin/activity-logs", label: "activity-logs" },

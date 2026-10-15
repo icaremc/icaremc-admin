@@ -18,8 +18,16 @@ const initialState: PayoutDetailState = {
 
 async function readApiError(response: Response): Promise<string> {
   try {
-    const body = (await response.json()) as { error?: string };
-    return body.error ?? response.statusText;
+    const body = (await response.json()) as {
+      error?: string;
+      detail?: string | Array<{ msg?: string }>;
+    };
+    if (typeof body.error === "string" && body.error.trim()) return body.error;
+    if (typeof body.detail === "string" && body.detail.trim()) return body.detail;
+    if (Array.isArray(body.detail) && body.detail[0]?.msg) {
+      return String(body.detail[0].msg);
+    }
+    return response.statusText || "Request failed";
   } catch {
     return response.statusText || "Request failed";
   }
@@ -28,15 +36,29 @@ async function readApiError(response: Response): Promise<string> {
 export const fetchPayoutDetail = createAsyncThunk(
   "payoutDetail/fetch",
   async (id: string, { rejectWithValue }) => {
-    const response = await fetch(`/api/admin/payout-requests/${id}`);
-    if (!response.ok) {
-      return rejectWithValue(await readApiError(response));
+    try {
+      const response = await fetch(`/api/admin/payout-requests/${id}`);
+      if (!response.ok) {
+        return rejectWithValue(await readApiError(response));
+      }
+      const body = (await response.json()) as {
+        request?: DoctorPayoutRequest;
+        context?: DoctorPayoutContext;
+        error?: string;
+        stagingNotFound?: boolean;
+      };
+      if (!body.request || body.stagingNotFound) {
+        return rejectWithValue(body.error ?? "Payout request not found");
+      }
+      return {
+        request: body.request,
+        context: body.context ?? null,
+      };
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error.message : "Request failed",
+      );
     }
-    const body = (await response.json()) as {
-      request: DoctorPayoutRequest;
-      context: DoctorPayoutContext;
-    };
-    return body;
   },
 );
 

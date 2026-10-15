@@ -45,7 +45,8 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
   {
     pathPrefix: "/admin/finance/payout-request",
     label: "Payout requests",
-    backendHint: "GET|POST /api/v1/admin/payout-requests (detail via list)",
+    backendHint:
+      "GET list + GET /payout-requests/{id} review + POST action",
   },
   {
     pathPrefix: "/admin/finance/wallet-transactions",
@@ -282,8 +283,7 @@ export function mapAdminApiToBackend(
     case "payout-requests":
       if (rest.length === 0) return "/api/v1/admin/payout-requests";
       if (rest.length === 1) {
-        if (method === "GET") return "/api/v1/admin/payout-requests";
-        if (method === "PATCH" || method === "POST") {
+        if (method === "GET" || method === "PATCH" || method === "POST") {
           return `/api/v1/admin/payout-requests/${rest[0]}`;
         }
         return null;
@@ -535,13 +535,18 @@ export const ADMIN_API_MAPPING_CASES: Array<{
   { adminPath: "payout-requests", backendPath: "/api/v1/admin/payout-requests" },
   {
     adminPath: "payout-requests/p1",
-    backendPath: "/api/v1/admin/payout-requests",
+    backendPath: "/api/v1/admin/payout-requests/p1",
     method: "GET",
   },
   {
     adminPath: "payout-requests/p1",
     backendPath: "/api/v1/admin/payout-requests/p1",
     method: "PATCH",
+  },
+  {
+    adminPath: "payout-requests/p1",
+    backendPath: "/api/v1/admin/payout-requests/p1",
+    method: "POST",
   },
   { adminPath: "wallet-transactions", backendPath: "/api/v1/admin/wallet-transactions" },
   { adminPath: "app-membership-members", backendPath: "/api/v1/admin/membership" },

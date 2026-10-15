@@ -557,6 +557,101 @@ describe("adaptBackendResponse", () => {
     assert.equal(appVersion.updatedAt, "2026-10-06T11:23:42.643865+00:00");
   });
 
+  it("adapts payout review detail into request + context", () => {
+    const out = adaptBackendResponse(
+      "payout-requests/req-1",
+      "GET",
+      200,
+      {
+        request: {
+          id: "req-1",
+          doctor_id: "doc-1",
+          amount: 500,
+          status: "pending",
+          created_at: "2026-10-15T10:00:00Z",
+          doctor_note: "Please pay",
+          admin_note: null,
+          payment_date: null,
+          payout_method: {
+            id: "pm-1",
+            bank_name: "CBE",
+            account_number: "1000",
+            holder_name: "Dr Test",
+            bank_code: "01",
+            currency: "ETB",
+          },
+        },
+        doctor: {
+          id: "doc-1",
+          name: "Abebe Kebede",
+          phone: "0911",
+        },
+        wallet: {
+          available_balance: 1200,
+          pending_balance: 100,
+          earned_this_week: 200,
+          earned_this_month: 800,
+          currency: "ETB",
+        },
+        this_month: {
+          net_earnings: 800,
+          paid_out: 300,
+          open_requests: 500,
+          payout_requests: 2,
+          platform_commission: 12,
+        },
+        payout_history: [
+          {
+            id: "req-0",
+            created_at: "2026-09-01T00:00:00Z",
+            amount: 300,
+            status: "completed",
+          },
+        ],
+        recent_earnings: [
+          {
+            id: "e1",
+            created_at: "2026-10-14T00:00:00Z",
+            amount: 150,
+            appointment_id: "a1",
+            appointment: "Consultation",
+            parent: "Parent One",
+          },
+        ],
+      },
+    ) as {
+      request: {
+        id: string;
+        note: string | null;
+        doctor_profiles: { first_name: string; last_name: string } | null;
+        doctor_payout_methods: { bank_name: string } | null;
+      };
+      context: {
+        commissionPercent: number;
+        thisMonth: { earned: number; paidOut: number; requested: number };
+        thisWeek: { earned: number };
+        wallet: { available_balance: number } | null;
+        recentEarnings: Array<{ patient_name: string | null; service_name: string | null }>;
+        payoutHistory: Array<{ id: string }>;
+      };
+    };
+
+    assert.equal(out.request.id, "req-1");
+    assert.equal(out.request.note, "Please pay");
+    assert.equal(out.request.doctor_profiles?.first_name, "Abebe");
+    assert.equal(out.request.doctor_profiles?.last_name, "Kebede");
+    assert.equal(out.request.doctor_payout_methods?.bank_name, "CBE");
+    assert.equal(out.context.wallet?.available_balance, 1200);
+    assert.equal(out.context.thisWeek.earned, 200);
+    assert.equal(out.context.thisMonth.earned, 800);
+    assert.equal(out.context.thisMonth.paidOut, 300);
+    assert.equal(out.context.thisMonth.requested, 500);
+    assert.equal(out.context.commissionPercent, 12);
+    assert.equal(out.context.payoutHistory[0]?.id, "req-0");
+    assert.equal(out.context.recentEarnings[0]?.patient_name, "Parent One");
+    assert.equal(out.context.recentEarnings[0]?.service_name, "Consultation");
+  });
+
   it("keeps document preview_url and wallet doctor_profiles", () => {
     const docs = adaptBackendResponse("documents", "GET", 200, [
       {

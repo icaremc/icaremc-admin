@@ -826,6 +826,172 @@ function mapDocumentRow(row: Record<string, unknown>) {
   };
 }
 
+function splitDoctorDisplayName(name: string): {
+  first_name: string;
+  last_name: string;
+} {
+  const trimmed = name.trim();
+  if (!trimmed) return { first_name: "Doctor", last_name: "" };
+  const parts = trimmed.split(/\s+/);
+  if (parts.length === 1) return { first_name: parts[0] ?? trimmed, last_name: "" };
+  return {
+    first_name: parts[0] ?? trimmed,
+    last_name: parts.slice(1).join(" "),
+  };
+}
+
+function mapPayoutMethodReview(
+  row: Record<string, unknown> | null,
+  doctorId: string,
+) {
+  if (!row) return null;
+  return {
+    id: str(row.id),
+    doctor_id: doctorId,
+    holder_name: str(row.holder_name ?? row.holderName),
+    account_number: str(row.account_number ?? row.accountNumber),
+    bank_name: str(row.bank_name ?? row.bankName),
+    bank_code: (row.bank_code ?? row.bankCode ?? null) as string | null,
+    swift_code: (row.swift_code ?? row.swiftCode ?? null) as string | null,
+    is_active: true,
+    is_default: true,
+    currency: str(row.currency || "ETB"),
+    created_at: str(row.created_at ?? row.createdAt),
+    updated_at: str(row.updated_at ?? row.updatedAt),
+  };
+}
+
+/** OpenAPI PayoutReviewOut → admin payout detail { request, context }. */
+function mapPayoutReviewOut(body: Record<string, unknown>) {
+  const rawRequest = isPlainObject(body.request) ? body.request : body;
+  const doctor = isPlainObject(body.doctor) ? body.doctor : null;
+  const wallet = isPlainObject(body.wallet) ? body.wallet : null;
+  const thisMonth = isPlainObject(body.this_month)
+    ? body.this_month
+    : isPlainObject(body.thisMonth)
+      ? body.thisMonth
+      : null;
+  const doctorId = str(rawRequest.doctor_id ?? rawRequest.doctorId ?? doctor?.id);
+  const names = splitDoctorDisplayName(str(doctor?.name ?? ""));
+  const method = mapPayoutMethodReview(
+    isPlainObject(rawRequest.payout_method)
+      ? rawRequest.payout_method
+      : isPlainObject(rawRequest.payoutMethod)
+        ? rawRequest.payoutMethod
+        : null,
+    doctorId,
+  );
+
+  const request = {
+    id: str(rawRequest.id),
+    doctor_id: doctorId,
+    payout_method_id: method?.id ?? null,
+    amount: num(rawRequest.amount),
+    note: (rawRequest.doctor_note ??
+      rawRequest.doctorNote ??
+      rawRequest.note ??
+      null) as string | null,
+    admin_note: (rawRequest.admin_note ?? rawRequest.adminNote ?? null) as
+      | string
+      | null,
+    status: str(rawRequest.status || "pending"),
+    created_at: str(rawRequest.created_at ?? rawRequest.createdAt),
+    payment_date: (rawRequest.payment_date ??
+      rawRequest.paymentDate ??
+      null) as string | null,
+    updated_at: str(
+      rawRequest.updated_at ?? rawRequest.updatedAt ?? rawRequest.created_at,
+    ),
+    doctor_profiles: doctor
+      ? {
+          first_name: names.first_name,
+          last_name: names.last_name,
+          phone: (doctor.phone ?? null) as string | null,
+        }
+      : null,
+    doctor_payout_methods: method,
+  };
+
+  const historyRaw = Array.isArray(body.payout_history)
+    ? body.payout_history
+    : Array.isArray(body.payoutHistory)
+      ? body.payoutHistory
+      : [];
+  const payoutHistory = historyRaw.filter(isPlainObject).map((row) => ({
+    id: str(row.id),
+    doctor_id: doctorId,
+    payout_method_id: null,
+    amount: num(row.amount),
+    note: (row.note ?? null) as string | null,
+    admin_note: (row.admin_note ?? row.adminNote ?? null) as string | null,
+    status: str(row.status || "pending"),
+    created_at: str(row.created_at ?? row.createdAt ?? row.date),
+    payment_date: (row.payment_date ?? row.paymentDate ?? null) as string | null,
+    updated_at: str(row.updated_at ?? row.updatedAt ?? row.created_at ?? row.date),
+  }));
+
+  const earningsRaw = Array.isArray(body.recent_earnings)
+    ? body.recent_earnings
+    : Array.isArray(body.recentEarnings)
+      ? body.recentEarnings
+      : [];
+  const recentEarnings = earningsRaw.filter(isPlainObject).map((row) => ({
+    id: str(row.id),
+    amount: num(row.amount),
+    created_at: str(row.created_at ?? row.createdAt ?? row.date),
+    note: (row.note ?? null) as string | null,
+    appointment_id: (row.appointment_id ?? row.appointmentId ?? null) as
+      | string
+      | null,
+    appointment_date: null as string | null,
+    time_slot: null as string | null,
+    service_name: (row.appointment ?? row.service_name ?? null) as string | null,
+    patient_id: (row.patient_id ?? row.patientId ?? null) as string | null,
+    patient_name: (row.parent ??
+      row.patient_name ??
+      row.patientName ??
+      null) as string | null,
+  }));
+
+  const currency = str(
+    wallet?.currency ?? method?.currency ?? rawRequest.currency ?? "ETB",
+  );
+
+  return {
+    request,
+    context: {
+      wallet: wallet
+        ? {
+            available_balance: num(
+              wallet.available_balance ?? wallet.availableBalance,
+            ),
+            pending_balance: num(
+              wallet.pending_balance ?? wallet.pendingBalance,
+            ),
+            currency,
+          }
+        : null,
+      commissionPercent: num(
+        thisMonth?.platform_commission ?? thisMonth?.platformCommission ?? 10,
+      ),
+      thisMonth: {
+        earned: num(thisMonth?.net_earnings ?? thisMonth?.netEarnings),
+        paidOut: num(thisMonth?.paid_out ?? thisMonth?.paidOut),
+        requested: num(thisMonth?.open_requests ?? thisMonth?.openRequests),
+        payoutCount: num(
+          thisMonth?.payout_requests ?? thisMonth?.payoutRequests,
+        ),
+      },
+      thisWeek: {
+        earned: num(wallet?.earned_this_week ?? wallet?.earnedThisWeek),
+        payoutCount: 0,
+      },
+      payoutHistory,
+      recentEarnings,
+    },
+  };
+}
+
 function documentListRows(body: unknown): Record<string, unknown>[] {
   if (Array.isArray(body)) return body.filter(isPlainObject);
   if (isPlainObject(body) && Array.isArray(body.documents)) {
@@ -1242,12 +1408,17 @@ export function adaptBackendResponse(
   }
 
   if (head === "payout-requests" && rest.length === 1 && upper === "GET") {
-    if (!Array.isArray(body)) {
-      return isPlainObject(body) ? { request: body, context: null } : body;
+    if (isPlainObject(body) && ("request" in body || "wallet" in body || "doctor" in body)) {
+      return mapPayoutReviewOut(body);
     }
-    const request = findById(body, rest[0]);
-    if (!request) return { error: "Payout request not found", stagingNotFound: true };
-    return { request, context: null };
+    if (Array.isArray(body)) {
+      const request = findById(body, rest[0]);
+      if (!request) {
+        return { error: "Payout request not found", stagingNotFound: true };
+      }
+      return { request, context: null };
+    }
+    return isPlainObject(body) ? mapPayoutReviewOut({ request: body }) : body;
   }
 
   if (head === "children" && rest.length === 2 && upper === "GET") {
@@ -1575,6 +1746,9 @@ export function adaptBackendResponse(
           ? body.items
           : [];
       return { logs };
+    }
+    if (head === "payout-requests" && rest.length === 1 && upper === "GET") {
+      return mapPayoutReviewOut(body);
     }
     if (head === "payout-requests" && rest.length === 1) {
       return { request: body, ...body };

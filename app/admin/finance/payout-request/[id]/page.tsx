@@ -58,7 +58,8 @@ function maskAccountNumber(accountNumber?: string | null): string {
 export default function PayoutRequestDetailPage() {
   const params = useParams();
   const dispatch = useAppDispatch();
-  const id = params.id as string;
+  const rawId = params?.id;
+  const id = Array.isArray(rawId) ? rawId[0] : rawId;
 
   const { request, context, loading, error } = useAppSelector(
     (state) => state.payoutDetail,
@@ -72,7 +73,8 @@ export default function PayoutRequestDetailPage() {
   );
 
   useEffect(() => {
-    if (id) dispatch(fetchPayoutDetail(id));
+    if (!id) return;
+    void dispatch(fetchPayoutDetail(id));
   }, [dispatch, id]);
 
   const doctor = request?.doctor_profiles;
@@ -86,10 +88,12 @@ export default function PayoutRequestDetailPage() {
     request?.status === "approved" && hasChapaReference(request.admin_note);
 
   async function reload() {
+    if (!id) return;
     await dispatch(fetchPayoutDetail(id));
   }
 
   async function handleAction(action: "approve" | "reject" | "complete") {
+    if (!id) return;
     const result = await dispatch(updatePayoutRequest({ id, action }));
     if (updatePayoutRequest.fulfilled.match(result)) {
       await reload();
@@ -117,6 +121,7 @@ export default function PayoutRequestDetailPage() {
       : null;
 
   async function handleChapaTransfer() {
+    if (!id) return;
     setShowChapaConfirm(false);
     const result = await dispatch(sendPayoutViaChapa({ id }));
     if (sendPayoutViaChapa.fulfilled.match(result)) {
@@ -126,13 +131,16 @@ export default function PayoutRequestDetailPage() {
   }
 
   async function handleVerify() {
+    if (!id) return;
     const result = await dispatch(verifyPayoutViaChapa({ id }));
     if (verifyPayoutViaChapa.fulfilled.match(result)) {
       await reload();
     }
   }
 
-  if (loading && !request) {
+  const showLoading = Boolean(id) && (loading || (!request && !error));
+
+  if (showLoading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-emerald-600" />
@@ -251,13 +259,13 @@ export default function PayoutRequestDetailPage() {
           />
           <StatCard
             label="Earned this week"
-            value={formatMoney(context?.thisWeek.earned ?? 0, currency)}
+            value={formatMoney(context?.thisWeek?.earned ?? 0, currency)}
             icon={DollarSign}
             accent="teal"
           />
           <StatCard
             label="Earned this month"
-            value={formatMoney(context?.thisMonth.earned ?? 0, currency)}
+            value={formatMoney(context?.thisMonth?.earned ?? 0, currency)}
             icon={DollarSign}
             accent="violet"
           />
@@ -311,20 +319,20 @@ export default function PayoutRequestDetailPage() {
               <div className="flex justify-between gap-4">
                 <dt className="text-gray-500">Net earnings</dt>
                 <dd className="font-medium text-emerald-700">
-                  {formatMoney(context?.thisMonth.earned ?? 0, currency)}
+                  {formatMoney(context?.thisMonth?.earned ?? 0, currency)}
                 </dd>
               </div>
               <div className="flex justify-between gap-4">
                 <dt className="text-gray-500">Paid out</dt>
-                <dd>{formatMoney(context?.thisMonth.paidOut ?? 0, currency)}</dd>
+                <dd>{formatMoney(context?.thisMonth?.paidOut ?? 0, currency)}</dd>
               </div>
               <div className="flex justify-between gap-4">
                 <dt className="text-gray-500">Open requests</dt>
-                <dd>{formatMoney(context?.thisMonth.requested ?? 0, currency)}</dd>
+                <dd>{formatMoney(context?.thisMonth?.requested ?? 0, currency)}</dd>
               </div>
               <div className="flex justify-between gap-4">
                 <dt className="text-gray-500">Payout requests</dt>
-                <dd>{context?.thisMonth.payoutCount ?? 0}</dd>
+                <dd>{context?.thisMonth?.payoutCount ?? 0}</dd>
               </div>
               <div className="flex justify-between gap-4 border-t border-gray-100 pt-3">
                 <dt className="text-gray-500">Platform commission</dt>
