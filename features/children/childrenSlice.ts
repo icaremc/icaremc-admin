@@ -100,15 +100,40 @@ export const fetchChildren = createAsyncThunk(
   },
 );
 
+/** GET /api/v1/admin/children/{id}/measurements */
+function getChildMeasurements(childId: string) {
+  return fetch(`/api/admin/children/${childId}/measurements`);
+}
+
+/** GET /api/v1/admin/children/{id}/milestones */
+function getChildMilestones(childId: string) {
+  return fetch(`/api/admin/children/${childId}/milestones`);
+}
+
+/** GET /api/v1/admin/children/{id}/vaccines */
+function getChildVaccines(childId: string) {
+  return fetch(`/api/admin/children/${childId}/vaccines`);
+}
+
+async function readJsonBody(
+  response: Response,
+): Promise<Record<string, unknown>> {
+  if (!response.ok) return {};
+  const body = (await response.json()) as unknown;
+  return body && typeof body === "object" && !Array.isArray(body)
+    ? (body as Record<string, unknown>)
+    : {};
+}
+
 export const fetchChildDetail = createAsyncThunk(
   "children/fetchDetail",
   async (childId: string, { rejectWithValue }) => {
     const [detailRes, measurementsRes, milestonesRes, vaccinesRes, periodsRes] =
       await Promise.all([
         fetch(`/api/admin/children/${childId}`),
-        fetch(`/api/admin/children/${childId}/measurements`),
-        fetch(`/api/admin/children/${childId}/milestones`),
-        fetch(`/api/admin/children/${childId}/vaccines`),
+        getChildMeasurements(childId),
+        getChildMilestones(childId),
+        getChildVaccines(childId),
         fetch("/api/admin/child-growth"),
       ]);
 
@@ -119,16 +144,6 @@ export const fetchChildDetail = createAsyncThunk(
     const detailBody = (await detailRes.json()) as Record<string, unknown>;
     const detail = asDetailPayload(detailBody);
     if (!detail) return rejectWithValue("Child not found");
-
-    async function readJsonBody(
-      response: Response,
-    ): Promise<Record<string, unknown>> {
-      if (!response.ok) return {};
-      const body = (await response.json()) as unknown;
-      return body && typeof body === "object" && !Array.isArray(body)
-        ? (body as Record<string, unknown>)
-        : {};
-    }
 
     const [measurementsBody, milestonesBody, vaccinesBody, periodsBody] =
       await Promise.all([

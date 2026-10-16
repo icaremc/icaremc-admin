@@ -118,7 +118,7 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     pathPrefix: "/admin/children",
     label: "Children",
     backendHint:
-      "GET /api/v1/admin/children (+ detail, measurements, milestones, vaccines)",
+      "GET /children + GET /children/{id} + GET /children/{id}/measurements|milestones|vaccines",
   },
   {
     pathPrefix: "/admin/content",
@@ -412,14 +412,15 @@ export function mapAdminApiToBackend(
       if (rest.length === 1 && method === "GET") {
         return `/api/v1/admin/children/${rest[0]}`;
       }
-      if (
-        rest.length === 2 &&
-        method === "GET" &&
-        (rest[1] === "measurements" ||
-          rest[1] === "milestones" ||
-          rest[1] === "vaccines")
-      ) {
-        return `/api/v1/admin/children/${rest[0]}/${rest[1]}`;
+      // GET /api/v1/admin/children/{id}/measurements|milestones|vaccines
+      if (rest.length === 2 && method === "GET" && rest[1] === "measurements") {
+        return `/api/v1/admin/children/${rest[0]}/measurements`;
+      }
+      if (rest.length === 2 && method === "GET" && rest[1] === "milestones") {
+        return `/api/v1/admin/children/${rest[0]}/milestones`;
+      }
+      if (rest.length === 2 && method === "GET" && rest[1] === "vaccines") {
+        return `/api/v1/admin/children/${rest[0]}/vaccines`;
       }
       return null;
     case "daily-tips":
