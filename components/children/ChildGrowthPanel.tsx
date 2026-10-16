@@ -27,6 +27,7 @@ import {
 import {
   ensureWhoLmsLoaded,
   whoReferenceSeries,
+  whoTable,
   type WhoIndicator,
 } from "@/lib/who/whoZScore";
 import { cn } from "@/lib/utils";
@@ -206,8 +207,10 @@ export default function ChildGrowthPanel({
       ...childPoints.map((point) => point.ageMonths),
       latest ? measurementAgeMonths(child, latest) : 0,
     );
-    // Keep infant charts readable: at least 12 mo, pad past last point, cap at 60.
-    const maxAge = Math.min(60, Math.max(12, Math.ceil(childMaxAge + 2)));
+    // Full WHO table for this indicator (wfa/hfa/hca are 0–60 mo in who_lms.json).
+    const table = whoTable(activeMetric.indicator, child.gender);
+    const tableMax = table.at(-1)?.given ?? 60;
+    const maxAge = Math.max(tableMax, Math.ceil(childMaxAge));
 
     const reference = whoReferenceSeries({
       indicator: activeMetric.indicator,
@@ -220,9 +223,6 @@ export default function ChildGrowthPanel({
     const refLows = reference.map((row) => row.low);
     const refMax = refHighs.length > 0 ? Math.max(...refHighs) : 1;
     const refMin = refLows.length > 0 ? Math.min(...refLows) : 0;
-    const pad = Math.max((refMax - refMin) * 0.12, refMax * 0.05, 0.5);
-    // ponytail: outliers (e.g. 65 kg at 1 mo) stay in the table only so WHO bands remain readable
-    const inlierCap = refMax * 2.5;
 
     const rows: ChartRow[] = reference.map((row) => ({
       ageMonths: row.ageMonths,
@@ -232,16 +232,7 @@ export default function ChildGrowthPanel({
       child: null,
     }));
 
-    let yMax = refMax + pad;
-    let yMin = Math.max(0, refMin - pad);
-    let outsideScaleCount = 0;
     for (const point of childPoints) {
-      if (point.child > inlierCap) {
-        outsideScaleCount += 1;
-        continue;
-      }
-      yMax = Math.max(yMax, point.child + pad);
-      yMin = Math.min(yMin, Math.max(0, point.child - pad));
       rows.push({
         ageMonths: point.ageMonths,
         low: null,
@@ -252,10 +243,19 @@ export default function ChildGrowthPanel({
     }
     rows.sort((a, b) => a.ageMonths - b.ageMonths);
 
+    // Scale to measurements when present; otherwise WHO. Integer ticks stay readable.
+    const values = childPoints.map((point) => point.child);
+    const dataMin = values.length > 0 ? Math.min(...values) : refMin;
+    const dataMax = values.length > 0 ? Math.max(...values) : refMax;
+    const span = Math.max(dataMax - dataMin, 1);
+    const pad = Math.max(span * 0.12, 0.5);
+    const domainLo = Math.max(0, Math.floor(dataMin - pad));
+    const domainHi = Math.max(domainLo + 1, Math.ceil(dataMax + pad));
+
     return {
       chartData: rows,
-      yDomain: [yMin, yMax] as [number, number],
-      outsideScaleCount,
+      yDomain: [domainLo, domainHi] as [number, number],
+      outsideScaleCount: 0,
     };
   }, [activeMetric.indicator, child, latest, metric, ready, sorted]);
 
@@ -387,7 +387,7 @@ export default function ChildGrowthPanel({
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={chartData}
-              margin={{ top: 12, right: 16, bottom: 8, left: 0 }}
+              margin={{ top: 12, right: 16, bottom: 8, left: 8 }}
             >
               <CartesianGrid strokeDasharray="4 4" stroke="#e5e7eb" />
               <XAxis
@@ -408,9 +408,14 @@ export default function ChildGrowthPanel({
               <YAxis
                 domain={yDomain}
                 allowDataOverflow
+                tickCount={6}
+                width={36}
                 tickLine={false}
                 axisLine={false}
                 tick={{ fill: "#6b7280", fontSize: 12 }}
+                tickFormatter={(value) =>
+                  typeof value === "number" ? String(Math.round(value)) : ""
+                }
                 label={{
                   value: activeMetric.unit,
                   angle: -90,

@@ -154,18 +154,14 @@ function dateGroupLabel(value: string): string {
 }
 
 function compareAppointments(a: Appointment, b: Appointment): number {
+  const dateA = dateKey(a.appointment_date);
+  const dateB = dateKey(b.appointment_date);
+  if (dateA !== dateB) return dateB.localeCompare(dateA);
+
   const aActive = ACTIVE_STATUSES.includes(a.status);
   const bActive = ACTIVE_STATUSES.includes(b.status);
-
   if (aActive && !bActive) return -1;
   if (!aActive && bActive) return 1;
-
-  const dateA = new Date(`${a.appointment_date}T12:00:00`).getTime();
-  const dateB = new Date(`${b.appointment_date}T12:00:00`).getTime();
-
-  if (dateA !== dateB) {
-    return aActive ? dateA - dateB : dateB - dateA;
-  }
 
   return a.time_slot.localeCompare(b.time_slot);
 }
@@ -177,12 +173,7 @@ function groupByDate(appointments: Appointment[]): [string, Appointment[]][] {
     map.set(key, [...(map.get(key) ?? []), appt]);
   }
 
-  return [...map.entries()].sort(([keyA], [keyB]) => {
-    const a = appointments.find((appt) => dateKey(appt.appointment_date) === keyA);
-    const b = appointments.find((appt) => dateKey(appt.appointment_date) === keyB);
-    if (!a || !b) return keyB.localeCompare(keyA);
-    return compareAppointments(a, b);
-  });
+  return [...map.entries()].sort(([keyA], [keyB]) => keyB.localeCompare(keyA));
 }
 
 function AppointmentCard({

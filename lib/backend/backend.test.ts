@@ -208,6 +208,20 @@ describe("adaptBackendResponse", () => {
     });
   });
 
+  it("sorts appointments by date desc then time_slot asc", () => {
+    const out = adaptBackendResponse("appointments", "GET", 200, [
+      { id: "old", appointment_date: "2026-01-01", time_slot: "14:00" },
+      { id: "new-pm", appointment_date: "2026-10-16", time_slot: "15:00" },
+      { id: "new-am", appointment_date: "2026-10-16", time_slot: "09:00" },
+    ]) as {
+      appointments: Array<{ id: string; appointment_date: string; time_slot: string }>;
+    };
+    assert.deepEqual(
+      out.appointments.map((a) => a.id),
+      ["new-am", "new-pm", "old"],
+    );
+  });
+
   it("unwraps appointments object list", () => {
     const out = adaptBackendResponse(
       "appointments",

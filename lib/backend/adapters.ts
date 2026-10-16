@@ -687,6 +687,16 @@ function appointmentListRows(body: unknown): Record<string, unknown>[] {
   return [];
 }
 
+/** Match Supabase GET: appointment_date desc, time_slot asc. */
+function byAppointmentDateDesc(
+  a: { appointment_date?: string; time_slot?: string },
+  b: { appointment_date?: string; time_slot?: string },
+): number {
+  const byDate = str(b.appointment_date).localeCompare(str(a.appointment_date));
+  if (byDate !== 0) return byDate;
+  return str(a.time_slot).localeCompare(str(b.time_slot));
+}
+
 function mapAppointmentDoctorProfiles(row: Record<string, unknown>) {
   const nested = isPlainObject(row.doctor_profiles)
     ? row.doctor_profiles
@@ -1532,7 +1542,9 @@ export function adaptBackendResponse(
         if (rest[0] === "stats") {
           return deriveAppointmentStats(body);
         }
-        const appointments = appointmentListRows(body).map(mapAppointmentRow);
+        const appointments = appointmentListRows(body)
+          .map(mapAppointmentRow)
+          .sort(byAppointmentDateDesc);
         return {
           appointments,
           pagination: listPageMeta(body, options.searchParams, appointments.length),
@@ -1697,7 +1709,9 @@ export function adaptBackendResponse(
 
   if (isPlainObject(body)) {
     if (head === "appointments" && rest.length === 0) {
-      const appointments = appointmentListRows(body).map(mapAppointmentRow);
+      const appointments = appointmentListRows(body)
+        .map(mapAppointmentRow)
+        .sort(byAppointmentDateDesc);
       return {
         appointments,
         pagination: listPageMeta(body, options.searchParams, appointments.length),
