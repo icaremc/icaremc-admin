@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { RotateCcw, ZoomIn, ZoomOut } from "lucide-react";
 import {
   CartesianGrid,
   ComposedChart,
@@ -33,6 +34,7 @@ import {
 import { cn } from "@/lib/utils";
 
 type MetricKey = "weight" | "height" | "hc";
+type AgePreset = "fit" | "12" | "24" | "60" | "full";
 
 const METRICS: {
   key: MetricKey;
@@ -49,6 +51,21 @@ const METRICS: {
     indicator: "hca",
   },
 ];
+
+function clampRange(
+  lo: number,
+  hi: number,
+  tableMax: number,
+): [number, number] {
+  const minSpan = 3;
+  let start = Math.max(0, lo);
+  let end = Math.min(tableMax, hi);
+  if (end - start < minSpan) {
+    end = Math.min(tableMax, start + minSpan);
+    start = Math.max(0, end - minSpan);
+  }
+  return [start, end];
+}
 
 function StatusChip({ result }: { result: GrowthMetricResult }) {
   const tone = growthStatusTone(result.level);
@@ -114,6 +131,8 @@ export default function ChildGrowthPanel({
   measurements,
 }: ChildGrowthPanelProps) {
   const [metric, setMetric] = useState<MetricKey>("weight");
+  /** null = auto fit to child age */
+  const [xRange, setXRange] = useState<[number, number] | null>(null);
   const [ready, setReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -177,7 +196,26 @@ export default function ChildGrowthPanel({
     };
   }, [child, latestByMetric, ready]);
 
-  const { chartData, yDomain, outsideScaleCount } = useMemo(() => {
+  const tableMax = useMemo(() => {
+    if (!ready) return 60;
+    return whoTable(activeMetric.indicator, child.gender).at(-1)?.given ?? 60;
+  }, [activeMetric.indicator, child.gender, ready]);
+
+  const childMaxAge = useMemo(() => {
+    const ages = sorted.map((row) => measurementAgeMonths(child, row));
+    if (latest) ages.push(measurementAgeMonths(child, latest));
+    return Math.max(0, ...ages);
+  }, [child, latest, sorted]);
+
+  const fitRange = useMemo(
+    (): [number, number] =>
+      clampRange(0, Math.max(12, Math.ceil(childMaxAge + 2)), tableMax),
+    [childMaxAge, tableMax],
+  );
+
+  const viewRange = xRange ?? fitRange;
+
+  const { chartData, yDomain } = useMemo(() => {
     type ChartRow = {
       ageMonths: number;
       low: number | null;
@@ -189,40 +227,17 @@ export default function ChildGrowthPanel({
     const empty = {
       chartData: [] as ChartRow[],
       yDomain: [0, 1] as [number, number],
-      outsideScaleCount: 0,
     };
     if (!ready) return empty;
 
-    const childPoints = sorted
-      .map((row) => {
-        const age = measurementAgeMonths(child, row);
-        const value = measurementValue(row, metric);
-        if (value == null) return null;
-        return { ageMonths: age, child: value };
-      })
-      .filter((row): row is { ageMonths: number; child: number } => row != null);
-
-    const childMaxAge = Math.max(
-      0,
-      ...childPoints.map((point) => point.ageMonths),
-      latest ? measurementAgeMonths(child, latest) : 0,
-    );
-    // Full WHO table for this indicator (wfa/hfa/hca are 0–60 mo in who_lms.json).
-    const table = whoTable(activeMetric.indicator, child.gender);
-    const tableMax = table.at(-1)?.given ?? 60;
-    const maxAge = Math.max(tableMax, Math.ceil(childMaxAge));
-
+    const [x0, x1] = viewRange;
+    const step = x1 - x0 > 120 ? 2 : 1;
     const reference = whoReferenceSeries({
       indicator: activeMetric.indicator,
       sex: child.gender,
-      maxAgeMonths: maxAge,
-      stepMonths: 1,
-    });
-
-    const refHighs = reference.map((row) => row.high);
-    const refLows = reference.map((row) => row.low);
-    const refMax = refHighs.length > 0 ? Math.max(...refHighs) : 1;
-    const refMin = refLows.length > 0 ? Math.min(...refLows) : 0;
+      maxAgeMonths: Math.ceil(x1),
+      stepMonths: step,
+    }).filter((row) => row.ageMonths >= x0 && row.ageMonths <= x1);
 
     const rows: ChartRow[] = reference.map((row) => ({
       ageMonths: row.ageMonths,
@@ -232,32 +247,51 @@ export default function ChildGrowthPanel({
       child: null,
     }));
 
-    for (const point of childPoints) {
+    const childValues: number[] = [];
+    for (const row of sorted) {
+      const age = measurementAgeMonths(child, row);
+      const value = measurementValue(row, metric);
+      if (value == null || age < x0 || age > x1) continue;
+      childValues.push(value);
       rows.push({
-        ageMonths: point.ageMonths,
+        ageMonths: age,
         low: null,
         median: null,
         high: null,
-        child: point.child,
+        child: value,
       });
     }
     rows.sort((a, b) => a.ageMonths - b.ageMonths);
 
-    // Scale to measurements when present; otherwise WHO. Integer ticks stay readable.
-    const values = childPoints.map((point) => point.child);
-    const dataMin = values.length > 0 ? Math.min(...values) : refMin;
-    const dataMax = values.length > 0 ? Math.max(...values) : refMax;
-    const span = Math.max(dataMax - dataMin, 1);
-    const pad = Math.max(span * 0.12, 0.5);
-    const domainLo = Math.max(0, Math.floor(dataMin - pad));
-    const domainHi = Math.max(domainLo + 1, Math.ceil(dataMax + pad));
+    const refTop = reference.length > 0 ? Math.max(...reference.map((r) => r.high)) : 1;
+    const dataTop = childValues.length > 0 ? Math.max(...childValues) : refTop;
+    const top = Math.max(refTop, dataTop);
+    const pad = Math.max(top * 0.08, 1);
 
     return {
       chartData: rows,
-      yDomain: [domainLo, domainHi] as [number, number],
-      outsideScaleCount: 0,
+      yDomain: [0, Math.max(1, Math.ceil(top + pad))] as [number, number],
     };
-  }, [activeMetric.indicator, child, latest, metric, ready, sorted]);
+  }, [activeMetric.indicator, child, metric, ready, sorted, viewRange]);
+
+  function applyPreset(preset: AgePreset) {
+    if (preset === "fit") {
+      setXRange(null);
+      return;
+    }
+    if (preset === "full") {
+      setXRange([0, tableMax]);
+      return;
+    }
+    setXRange(clampRange(0, Number(preset), tableMax));
+  }
+
+  function zoomBy(factor: number) {
+    const [lo, hi] = viewRange;
+    const mid = (lo + hi) / 2;
+    const half = ((hi - lo) / 2) * factor;
+    setXRange(clampRange(mid - half, mid + half, tableMax));
+  }
 
   if (loadError) {
     return (
@@ -355,35 +389,94 @@ export default function ChildGrowthPanel({
       <section className="admin-panel">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="admin-section-title">Growth chart</h2>
-          <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5">
-            {METRICS.map((item) => (
-              <button
-                key={item.key}
-                type="button"
-                onClick={() => setMetric(item.key)}
-                className={cn(
-                  "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-                  metric === item.key
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "text-gray-500 hover:text-gray-800",
-                )}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5">
+              {METRICS.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setMetric(item.key)}
+                  className={cn(
+                    "rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                    metric === item.key
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "text-gray-500 hover:text-gray-800",
+                  )}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            <label className="flex items-center gap-1.5 text-xs text-gray-500">
+              <span className="sr-only">Age range</span>
+              <select
+                className="h-8 rounded-md border border-gray-200 bg-white px-2 text-xs font-medium text-gray-700"
+                value={
+                  xRange == null
+                    ? "fit"
+                    : xRange[0] === 0 && xRange[1] === tableMax
+                      ? "full"
+                      : xRange[0] === 0 && xRange[1] === 12
+                        ? "12"
+                        : xRange[0] === 0 && xRange[1] === 24
+                          ? "24"
+                          : xRange[0] === 0 && xRange[1] === 60
+                            ? "60"
+                            : "custom"
+                }
+                onChange={(e) => {
+                  const value = e.target.value as AgePreset | "custom";
+                  if (value === "custom") return;
+                  applyPreset(value);
+                }}
               >
-                {item.label}
+                <option value="fit">Fit child</option>
+                <option value="12">0–12 months</option>
+                <option value="24">0–24 months</option>
+                <option value="60">0–5 years</option>
+                <option value="full">Full table</option>
+                {xRange != null &&
+                !(
+                  (xRange[0] === 0 && xRange[1] === tableMax) ||
+                  (xRange[0] === 0 &&
+                    [12, 24, 60].includes(xRange[1]))
+                ) ? (
+                  <option value="custom">
+                    {viewRange[0].toFixed(0)}–{viewRange[1].toFixed(0)} mo
+                  </option>
+                ) : null}
+              </select>
+            </label>
+            <div className="inline-flex overflow-hidden rounded-md border border-gray-200 bg-white">
+              <button
+                type="button"
+                aria-label="Zoom out"
+                onClick={() => zoomBy(2)}
+                className="flex h-8 w-8 items-center justify-center text-gray-600 hover:bg-gray-50"
+              >
+                <ZoomOut className="h-4 w-4" />
               </button>
-            ))}
+              <button
+                type="button"
+                aria-label="Zoom in"
+                onClick={() => zoomBy(0.5)}
+                className="flex h-8 w-8 items-center justify-center border-l border-gray-200 text-gray-600 hover:bg-gray-50"
+              >
+                <ZoomIn className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                aria-label="Reset view"
+                onClick={() => setXRange(null)}
+                className="flex h-8 w-8 items-center justify-center border-l border-gray-200 text-gray-600 hover:bg-gray-50"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
         </div>
 
-        {outsideScaleCount > 0 ? (
-          <p className="mb-3 text-xs text-amber-700">
-            {outsideScaleCount === 1
-              ? "1 measurement is outside the chart scale"
-              : `${outsideScaleCount} measurements are outside the chart scale`}{" "}
-            (kept in the table so WHO bands stay readable).
-          </p>
-        ) : null}
-
-        <div className="h-[320px] w-full">
+        <div className="h-[340px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={chartData}
@@ -393,7 +486,8 @@ export default function ChildGrowthPanel({
               <XAxis
                 dataKey="ageMonths"
                 type="number"
-                domain={["dataMin", "dataMax"]}
+                domain={viewRange}
+                allowDataOverflow
                 tickLine={false}
                 axisLine={false}
                 tick={{ fill: "#6b7280", fontSize: 12 }}
