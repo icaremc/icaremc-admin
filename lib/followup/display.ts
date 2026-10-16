@@ -1,4 +1,9 @@
-import type { ChildFollowupVisitTemplate } from "@/lib/types/database";
+import type {
+  ChildFollowupVisitTemplate,
+  ChildGrowthPeriod,
+} from "@/lib/types/database";
+
+type GrowthPeriodRef = Pick<ChildGrowthPeriod, "id" | "age_months" | "age_label">;
 
 /** Short, admin-friendly milestone label (avoids "6 weeks / 1.5 months"). */
 export function milestoneDisplayLabel(
@@ -9,6 +14,29 @@ export function milestoneDisplayLabel(
   if (ageMonths === 0 || ageLabel.startsWith("Newborn")) return "Newborn";
   if (ageMonths === 1 || ageLabel.includes("6 weeks")) return "6 weeks";
   return ageLabel.trim();
+}
+
+/** Fill nested period when API only returns growth_period_id. */
+export function attachGrowthPeriods(
+  templates: ChildFollowupVisitTemplate[],
+  periods: GrowthPeriodRef[],
+): ChildFollowupVisitTemplate[] {
+  const byId = new Map(periods.map((period) => [period.id, period]));
+  return templates.map((template) => {
+    if (template.child_growth_periods?.age_label?.trim()) return template;
+    const period = template.growth_period_id
+      ? byId.get(template.growth_period_id)
+      : undefined;
+    if (!period) return template;
+    return {
+      ...template,
+      child_growth_periods: {
+        id: period.id,
+        age_months: period.age_months,
+        age_label: period.age_label,
+      },
+    };
+  });
 }
 
 export type FollowupMilestoneGroup = {

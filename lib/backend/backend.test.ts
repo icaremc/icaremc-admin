@@ -924,6 +924,35 @@ describe("adaptBackendResponse", () => {
     assert.deepEqual(out.milestoneChecks, []);
   });
 
+  it("maps child parent profile from nested parent or flat fields", () => {
+    const nested = adaptBackendResponse("children/c1", "GET", 200, {
+      id: "c1",
+      user_id: "u1",
+      name: "Amina",
+      gender: "female",
+      birth_date: "2022-08-20",
+      parent: { id: "u1", name: "Meron Asfaw", phone: "0911" },
+    }) as {
+      child: { profiles: { full_name: string | null; phone: string | null } | null };
+    };
+    assert.equal(nested.child.profiles?.full_name, "Meron Asfaw");
+    assert.equal(nested.child.profiles?.phone, "0911");
+
+    const flat = adaptBackendResponse("children/c2", "GET", 200, {
+      id: "c2",
+      user_id: "u2",
+      name: "Kid",
+      gender: "male",
+      birth_date: "2023-01-01",
+      parent_name: "Parent Two",
+      parent_phone: "0922",
+    }) as {
+      child: { profiles: { full_name: string | null; phone: string | null } | null };
+    };
+    assert.equal(flat.child.profiles?.full_name, "Parent Two");
+    assert.equal(flat.child.profiles?.phone, "0922");
+  });
+
   it("adapts composed child detail envelope", () => {
     const out = adaptBackendResponse("children/c1", "GET", 200, {
       child: {

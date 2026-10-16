@@ -391,11 +391,15 @@ function mapReferralStats(row: Record<string, unknown>) {
 
 function mapChildProfile(row: Record<string, unknown> | null) {
   if (!row) return null;
+  const fullName = (row.full_name ??
+    row.fullName ??
+    row.name ??
+    null) as string | null;
   return {
     id: (row.id ?? null) as string | null,
     phone: (row.phone ?? null) as string | null,
     locale: (row.locale ?? null) as string | null,
-    full_name: (row.full_name ?? row.fullName ?? null) as string | null,
+    full_name: fullName,
     created_at: (row.created_at ?? row.createdAt ?? null) as string | null,
     account_type: (row.account_type ?? row.accountType ?? null) as string | null,
     onboarding_complete: Boolean(
@@ -404,6 +408,24 @@ function mapChildProfile(row: Record<string, unknown> | null) {
     notifications_enabled:
       row.notifications_enabled ?? row.notificationsEnabled ?? true,
   };
+}
+
+/** Parent profile from nested/flat child fields, or null. */
+function childParentProfile(row: Record<string, unknown>) {
+  if (isPlainObject(row.profiles)) return mapChildProfile(row.profiles);
+  if (isPlainObject(row.parent)) return mapChildProfile(row.parent);
+  if (isPlainObject(row.user)) return mapChildProfile(row.user);
+  if (isPlainObject(row.profile)) return mapChildProfile(row.profile);
+  const flatName = row.parent_name ?? row.parentName ?? row.full_name ?? row.fullName;
+  const flatPhone = row.parent_phone ?? row.parentPhone;
+  if (flatName != null || flatPhone != null) {
+    return mapChildProfile({
+      id: row.user_id ?? row.userId ?? null,
+      full_name: flatName,
+      phone: flatPhone,
+    });
+  }
+  return null;
 }
 
 function membershipListRows(body: unknown): Record<string, unknown>[] {
@@ -495,7 +517,6 @@ function mapMembershipMember(row: Record<string, unknown>) {
 }
 
 function mapChildRow(row: Record<string, unknown>) {
-  const profilesRaw = isPlainObject(row.profiles) ? row.profiles : null;
   return {
     id: str(row.id),
     user_id: str(row.user_id ?? row.userId),
@@ -524,7 +545,7 @@ function mapChildRow(row: Record<string, unknown>) {
     photo_url: resolveBackendMediaUrl(
       (row.photo_url ?? row.photoUrl ?? null) as string | null,
     ),
-    profiles: mapChildProfile(profilesRaw),
+    profiles: childParentProfile(row),
   };
 }
 

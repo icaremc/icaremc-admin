@@ -8,6 +8,7 @@ import type {
   ChildMilestoneCheck,
   ChildUpdatePayload,
   ChildVaccineRecord,
+  Locale,
   VaccineDoseSchedule,
 } from "@/lib/types/database";
 
@@ -115,6 +116,47 @@ function getChildVaccines(childId: string) {
   return fetch(`/api/admin/children/${childId}/vaccines`);
 }
 
+/** GET /api/v1/admin/users/{user_id} — parent profile for child.user_id */
+function getParentByUserId(userId: string) {
+  return fetch(`/api/admin/users/${userId}`);
+}
+
+function profileFromUserBody(
+  body: Record<string, unknown>,
+): NonNullable<Child["profiles"]> {
+  const raw =
+    body.profile && typeof body.profile === "object" && !Array.isArray(body.profile)
+      ? (body.profile as Record<string, unknown>)
+      : body.user && typeof body.user === "object" && !Array.isArray(body.user)
+        ? (body.user as Record<string, unknown>)
+        : body;
+  const fullName =
+    (typeof raw.full_name === "string" ? raw.full_name : null) ??
+    (typeof raw.fullName === "string" ? raw.fullName : null) ??
+    (typeof raw.name === "string" ? raw.name : null);
+  return {
+    id: typeof raw.id === "string" ? raw.id : undefined,
+    full_name: fullName,
+    phone: typeof raw.phone === "string" ? raw.phone : null,
+    account_type:
+      (typeof raw.account_type === "string" ? raw.account_type : null) ??
+      (typeof raw.accountType === "string" ? raw.accountType : null),
+    locale:
+      raw.locale === "en" || raw.locale === "am" || raw.locale === "om"
+        ? (raw.locale as Locale)
+        : null,
+    onboarding_complete: Boolean(
+      raw.onboarding_complete ?? raw.onboardingComplete ?? false,
+    ),
+    notifications_enabled: Boolean(
+      raw.notifications_enabled ?? raw.notificationsEnabled ?? true,
+    ),
+    created_at:
+      (typeof raw.created_at === "string" ? raw.created_at : undefined) ??
+      (typeof raw.createdAt === "string" ? raw.createdAt : undefined),
+  };
+}
+
 async function readJsonBody(
   response: Response,
 ): Promise<Record<string, unknown>> {
@@ -145,16 +187,31 @@ export const fetchChildDetail = createAsyncThunk(
     const detail = asDetailPayload(detailBody);
     if (!detail) return rejectWithValue("Child not found");
 
-    const [measurementsBody, milestonesBody, vaccinesBody, periodsBody] =
+    const parentRes =
+      detail.child.user_id && !detail.child.profiles?.full_name
+        ? await getParentByUserId(detail.child.user_id)
+        : null;
+
+    const [measurementsBody, milestonesBody, vaccinesBody, periodsBody, parentBody] =
       await Promise.all([
         readJsonBody(measurementsRes),
         readJsonBody(milestonesRes),
         readJsonBody(vaccinesRes),
         readJsonBody(periodsRes),
+        parentRes ? readJsonBody(parentRes) : Promise.resolve({}),
       ]);
+
+    const parentProfiles =
+      Object.keys(parentBody).length > 0
+        ? profileFromUserBody(parentBody)
+        : null;
 
     return {
       ...detail,
+      child: {
+        ...detail.child,
+        profiles: parentProfiles ?? detail.child.profiles ?? null,
+      },
       measurements: Array.isArray(measurementsBody.measurements)
         ? (measurementsBody.measurements as ChildGrowthMeasurement[])
         : detail.measurements,

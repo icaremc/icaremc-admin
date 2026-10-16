@@ -8,9 +8,11 @@ import {
   nameTranslationsFromRows,
   type NameTranslationsForm,
 } from "@/lib/i18n/nameTranslations";
+import { attachGrowthPeriods } from "@/lib/followup/display";
 import { rejectUnlessCanManage } from "@/lib/rejectUnlessCanManage";
 import type {
   ChildFollowupVisitTemplate,
+  ChildGrowthPeriod,
   FollowupVisitModules,
   Locale,
 } from "@/lib/types/database";
@@ -125,6 +127,18 @@ function formToPayload(form: FollowupVisitTemplateFormState, opts?: { includeCod
   return payload;
 }
 
+async function loadGrowthPeriods(): Promise<
+  Pick<ChildGrowthPeriod, "id" | "age_months" | "age_label">[]
+> {
+  const response = await fetch("/api/admin/child-growth");
+  if (!response.ok) return [];
+  const body = (await response.json()) as {
+    periods?: ChildGrowthPeriod[];
+    items?: ChildGrowthPeriod[];
+  };
+  return body.periods ?? body.items ?? [];
+}
+
 export const fetchFollowupVisitTemplates = createAsyncThunk(
   "followupVisits/fetchAll",
   async (_, { rejectWithValue }) => {
@@ -140,7 +154,10 @@ export const fetchFollowupVisitTemplates = createAsyncThunk(
     const templates = (body.templates ??
       body.items ??
       []) as ChildFollowupVisitTemplate[];
-    return [...templates].sort((a, b) => a.sort_order - b.sort_order);
+    const periods = await loadGrowthPeriods();
+    return attachGrowthPeriods(templates, periods).sort(
+      (a, b) => a.sort_order - b.sort_order,
+    );
   },
 );
 
@@ -159,7 +176,8 @@ export const fetchFollowupVisitTemplate = createAsyncThunk(
     const templates = body.templates ?? body.items ?? [];
     const found = templates.find((template) => template.id === id);
     if (!found) return rejectWithValue("Template not found");
-    return found;
+    const periods = await loadGrowthPeriods();
+    return attachGrowthPeriods([found], periods)[0]!;
   },
 );
 
@@ -192,7 +210,10 @@ export const createFollowupVisitTemplate = createAsyncThunk(
       template?: ChildFollowupVisitTemplate;
       templates?: ChildFollowupVisitTemplate[];
     };
-    return body.template ?? body.templates?.[0] ?? (body as ChildFollowupVisitTemplate);
+    const created =
+      body.template ?? body.templates?.[0] ?? (body as ChildFollowupVisitTemplate);
+    const periods = await loadGrowthPeriods();
+    return attachGrowthPeriods([created], periods)[0]!;
   },
 );
 
@@ -225,7 +246,10 @@ export const updateFollowupVisitTemplate = createAsyncThunk(
       template?: ChildFollowupVisitTemplate;
       templates?: ChildFollowupVisitTemplate[];
     };
-    return body.template ?? body.templates?.[0] ?? (body as ChildFollowupVisitTemplate);
+    const updated =
+      body.template ?? body.templates?.[0] ?? (body as ChildFollowupVisitTemplate);
+    const periods = await loadGrowthPeriods();
+    return attachGrowthPeriods([updated], periods)[0]!;
   },
 );
 

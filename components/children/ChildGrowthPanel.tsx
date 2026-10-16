@@ -146,18 +146,37 @@ export default function ChildGrowthPanel({
   const latest = sorted.length > 0 ? sorted[sorted.length - 1]! : null;
   const activeMetric = METRICS.find((item) => item.key === metric)!;
 
-  const latestStatuses = useMemo(() => {
-    if (!ready || !latest) return null;
+  const latestByMetric = useMemo(() => {
+    function latestWith(key: MetricKey) {
+      for (let i = sorted.length - 1; i >= 0; i--) {
+        const row = sorted[i]!;
+        if (measurementValue(row, key) != null) return row;
+      }
+      return null;
+    }
     return {
-      weight: statusForMeasurement(child, latest, "weight"),
-      height: statusForMeasurement(child, latest, "height"),
-      hc: statusForMeasurement(child, latest, "hc"),
+      weight: latestWith("weight"),
+      height: latestWith("height"),
+      hc: latestWith("hc"),
     };
-  }, [child, latest, ready]);
+  }, [sorted]);
 
-  const chartData = useMemo(() => {
-    if (!ready) return [];
+  const latestStatuses = useMemo(() => {
+    if (!ready) return null;
+    const { weight, height, hc } = latestByMetric;
+    if (!weight && !height && !hc) return null;
+    return {
+      weight: weight
+        ? statusForMeasurement(child, weight, "weight")
+        : null,
+      height: height
+        ? statusForMeasurement(child, height, "height")
+        : null,
+      hc: hc ? statusForMeasurement(child, hc, "hc") : null,
+    };
+  }, [child, latestByMetric, ready]);
 
+  const { chartData, yDomain, outsideScaleCount } = useMemo(() => {
     type ChartRow = {
       ageMonths: number;
       low: number | null;
@@ -165,6 +184,13 @@ export default function ChildGrowthPanel({
       high: number | null;
       child: number | null;
     };
+
+    const empty = {
+      chartData: [] as ChartRow[],
+      yDomain: [0, 1] as [number, number],
+      outsideScaleCount: 0,
+    };
+    if (!ready) return empty;
 
     const childPoints = sorted
       .map((row) => {
@@ -175,47 +201,62 @@ export default function ChildGrowthPanel({
       })
       .filter((row): row is { ageMonths: number; child: number } => row != null);
 
-    const maxAge = Math.max(
-      24,
+    const childMaxAge = Math.max(
+      0,
       ...childPoints.map((point) => point.ageMonths),
       latest ? measurementAgeMonths(child, latest) : 0,
     );
+    // Keep infant charts readable: at least 12 mo, pad past last point, cap at 60.
+    const maxAge = Math.min(60, Math.max(12, Math.ceil(childMaxAge + 2)));
 
     const reference = whoReferenceSeries({
       indicator: activeMetric.indicator,
       sex: child.gender,
-      maxAgeMonths: Math.min(60, Math.ceil(maxAge + 2)),
+      maxAgeMonths: maxAge,
       stepMonths: 1,
     });
 
-    const byAge = new Map<number, ChartRow>();
-    for (const row of reference) {
-      byAge.set(row.ageMonths, {
-        ageMonths: row.ageMonths,
-        low: row.low,
-        median: row.median,
-        high: row.high,
-        child: null,
+    const refHighs = reference.map((row) => row.high);
+    const refLows = reference.map((row) => row.low);
+    const refMax = refHighs.length > 0 ? Math.max(...refHighs) : 1;
+    const refMin = refLows.length > 0 ? Math.min(...refLows) : 0;
+    const pad = Math.max((refMax - refMin) * 0.12, refMax * 0.05, 0.5);
+    // ponytail: outliers (e.g. 65 kg at 1 mo) stay in the table only so WHO bands remain readable
+    const inlierCap = refMax * 2.5;
+
+    const rows: ChartRow[] = reference.map((row) => ({
+      ageMonths: row.ageMonths,
+      low: row.low,
+      median: row.median,
+      high: row.high,
+      child: null,
+    }));
+
+    let yMax = refMax + pad;
+    let yMin = Math.max(0, refMin - pad);
+    let outsideScaleCount = 0;
+    for (const point of childPoints) {
+      if (point.child > inlierCap) {
+        outsideScaleCount += 1;
+        continue;
+      }
+      yMax = Math.max(yMax, point.child + pad);
+      yMin = Math.min(yMin, Math.max(0, point.child - pad));
+      rows.push({
+        ageMonths: point.ageMonths,
+        low: null,
+        median: null,
+        high: null,
+        child: point.child,
       });
     }
+    rows.sort((a, b) => a.ageMonths - b.ageMonths);
 
-    for (const point of childPoints) {
-      const ageKey = Math.round(point.ageMonths);
-      const existing = byAge.get(ageKey);
-      if (existing) {
-        existing.child = point.child;
-      } else {
-        byAge.set(ageKey, {
-          ageMonths: point.ageMonths,
-          low: null,
-          median: null,
-          high: null,
-          child: point.child,
-        });
-      }
-    }
-
-    return [...byAge.values()].sort((a, b) => a.ageMonths - b.ageMonths);
+    return {
+      chartData: rows,
+      yDomain: [yMin, yMax] as [number, number],
+      outsideScaleCount,
+    };
   }, [activeMetric.indicator, child, latest, metric, ready, sorted]);
 
   if (loadError) {
@@ -249,15 +290,25 @@ export default function ChildGrowthPanel({
           </div>
         </div>
 
-        {latest && latestStatuses ? (
+        {latestStatuses ? (
           <div className="grid gap-3 sm:grid-cols-3">
             {(
               [
-                ["Weight", latest.weight_kg, "kg", latestStatuses.weight],
-                ["Height", latest.height_cm, "cm", latestStatuses.height],
+                [
+                  "Weight",
+                  latestByMetric.weight?.weight_kg ?? null,
+                  "kg",
+                  latestStatuses.weight,
+                ],
+                [
+                  "Height",
+                  latestByMetric.height?.height_cm ?? null,
+                  "cm",
+                  latestStatuses.height,
+                ],
                 [
                   "Head",
-                  latest.head_circumference_cm,
+                  latestByMetric.hc?.head_circumference_cm ?? null,
                   "cm",
                   latestStatuses.hc,
                 ],
@@ -274,9 +325,15 @@ export default function ChildGrowthPanel({
                   {value != null ? `${value} ${unit}` : "—"}
                 </p>
                 <div className="mt-2">
-                  <StatusChip result={result} />
+                  {result ? (
+                    <StatusChip result={result} />
+                  ) : (
+                    <span className="inline-flex rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600">
+                      No reference
+                    </span>
+                  )}
                 </div>
-                {result.median != null ? (
+                {result?.median != null ? (
                   <p className="mt-2 text-xs text-gray-500">
                     WHO median {result.median.toFixed(1)} {unit}
                     {result.min != null && result.max != null
@@ -317,6 +374,15 @@ export default function ChildGrowthPanel({
           </div>
         </div>
 
+        {outsideScaleCount > 0 ? (
+          <p className="mb-3 text-xs text-amber-700">
+            {outsideScaleCount === 1
+              ? "1 measurement is outside the chart scale"
+              : `${outsideScaleCount} measurements are outside the chart scale`}{" "}
+            (kept in the table so WHO bands stay readable).
+          </p>
+        ) : null}
+
         <div className="h-[320px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
@@ -327,6 +393,7 @@ export default function ChildGrowthPanel({
               <XAxis
                 dataKey="ageMonths"
                 type="number"
+                domain={["dataMin", "dataMax"]}
                 tickLine={false}
                 axisLine={false}
                 tick={{ fill: "#6b7280", fontSize: 12 }}
@@ -339,6 +406,8 @@ export default function ChildGrowthPanel({
                 }}
               />
               <YAxis
+                domain={yDomain}
+                allowDataOverflow
                 tickLine={false}
                 axisLine={false}
                 tick={{ fill: "#6b7280", fontSize: 12 }}
@@ -378,6 +447,7 @@ export default function ChildGrowthPanel({
                 dot={false}
                 name="−2 SD"
                 connectNulls
+                isAnimationActive={false}
               />
               <Line
                 type="monotone"
@@ -387,6 +457,7 @@ export default function ChildGrowthPanel({
                 dot={false}
                 name="WHO median"
                 connectNulls
+                isAnimationActive={false}
               />
               <Line
                 type="monotone"
@@ -397,6 +468,7 @@ export default function ChildGrowthPanel({
                 dot={false}
                 name="+2 SD"
                 connectNulls
+                isAnimationActive={false}
               />
               <Line
                 type="monotone"
@@ -406,6 +478,7 @@ export default function ChildGrowthPanel({
                 dot={{ r: 4, fill: "#0f766e" }}
                 name="Child"
                 connectNulls
+                isAnimationActive={false}
               />
             </ComposedChart>
           </ResponsiveContainer>
