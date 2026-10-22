@@ -87,6 +87,12 @@ const appSettingsItems: NavItem[] = [
 
 const financeItems: NavItem[] = [
   { href: "/admin/finance/payout-request", label: "Payout request", icon: DollarSign },
+  {
+    href: "/admin/finance/patient-withdrawals",
+    label: "Patient withdrawals",
+    icon: Wallet,
+    matchPrefix: true,
+  },
   { href: "/admin/finance/payment", label: "Payment", icon: CreditCard },
   { href: "/admin/finance/app-membership", label: "App membership", icon: BadgeCheck },
   { href: "/admin/finance/wallet-transactions", label: "Wallet transactions", icon: Wallet },

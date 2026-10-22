@@ -46,7 +46,12 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     pathPrefix: "/admin/finance/payout-request",
     label: "Payout requests",
     backendHint:
-      "GET list + GET /payout-requests/{id} review + POST action",
+      "Doctor: /payout-requests · Patient: /patient-withdrawals (approve → Chapa)",
+  },
+  {
+    pathPrefix: "/admin/finance/patient-withdrawals",
+    label: "Patient withdrawals",
+    backendHint: "GET|POST /api/v1/admin/patient-withdrawals/{id}",
   },
   {
     pathPrefix: "/admin/finance/wallet-transactions",
@@ -285,6 +290,15 @@ export function mapAdminApiToBackend(
       if (rest.length === 1) {
         if (method === "GET" || method === "PATCH" || method === "POST") {
           return `/api/v1/admin/payout-requests/${rest[0]}`;
+        }
+        return null;
+      }
+      return null;
+    case "patient-withdrawals":
+      if (rest.length === 0) return "/api/v1/admin/patient-withdrawals";
+      if (rest.length === 1) {
+        if (method === "GET" || method === "PATCH" || method === "POST") {
+          return `/api/v1/admin/patient-withdrawals/${rest[0]}`;
         }
         return null;
       }
@@ -551,6 +565,17 @@ export const ADMIN_API_MAPPING_CASES: Array<{
   {
     adminPath: "payout-requests/p1",
     backendPath: "/api/v1/admin/payout-requests/p1",
+    method: "POST",
+  },
+  { adminPath: "patient-withdrawals", backendPath: "/api/v1/admin/patient-withdrawals" },
+  {
+    adminPath: "patient-withdrawals/w1",
+    backendPath: "/api/v1/admin/patient-withdrawals/w1",
+    method: "GET",
+  },
+  {
+    adminPath: "patient-withdrawals/w1",
+    backendPath: "/api/v1/admin/patient-withdrawals/w1",
     method: "POST",
   },
   { adminPath: "wallet-transactions", backendPath: "/api/v1/admin/wallet-transactions" },

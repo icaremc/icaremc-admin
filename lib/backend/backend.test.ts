@@ -701,6 +701,77 @@ describe("adaptBackendResponse", () => {
     assert.equal(out.context.recentEarnings[0]?.service_name, "Consultation");
   });
 
+  it("adapts patient withdrawal review with bank account", () => {
+    const out = adaptBackendResponse(
+      "patient-withdrawals/w1",
+      "GET",
+      200,
+      {
+        request: {
+          id: "w1",
+          patient_id: "pat-1",
+          amount: "100.00",
+          status: "pending",
+          note: "School supplies",
+          created_at: "2026-10-19T11:16:01.917Z",
+        },
+        patient: {
+          id: "pat-1",
+          full_name: "Abebech",
+          phone: "251911223344",
+        },
+        wallet: { balance: "450.00", currency: "ETB" },
+        payout_method: {
+          holder_name: "Abebech Gobena",
+          account_number: "1000653707348",
+          bank_name: "Commercial Bank of Ethiopia",
+          bank_code: "cbe",
+        },
+      },
+    ) as {
+      request: {
+        id: string;
+        amount: number;
+        patient: { full_name: string | null } | null;
+        payout_method: { account_number: string; bank_code: string | null } | null;
+      };
+      wallet: { balance: number; currency: string } | null;
+    };
+
+    assert.equal(out.request.id, "w1");
+    assert.equal(out.request.amount, 100);
+    assert.equal(out.request.patient?.full_name, "Abebech");
+    assert.equal(out.request.payout_method?.account_number, "1000653707348");
+    assert.equal(out.request.payout_method?.bank_code, "cbe");
+    assert.equal(out.wallet?.balance, 450);
+    assert.equal(out.wallet?.currency, "ETB");
+
+    const list = adaptBackendResponse("patient-withdrawals", "GET", 200, [
+      {
+        id: "w2",
+        patient_id: "pat-2",
+        amount: 50,
+        status: "pending",
+        note: null,
+        created_at: "2026-10-20T00:00:00Z",
+        patient: { id: "pat-2", full_name: "Sara", phone: null },
+        payout_method: {
+          holder_name: "Sara",
+          account_number: "1000123456789",
+          bank_name: "CBE",
+          bank_code: "cbe",
+        },
+      },
+    ]) as {
+      requests: Array<{
+        id: string;
+        payout_method: { account_number: string } | null;
+      }>;
+    };
+    assert.equal(list.requests[0]?.id, "w2");
+    assert.equal(list.requests[0]?.payout_method?.account_number, "1000123456789");
+  });
+
   it("keeps document preview_url and wallet doctor_profiles", () => {
     const docs = adaptBackendResponse("documents", "GET", 200, [
       {

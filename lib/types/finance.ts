@@ -5,6 +5,35 @@ export type FinanceSettings = {
 
 export type PayoutRequestStatus = "pending" | "approved" | "rejected" | "completed";
 
+export type PatientWithdrawalStatus = "pending" | "completed" | "rejected" | "approved";
+
+export type PatientPayoutMethod = {
+  id?: string;
+  holder_name: string;
+  account_number: string;
+  bank_name: string;
+  bank_code: string | null;
+  currency?: string;
+};
+
+export type PatientWithdrawalRequest = {
+  id: string;
+  patient_id: string;
+  amount: number;
+  status: PatientWithdrawalStatus;
+  note: string | null;
+  admin_note: string | null;
+  created_at: string;
+  updated_at?: string | null;
+  chapa_transfer_reference?: string | null;
+  patient?: {
+    id: string;
+    full_name: string | null;
+    phone: string | null;
+  } | null;
+  payout_method?: PatientPayoutMethod | null;
+};
+
 export type DoctorPayoutMethod = {
   id: string;
   doctor_id: string;

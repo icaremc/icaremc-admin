@@ -658,11 +658,16 @@ async function rewriteUpstreamRequest(
     }
   }
 
-  // PATCH /payout-requests/:id { action, adminNote } → POST { status, admin_note }
-  if (head === "payout-requests" && rest.length === 1 && (upper === "PATCH" || upper === "POST")) {
+  // PATCH/POST payout or patient-withdrawal { action } → POST { status, admin_note }
+  // approve → completed so staging auto-disburses via Chapa to the saved account.
+  if (
+    (head === "payout-requests" || head === "patient-withdrawals") &&
+    rest.length === 1 &&
+    (upper === "PATCH" || upper === "POST")
+  ) {
     if (isPlainObject(parsed) && typeof parsed.action === "string") {
       const statusMap: Record<string, string> = {
-        approve: "approved",
+        approve: "completed",
         reject: "rejected",
         complete: "completed",
       };

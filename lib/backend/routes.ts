@@ -16,6 +16,21 @@ export const STAGING_BACKEND_ADMIN_ROUTES = [
     path: "/api/v1/admin/payout-requests/{id}",
     label: "payout-request-review",
   },
+  {
+    method: "GET",
+    path: "/api/v1/admin/patient-withdrawals",
+    label: "patient-withdrawals",
+  },
+  {
+    method: "GET",
+    path: "/api/v1/admin/patient-withdrawals/{id}",
+    label: "patient-withdrawal-review",
+  },
+  {
+    method: "POST",
+    path: "/api/v1/admin/patient-withdrawals/{id}",
+    label: "patient-withdrawal-action",
+  },
   { method: "GET", path: "/api/v1/admin/wallet-transactions", label: "wallet-transactions" },
   { method: "GET", path: "/api/v1/admin/admins", label: "admins" },
   { method: "GET", path: "/api/v1/admin/activity-logs", label: "activity-logs" },

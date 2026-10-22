@@ -1024,6 +1024,93 @@ function mapPayoutReviewOut(body: Record<string, unknown>) {
   };
 }
 
+function mapPatientPayoutMethod(row: Record<string, unknown> | null) {
+  if (!row) return null;
+  return {
+    id: row.id != null ? str(row.id) : undefined,
+    holder_name: str(row.holder_name ?? row.holderName),
+    account_number: str(row.account_number ?? row.accountNumber),
+    bank_name: str(row.bank_name ?? row.bankName),
+    bank_code: (row.bank_code ?? row.bankCode ?? null) as string | null,
+    currency: str(row.currency || "ETB"),
+  };
+}
+
+function mapPatientWithdrawalRow(
+  row: Record<string, unknown>,
+  extras: {
+    patient?: Record<string, unknown> | null;
+    payout_method?: Record<string, unknown> | null;
+  } = {},
+) {
+  const patientRaw =
+    extras.patient ??
+    (isPlainObject(row.patient) ? row.patient : null);
+  const methodRaw =
+    extras.payout_method ??
+    (isPlainObject(row.payout_method)
+      ? row.payout_method
+      : isPlainObject(row.payoutMethod)
+        ? row.payoutMethod
+        : null);
+
+  return {
+    id: str(row.id),
+    patient_id: str(row.patient_id ?? row.patientId ?? patientRaw?.id),
+    amount: num(row.amount),
+    status: str(row.status || "pending"),
+    note: (row.note ?? null) as string | null,
+    admin_note: (row.admin_note ?? row.adminNote ?? null) as string | null,
+    created_at: str(row.created_at ?? row.createdAt),
+    updated_at: (row.updated_at ?? row.updatedAt ?? null) as string | null,
+    chapa_transfer_reference: (row.chapa_transfer_reference ??
+      row.chapaTransferReference ??
+      null) as string | null,
+    patient: patientRaw
+      ? {
+          id: str(patientRaw.id),
+          full_name: (patientRaw.full_name ??
+            patientRaw.fullName ??
+            patientRaw.name ??
+            null) as string | null,
+          phone: (patientRaw.phone ?? null) as string | null,
+        }
+      : null,
+    payout_method: mapPatientPayoutMethod(methodRaw),
+  };
+}
+
+/** OpenAPI patient withdrawal review → { request, wallet }. */
+function mapPatientWithdrawalReviewOut(body: Record<string, unknown>) {
+  const rawRequest = isPlainObject(body.request) ? body.request : body;
+  const patient = isPlainObject(body.patient) ? body.patient : null;
+  const wallet = isPlainObject(body.wallet) ? body.wallet : null;
+  const method = isPlainObject(body.payout_method)
+    ? body.payout_method
+    : isPlainObject(body.payoutMethod)
+      ? body.payoutMethod
+      : isPlainObject(rawRequest.payout_method)
+        ? rawRequest.payout_method
+        : isPlainObject(rawRequest.payoutMethod)
+          ? rawRequest.payoutMethod
+          : null;
+
+  const request = mapPatientWithdrawalRow(rawRequest, {
+    patient,
+    payout_method: method,
+  });
+
+  return {
+    request,
+    wallet: wallet
+      ? {
+          balance: num(wallet.balance),
+          currency: str(wallet.currency || "ETB"),
+        }
+      : null,
+  };
+}
+
 function documentListRows(body: unknown): Record<string, unknown>[] {
   if (Array.isArray(body)) return body.filter(isPlainObject);
   if (isPlainObject(body) && Array.isArray(body.documents)) {
@@ -1453,6 +1540,25 @@ export function adaptBackendResponse(
     return isPlainObject(body) ? mapPayoutReviewOut({ request: body }) : body;
   }
 
+  if (head === "patient-withdrawals" && rest.length === 1 && upper === "GET") {
+    if (
+      isPlainObject(body) &&
+      ("request" in body || "wallet" in body || "patient" in body)
+    ) {
+      return mapPatientWithdrawalReviewOut(body);
+    }
+    if (Array.isArray(body)) {
+      const row = findById(body, rest[0]);
+      if (!row) {
+        return { error: "Withdrawal request not found", stagingNotFound: true };
+      }
+      return { request: mapPatientWithdrawalRow(row), wallet: null };
+    }
+    return isPlainObject(body)
+      ? mapPatientWithdrawalReviewOut({ request: body })
+      : body;
+  }
+
   if (head === "children" && rest.length === 2 && upper === "GET") {
     if (rest[1] === "measurements") {
       return {
@@ -1590,7 +1696,66 @@ export function adaptBackendResponse(
       case "documents":
         return { documents: body.filter(isPlainObject).map(mapDocumentRow) };
       case "payout-requests":
-        return { requests: body };
+        return {
+          requests: body.filter(isPlainObject).map((row) => {
+            const method = isPlainObject(row.payout_method)
+              ? row.payout_method
+              : isPlainObject(row.doctor_payout_methods)
+                ? row.doctor_payout_methods
+                : null;
+            const doctor = isPlainObject(row.doctor)
+              ? row.doctor
+              : isPlainObject(row.doctor_profiles)
+                ? row.doctor_profiles
+                : null;
+            const doctorId = str(row.doctor_id ?? row.doctorId ?? doctor?.id);
+            const profiles = doctor
+              ? doctor.first_name != null || doctor.firstName != null
+                ? {
+                    first_name: str(doctor.first_name ?? doctor.firstName),
+                    last_name: str(doctor.last_name ?? doctor.lastName),
+                    phone: (doctor.phone ?? null) as string | null,
+                  }
+                : (() => {
+                    const names = splitDoctorDisplayName(str(doctor.name ?? ""));
+                    return {
+                      first_name: names.first_name,
+                      last_name: names.last_name,
+                      phone: (doctor.phone ?? null) as string | null,
+                    };
+                  })()
+              : null;
+            return {
+              ...row,
+              id: str(row.id),
+              doctor_id: doctorId,
+              amount: num(row.amount),
+              status: str(row.status || "pending"),
+              note: (row.doctor_note ??
+                row.doctorNote ??
+                row.note ??
+                null) as string | null,
+              admin_note: (row.admin_note ?? row.adminNote ?? null) as
+                | string
+                | null,
+              created_at: str(row.created_at ?? row.createdAt),
+              payment_date: (row.payment_date ?? row.paymentDate ?? null) as
+                | string
+                | null,
+              updated_at: str(
+                row.updated_at ?? row.updatedAt ?? row.created_at ?? row.createdAt,
+              ),
+              doctor_profiles: profiles,
+              doctor_payout_methods: mapPayoutMethodReview(method, doctorId),
+            };
+          }),
+        };
+      case "patient-withdrawals":
+        return {
+          requests: body.filter(isPlainObject).map((row) =>
+            mapPatientWithdrawalRow(row),
+          ),
+        };
       case "wallet-transactions": {
         const transactions = body
           .filter(isPlainObject)
@@ -1788,6 +1953,23 @@ export function adaptBackendResponse(
     }
     if (head === "payout-requests" && rest.length === 1) {
       return { request: body, ...body };
+    }
+    if (head === "patient-withdrawals" && rest.length === 1 && upper === "GET") {
+      return mapPatientWithdrawalReviewOut(body);
+    }
+    if (head === "patient-withdrawals" && rest.length === 1) {
+      const request = mapPatientWithdrawalRow(
+        isPlainObject(body.request) ? body.request : body,
+        {
+          patient: isPlainObject(body.patient) ? body.patient : null,
+          payout_method: isPlainObject(body.payout_method)
+            ? body.payout_method
+            : isPlainObject(body.payoutMethod)
+              ? body.payoutMethod
+              : null,
+        },
+      );
+      return { request };
     }
     if (head === "admins" && upper === "POST") {
       return { admin: body };

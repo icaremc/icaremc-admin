@@ -117,6 +117,9 @@ export default function PayoutRequestDetailPage() {
           amount: Number(request.amount),
           currency,
           doctorName,
+          accountHint: method?.account_number
+            ? `${method.bank_name} · ${maskAccountNumber(method.account_number)}`
+            : undefined,
         })
       : null;
 
@@ -192,8 +195,12 @@ export default function PayoutRequestDetailPage() {
           <div className="flex flex-wrap gap-2">
             {request.status === "pending" ? (
               <>
-                <Button size="sm" disabled={isSaving} onClick={() => setPendingAction("approve")}>
-                  Allow
+                <Button
+                  size="sm"
+                  disabled={isSaving || !method?.account_number?.trim()}
+                  onClick={() => setPendingAction("approve")}
+                >
+                  Approve & send
                 </Button>
                 <Button
                   size="sm"

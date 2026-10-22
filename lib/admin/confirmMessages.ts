@@ -9,6 +9,7 @@ export function payoutConfirmCopy(params: {
   amount: number;
   currency?: string;
   doctorName: string;
+  accountHint?: string;
 }): {
   title: string;
   description: string;
@@ -17,13 +18,16 @@ export function payoutConfirmCopy(params: {
 } {
   const amountText = formatMoney(params.amount, params.currency ?? "ETB");
   const doctor = params.doctorName.trim() || "this doctor";
+  const account = params.accountHint?.trim();
 
   switch (params.action) {
     case "approve":
       return {
-        title: "Allow payout?",
-        description: `Allow ${doctor} to receive ${amountText}? Funds stay held until you send payment or mark as paid.`,
-        confirmLabel: "Allow payout",
+        title: "Approve and send payout?",
+        description: account
+          ? `Send ${amountText} to ${doctor} via Chapa (${account})? This cannot be undone once the transfer starts.`
+          : `Send ${amountText} to ${doctor} via Chapa using their saved bank account? This cannot be undone once the transfer starts.`,
+        confirmLabel: "Approve & send",
         variant: "default",
       };
     case "reject":
@@ -48,6 +52,41 @@ export function payoutConfirmCopy(params: {
         variant: "default",
       };
   }
+}
+
+export function patientWithdrawalConfirmCopy(params: {
+  action: "approve" | "reject";
+  amount: number;
+  currency?: string;
+  patientName: string;
+  accountHint?: string;
+}): {
+  title: string;
+  description: string;
+  confirmLabel: string;
+  variant: "default" | "danger";
+} {
+  const amountText = formatMoney(params.amount, params.currency ?? "ETB");
+  const patient = params.patientName.trim() || "this mother";
+  const account = params.accountHint?.trim();
+
+  if (params.action === "approve") {
+    return {
+      title: "Approve and send withdrawal?",
+      description: account
+        ? `Send ${amountText} to ${patient} via Chapa (${account})? This cannot be undone once the transfer starts.`
+        : `Send ${amountText} to ${patient} via Chapa using their saved bank account? This cannot be undone once the transfer starts.`,
+      confirmLabel: "Approve & send",
+      variant: "default",
+    };
+  }
+
+  return {
+    title: "Reject withdrawal?",
+    description: `Reject the ${amountText} withdrawal from ${patient}? The amount will return to their wallet balance.`,
+    confirmLabel: "Reject withdrawal",
+    variant: "danger",
+  };
 }
 
 export function doctorVerificationConfirmCopy(params: {

@@ -21,6 +21,7 @@ import { profilesReducer } from "@/features/profiles/profilesSlice";
 import { userDetailReducer } from "@/features/users/userDetailSlice";
 import { payoutReducer } from "@/features/finance/payoutSlice";
 import { payoutDetailReducer } from "@/features/finance/payoutDetailSlice";
+import { patientWithdrawalReducer } from "@/features/finance/patientWithdrawalSlice";
 import { walletTransactionsReducer } from "@/features/finance/walletTransactionsSlice";
 import { activityLogsReducer } from "@/features/activity/activityLogsSlice";
 import { authReducer } from "./slices/authSlice";
@@ -50,6 +51,7 @@ export const store = configureStore({
     appointmentDetail: appointmentDetailReducer,
     payout: payoutReducer,
     payoutDetail: payoutDetailReducer,
+    patientWithdrawals: patientWithdrawalReducer,
     walletTransactions: walletTransactionsReducer,
     activityLogs: activityLogsReducer,
   },

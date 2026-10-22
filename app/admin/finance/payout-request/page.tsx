@@ -277,6 +277,9 @@ function PayoutRequestContent() {
         amount: Number(pendingAction.request.amount),
         currency: pendingAction.request.doctor_payout_methods?.currency ?? "ETB",
         doctorName: payoutDoctorName(pendingAction.request),
+        accountHint: pendingAction.request.doctor_payout_methods?.account_number
+          ? `${pendingAction.request.doctor_payout_methods.bank_name} · ${maskAccountNumber(pendingAction.request.doctor_payout_methods.account_number)}`
+          : undefined,
       })
     : null;
 
@@ -327,7 +330,7 @@ function PayoutRequestContent() {
     <>
       <PageHero
         title="Payout requests"
-        description="Review doctor withdrawals, approve requests, and send payouts via Chapa"
+        description="Review doctor withdrawals; approve sends money via Chapa to the saved account"
         icon={DollarSign}
         stat={{ label: "Pending", value: stats.pendingCount }}
         actions={
@@ -341,6 +344,12 @@ function PayoutRequestContent() {
               <RefreshCw className={cn("mr-2 h-4 w-4", loading && "animate-spin")} />
               Refresh
             </Button>
+            <Link
+              href="/admin/finance/patient-withdrawals"
+              className="inline-flex h-8 items-center rounded-[var(--radius)] border border-gray-200 bg-white px-3 text-sm font-medium text-gray-900 hover:bg-gray-50"
+            >
+              Patient withdrawals
+            </Link>
             <Button
               variant="outline"
               size="sm"
@@ -504,12 +513,15 @@ function PayoutRequestContent() {
                             <>
                               <Button
                                 size="sm"
-                                disabled={isSaving}
+                                disabled={
+                                  isSaving ||
+                                  !method?.account_number?.trim()
+                                }
                                 onClick={() =>
                                   setPendingAction({ request, action: "approve" })
                                 }
                               >
-                                Allow
+                                Approve & send
                               </Button>
                               <Button
                                 size="sm"
