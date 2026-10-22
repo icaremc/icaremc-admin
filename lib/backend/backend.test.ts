@@ -522,6 +522,41 @@ describe("adaptBackendResponse", () => {
     }) as { paymentSettings: { chapa: { name: string } } };
     assert.equal(payment.paymentSettings.chapa.name, "Chapa");
 
+    const pregnancy = adaptBackendResponse(
+      "pregnancy-payment-settings",
+      "GET",
+      200,
+      {
+        id: "pregnancy_payment",
+        data: {
+          amount: 500,
+          currency: "ETB",
+          isActive: true,
+          description: "Pregnancy profile registration and activation fee",
+        },
+      },
+    ) as {
+      pregnancyPaymentSettings: {
+        amount: number;
+        currency: string;
+        isActive: boolean;
+      };
+    };
+    assert.equal(pregnancy.pregnancyPaymentSettings.amount, 500);
+    assert.equal(pregnancy.pregnancyPaymentSettings.currency, "ETB");
+    assert.equal(pregnancy.pregnancyPaymentSettings.isActive, true);
+
+    const child = adaptBackendResponse("child-payment-settings", "PUT", 200, {
+      data: {
+        amount: 750,
+        currency: "ETB",
+        is_active: false,
+        description: "Child fee",
+      },
+    }) as { childPaymentSettings: { amount: number; isActive: boolean } };
+    assert.equal(child.childPaymentSettings.amount, 750);
+    assert.equal(child.childPaymentSettings.isActive, false);
+
     const referral = adaptBackendResponse("referral-settings", "PUT", 200, {
       referralSettings: { commissionPercent: 20 },
       updatedAt: "2026-10-06T08:21:03.122649+00:00",

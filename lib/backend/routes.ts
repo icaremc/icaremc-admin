@@ -32,6 +32,26 @@ export const STAGING_BACKEND_ADMIN_ROUTES = [
   { method: "PUT", path: "/api/v1/admin/settings/finance", label: "settings-finance-put" },
   { method: "GET", path: "/api/v1/admin/settings/payment", label: "settings-payment" },
   { method: "PUT", path: "/api/v1/admin/settings/payment", label: "settings-payment-put" },
+  {
+    method: "GET",
+    path: "/api/v1/admin/settings/pregnancy_payment",
+    label: "settings-pregnancy-payment",
+  },
+  {
+    method: "PUT",
+    path: "/api/v1/admin/settings/pregnancy_payment",
+    label: "settings-pregnancy-payment-put",
+  },
+  {
+    method: "GET",
+    path: "/api/v1/admin/settings/child_payment",
+    label: "settings-child-payment",
+  },
+  {
+    method: "PUT",
+    path: "/api/v1/admin/settings/child_payment",
+    label: "settings-child-payment-put",
+  },
   { method: "GET", path: "/api/v1/admin/settings/subscription", label: "settings-subscription" },
   { method: "PUT", path: "/api/v1/admin/settings/subscription", label: "settings-subscription-put" },
   { method: "GET", path: "/api/v1/admin/settings/referral", label: "settings-referral" },

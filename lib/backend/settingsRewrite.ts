@@ -6,6 +6,8 @@ const SETTINGS_ADMIN_HEADS = new Set([
   "payment-settings",
   "app-membership-settings",
   "referral-settings",
+  "pregnancy-payment-settings",
+  "child-payment-settings",
 ]);
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -25,6 +27,8 @@ export function rewriteSettingsPutBody(parsed: unknown): { data: unknown } {
     parsed.appMembershipSettings ??
     parsed.referralSettings ??
     parsed.appVersionSettings ??
+    parsed.pregnancyPaymentSettings ??
+    parsed.childPaymentSettings ??
     parsed.data ??
     parsed;
   return { data };

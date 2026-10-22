@@ -304,6 +304,10 @@ export function mapAdminApiToBackend(
       return "/api/v1/admin/settings/finance";
     case "payment-settings":
       return "/api/v1/admin/settings/payment";
+    case "pregnancy-payment-settings":
+      return "/api/v1/admin/settings/pregnancy_payment";
+    case "child-payment-settings":
+      return "/api/v1/admin/settings/child_payment";
     case "app-version-settings": {
       const app = options.searchParams?.get("app");
       const rowId = app === "doctors" ? "app_version_doctors" : "app_version";
@@ -569,6 +573,24 @@ export const ADMIN_API_MAPPING_CASES: Array<{
   {
     adminPath: "payment-settings",
     backendPath: "/api/v1/admin/settings/payment",
+    method: "PUT",
+  },
+  {
+    adminPath: "pregnancy-payment-settings",
+    backendPath: "/api/v1/admin/settings/pregnancy_payment",
+  },
+  {
+    adminPath: "pregnancy-payment-settings",
+    backendPath: "/api/v1/admin/settings/pregnancy_payment",
+    method: "PUT",
+  },
+  {
+    adminPath: "child-payment-settings",
+    backendPath: "/api/v1/admin/settings/child_payment",
+  },
+  {
+    adminPath: "child-payment-settings",
+    backendPath: "/api/v1/admin/settings/child_payment",
     method: "PUT",
   },
   { adminPath: "app-version-settings", backendPath: "/api/v1/admin/settings/app_version" },

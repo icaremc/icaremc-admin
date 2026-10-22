@@ -9,6 +9,7 @@ import {
 } from "../appMembership/members.ts";
 import { parseAppMembershipSettingsData } from "../appMembership/subscriptionSettings.ts";
 import { parseFinanceSettings } from "../payment/financeSettings.ts";
+import { parseProfilePaymentSettings } from "../payment/profilePaymentSettings.ts";
 import { resolveBackendMediaUrl } from "./config.ts";
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -1836,6 +1837,24 @@ export function adaptBackendResponse(
       return {
         financeSettings: parseFinanceSettings(
           settingsData(body, "financeSettings"),
+        ),
+        updatedAt: settingsUpdatedAt(body),
+      };
+    }
+    if (head === "pregnancy-payment-settings") {
+      return {
+        pregnancyPaymentSettings: parseProfilePaymentSettings(
+          settingsData(body, "pregnancyPaymentSettings"),
+          "pregnancy_payment",
+        ),
+        updatedAt: settingsUpdatedAt(body),
+      };
+    }
+    if (head === "child-payment-settings") {
+      return {
+        childPaymentSettings: parseProfilePaymentSettings(
+          settingsData(body, "childPaymentSettings"),
+          "child_payment",
         ),
         updatedAt: settingsUpdatedAt(body),
       };

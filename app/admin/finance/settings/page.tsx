@@ -2,7 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CreditCard, Eye, EyeOff, RefreshCw, Save, Settings2, Wallet } from "lucide-react";
+import {
+  Baby,
+  CreditCard,
+  Eye,
+  EyeOff,
+  RefreshCw,
+  Save,
+  Settings2,
+  Wallet,
+} from "lucide-react";
 import PageHero from "@/components/PageHero";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,9 +24,14 @@ import {
   defaultChapaSettings,
   type ChapaPaymentSettings,
 } from "@/lib/payment/paymentSettings";
+import {
+  defaultProfilePaymentSettings,
+  parseProfilePaymentSettings,
+  type ProfilePaymentSettings,
+} from "@/lib/payment/profilePaymentSettings";
 import { cn } from "@/lib/utils";
 
-type Tab = "platform" | "payment";
+type Tab = "platform" | "payment" | "registration";
 
 type FinanceLoadResponse = {
   financeSettings?: FinanceSettings;
@@ -31,8 +45,20 @@ type PaymentLoadResponse = {
   error?: string;
 };
 
+type PregnancyPaymentLoadResponse = {
+  pregnancyPaymentSettings?: ProfilePaymentSettings;
+  updatedAt?: string | null;
+  error?: string;
+};
+
+type ChildPaymentLoadResponse = {
+  childPaymentSettings?: ProfilePaymentSettings;
+  updatedAt?: string | null;
+  error?: string;
+};
+
 function isFinanceTab(value: string | null): value is Tab {
-  return value === "platform" || value === "payment";
+  return value === "platform" || value === "payment" || value === "registration";
 }
 
 export default function FinanceSettingsPage() {
@@ -44,8 +70,16 @@ export default function FinanceSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<FinanceSettings>(defaultFinanceSettings());
   const [chapa, setChapa] = useState<ChapaPaymentSettings>(defaultChapaSettings());
+  const [pregnancyPayment, setPregnancyPayment] = useState<ProfilePaymentSettings>(
+    defaultProfilePaymentSettings("pregnancy_payment"),
+  );
+  const [childPayment, setChildPayment] = useState<ProfilePaymentSettings>(
+    defaultProfilePaymentSettings("child_payment"),
+  );
   const [financeUpdatedAt, setFinanceUpdatedAt] = useState<string | null>(null);
   const [paymentUpdatedAt, setPaymentUpdatedAt] = useState<string | null>(null);
+  const [pregnancyUpdatedAt, setPregnancyUpdatedAt] = useState<string | null>(null);
+  const [childUpdatedAt, setChildUpdatedAt] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showSecret, setShowSecret] = useState(false);
@@ -67,12 +101,16 @@ export default function FinanceSettingsPage() {
     setLoading(true);
     setError(null);
     try {
-      const [financeRes, paymentRes] = await Promise.all([
+      const [financeRes, paymentRes, pregnancyRes, childRes] = await Promise.all([
         fetch("/api/admin/finance-settings"),
         fetch("/api/admin/payment-settings"),
+        fetch("/api/admin/pregnancy-payment-settings"),
+        fetch("/api/admin/child-payment-settings"),
       ]);
       const financeData = (await financeRes.json()) as FinanceLoadResponse;
       const paymentData = (await paymentRes.json()) as PaymentLoadResponse;
+      const pregnancyData = (await pregnancyRes.json()) as PregnancyPaymentLoadResponse;
+      const childData = (await childRes.json()) as ChildPaymentLoadResponse;
 
       if (!financeRes.ok) {
         throw new Error(financeData.error ?? "Could not load finance settings");
@@ -80,11 +118,30 @@ export default function FinanceSettingsPage() {
       if (!paymentRes.ok) {
         throw new Error(paymentData.error ?? "Could not load payment settings");
       }
+      if (!pregnancyRes.ok) {
+        throw new Error(
+          pregnancyData.error ?? "Could not load pregnancy payment settings",
+        );
+      }
+      if (!childRes.ok) {
+        throw new Error(childData.error ?? "Could not load child payment settings");
+      }
 
       setSettings(parseFinanceSettings(financeData.financeSettings));
       setFinanceUpdatedAt(financeData.updatedAt ?? null);
       setChapa(paymentData.paymentSettings?.chapa ?? defaultChapaSettings());
       setPaymentUpdatedAt(paymentData.updatedAt ?? null);
+      setPregnancyPayment(
+        parseProfilePaymentSettings(
+          pregnancyData.pregnancyPaymentSettings,
+          "pregnancy_payment",
+        ),
+      );
+      setPregnancyUpdatedAt(pregnancyData.updatedAt ?? null);
+      setChildPayment(
+        parseProfilePaymentSettings(childData.childPaymentSettings, "child_payment"),
+      );
+      setChildUpdatedAt(childData.updatedAt ?? null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Load failed");
     } finally {
@@ -115,7 +172,7 @@ export default function FinanceSettingsPage() {
           parseFinanceSettings(financeData.financeSettings ?? settings),
         );
         setFinanceUpdatedAt(financeData.updatedAt ?? null);
-      } else {
+      } else if (tab === "payment") {
         const paymentRes = await fetch("/api/admin/payment-settings", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -127,6 +184,44 @@ export default function FinanceSettingsPage() {
         }
         setChapa(paymentData.paymentSettings?.chapa ?? chapa);
         setPaymentUpdatedAt(paymentData.updatedAt ?? null);
+      } else {
+        const [pregnancyRes, childRes] = await Promise.all([
+          fetch("/api/admin/pregnancy-payment-settings", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pregnancyPaymentSettings: pregnancyPayment }),
+          }),
+          fetch("/api/admin/child-payment-settings", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ childPaymentSettings: childPayment }),
+          }),
+        ]);
+        const pregnancyData =
+          (await pregnancyRes.json()) as PregnancyPaymentLoadResponse;
+        const childData = (await childRes.json()) as ChildPaymentLoadResponse;
+        if (!pregnancyRes.ok) {
+          throw new Error(
+            pregnancyData.error ?? "Could not save pregnancy payment settings",
+          );
+        }
+        if (!childRes.ok) {
+          throw new Error(childData.error ?? "Could not save child payment settings");
+        }
+        setPregnancyPayment(
+          parseProfilePaymentSettings(
+            pregnancyData.pregnancyPaymentSettings ?? pregnancyPayment,
+            "pregnancy_payment",
+          ),
+        );
+        setPregnancyUpdatedAt(pregnancyData.updatedAt ?? null);
+        setChildPayment(
+          parseProfilePaymentSettings(
+            childData.childPaymentSettings ?? childPayment,
+            "child_payment",
+          ),
+        );
+        setChildUpdatedAt(childData.updatedAt ?? null);
       }
       setMessage("Settings saved.");
     } catch (err) {
@@ -150,21 +245,42 @@ export default function FinanceSettingsPage() {
   }, [settings.platformCommissionPercent]);
 
   const lastUpdatedLabel = useMemo(() => {
-    const updatedAt = tab === "payment" ? paymentUpdatedAt : financeUpdatedAt;
+    const updatedAt =
+      tab === "payment"
+        ? paymentUpdatedAt
+        : tab === "registration"
+          ? pregnancyUpdatedAt ?? childUpdatedAt
+          : financeUpdatedAt;
     return updatedAt
       ? `Last updated ${new Date(updatedAt).toLocaleString()}`
       : "Not saved yet";
-  }, [financeUpdatedAt, paymentUpdatedAt, tab]);
+  }, [
+    childUpdatedAt,
+    financeUpdatedAt,
+    paymentUpdatedAt,
+    pregnancyUpdatedAt,
+    tab,
+  ]);
 
   return (
     <>
       <PageHero
         title="Finance settings"
-        description="Platform payouts, commissions, and Chapa payment gateway"
+        description="Platform payouts, registration fees, and Chapa payment gateway"
         icon={Settings2}
         stat={{
-          label: tab === "payment" ? "Gateway" : "Min withdraw",
-          value: tab === "payment" ? "Chapa" : settings.minimumAmountWithdraw,
+          label:
+            tab === "payment"
+              ? "Gateway"
+              : tab === "registration"
+                ? "Pregnancy fee"
+                : "Min withdraw",
+          value:
+            tab === "payment"
+              ? "Chapa"
+              : tab === "registration"
+                ? pregnancyPayment.amount
+                : settings.minimumAmountWithdraw,
         }}
       />
 
@@ -196,6 +312,19 @@ export default function FinanceSettingsPage() {
             >
               <CreditCard className="h-4 w-4" />
               Payment gateway
+            </button>
+            <button
+              type="button"
+              onClick={() => switchTab("registration")}
+              className={cn(
+                "inline-flex items-center gap-2 border-b-2 px-3 py-2 text-sm font-medium transition-colors",
+                tab === "registration"
+                  ? "border-emerald-600 text-emerald-700"
+                  : "border-transparent text-gray-500 hover:text-gray-800",
+              )}
+            >
+              <Baby className="h-4 w-4" />
+              Registration fees
             </button>
           </div>
         </div>
@@ -335,7 +464,7 @@ export default function FinanceSettingsPage() {
               </p>
             </section>
           </>
-        ) : (
+        ) : tab === "payment" ? (
           <section className="admin-panel space-y-5">
             <div>
               <h2 className="admin-section-title">Chapa</h2>
@@ -451,6 +580,144 @@ export default function FinanceSettingsPage() {
               stored in Supabase and used for signed-in checkout.
             </p>
           </section>
+        ) : (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <section className="admin-panel space-y-4">
+              <div>
+                <h2 className="admin-section-title">Pregnancy payment</h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Fee charged when a pregnancy profile is registered or activated.
+                </p>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={pregnancyPayment.isActive}
+                  onChange={(event) =>
+                    setPregnancyPayment((current) => ({
+                      ...current,
+                      isActive: event.target.checked,
+                    }))
+                  }
+                  disabled={loading}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                Active
+              </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="text-sm">
+                  <span className="mb-1 block font-medium text-gray-700">Amount</span>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={String(pregnancyPayment.amount)}
+                    onChange={(event) =>
+                      setPregnancyPayment((current) => ({
+                        ...current,
+                        amount:
+                          Number.parseFloat(event.target.value) || current.amount,
+                      }))
+                    }
+                    disabled={loading}
+                  />
+                </label>
+                <label className="text-sm">
+                  <span className="mb-1 block font-medium text-gray-700">Currency</span>
+                  <Input
+                    value={pregnancyPayment.currency}
+                    onChange={(event) =>
+                      setPregnancyPayment((current) => ({
+                        ...current,
+                        currency: event.target.value,
+                      }))
+                    }
+                    disabled={loading}
+                  />
+                </label>
+              </div>
+              <label className="block text-sm">
+                <span className="mb-1 block font-medium text-gray-700">Description</span>
+                <Input
+                  value={pregnancyPayment.description}
+                  onChange={(event) =>
+                    setPregnancyPayment((current) => ({
+                      ...current,
+                      description: event.target.value,
+                    }))
+                  }
+                  disabled={loading}
+                />
+              </label>
+            </section>
+
+            <section className="admin-panel space-y-4">
+              <div>
+                <h2 className="admin-section-title">Child payment</h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Fee charged when a child profile is registered or activated.
+                </p>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={childPayment.isActive}
+                  onChange={(event) =>
+                    setChildPayment((current) => ({
+                      ...current,
+                      isActive: event.target.checked,
+                    }))
+                  }
+                  disabled={loading}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                Active
+              </label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="text-sm">
+                  <span className="mb-1 block font-medium text-gray-700">Amount</span>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={String(childPayment.amount)}
+                    onChange={(event) =>
+                      setChildPayment((current) => ({
+                        ...current,
+                        amount:
+                          Number.parseFloat(event.target.value) || current.amount,
+                      }))
+                    }
+                    disabled={loading}
+                  />
+                </label>
+                <label className="text-sm">
+                  <span className="mb-1 block font-medium text-gray-700">Currency</span>
+                  <Input
+                    value={childPayment.currency}
+                    onChange={(event) =>
+                      setChildPayment((current) => ({
+                        ...current,
+                        currency: event.target.value,
+                      }))
+                    }
+                    disabled={loading}
+                  />
+                </label>
+              </div>
+              <label className="block text-sm">
+                <span className="mb-1 block font-medium text-gray-700">Description</span>
+                <Input
+                  value={childPayment.description}
+                  onChange={(event) =>
+                    setChildPayment((current) => ({
+                      ...current,
+                      description: event.target.value,
+                    }))
+                  }
+                  disabled={loading}
+                />
+              </label>
+            </section>
+          </div>
         )}
       </div>
     </>
