@@ -29,6 +29,8 @@ const ROUTES = [
   "/api/v1/admin/documents",
   "/api/v1/admin/membership",
   "/api/v1/admin/payout-requests",
+  "/api/v1/admin/payout-methods",
+  "/api/v1/admin/payment-methods",
   "/api/v1/admin/wallet-transactions",
   "/api/v1/admin/admins",
   "/api/v1/admin/activity/admin",

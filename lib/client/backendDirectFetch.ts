@@ -10,6 +10,7 @@ import {
   getBackendApiBaseUrl,
   isBackendApiEnabled,
 } from "@/lib/backend/config";
+import { enrichPayoutBankInfo } from "@/lib/backend/enrichPayoutBankInfo";
 import {
   isSettingsAdminPath,
   rewriteSettingsPutBody,
@@ -199,11 +200,31 @@ export function installBackendDirectFetch(): () => void {
       });
     }
 
+    let bodyForAdapt = parsedBody;
+    const adminHead = parsed.adminPath.split("/").filter(Boolean)[0] ?? "";
+    if (
+      upstream.ok &&
+      upstreamMethod === "GET" &&
+      token &&
+      (adminHead === "payout-requests" || adminHead === "patient-withdrawals")
+    ) {
+      bodyForAdapt = await enrichPayoutBankInfo(
+        parsed.adminPath,
+        upstreamMethod,
+        parsedBody,
+        {
+          baseUrl: getBackendApiBaseUrl(),
+          token,
+          fetchImpl: originalFetch,
+        },
+      );
+    }
+
     const adapted = adaptBackendResponse(
       parsed.adminPath,
       upstreamMethod,
       upstream.status,
-      parsedBody,
+      bodyForAdapt,
       { searchParams: parsed.searchParams },
     );
 

@@ -8,6 +8,7 @@ import {
   storagePathFromUploadUrl,
 } from "@/lib/backend/config";
 import { mapAdminApiToBackend } from "@/lib/backend/capabilities";
+import { enrichPayoutBankInfo } from "@/lib/backend/enrichPayoutBankInfo";
 import {
   isSettingsAdminPath,
   rewriteSettingsPutBody,
@@ -1167,6 +1168,16 @@ export async function proxyAdminRequestToBackend(
       rest.length === 0
     ) {
       bodyForAdapt = await enrichDocumentsWithPreviewUrls(parsed);
+    }
+    if (
+      upstream.ok &&
+      method === "GET" &&
+      (head === "payout-requests" || head === "patient-withdrawals")
+    ) {
+      bodyForAdapt = await enrichPayoutBankInfo(adminPath, method, bodyForAdapt, {
+        baseUrl: getBackendApiBaseUrl(),
+        token,
+      });
     }
 
     const adapted = adaptBackendResponse(

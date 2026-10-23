@@ -46,7 +46,7 @@ export const STAGING_CAPABILITIES: StagingCapability[] = [
     pathPrefix: "/admin/finance/payout-request",
     label: "Payout requests",
     backendHint:
-      "Doctor: /payout-requests · Patient: /patient-withdrawals (approve → Chapa)",
+      "Doctor: /payout-requests + /payout-methods · Patient: /patient-withdrawals + /payment-methods (approve → Chapa)",
   },
   {
     pathPrefix: "/admin/finance/patient-withdrawals",
@@ -293,6 +293,16 @@ export function mapAdminApiToBackend(
         }
         return null;
       }
+      return null;
+    case "payout-methods":
+      if (method !== "GET") return null;
+      if (rest.length === 0) return "/api/v1/admin/payout-methods";
+      if (rest.length === 1) return `/api/v1/admin/payout-methods/${rest[0]}`;
+      return null;
+    case "payment-methods":
+      if (method !== "GET") return null;
+      if (rest.length === 0) return "/api/v1/admin/payment-methods";
+      if (rest.length === 1) return `/api/v1/admin/payment-methods/${rest[0]}`;
       return null;
     case "patient-withdrawals":
       if (rest.length === 0) return "/api/v1/admin/patient-withdrawals";
@@ -566,6 +576,18 @@ export const ADMIN_API_MAPPING_CASES: Array<{
     adminPath: "payout-requests/p1",
     backendPath: "/api/v1/admin/payout-requests/p1",
     method: "POST",
+  },
+  { adminPath: "payout-methods", backendPath: "/api/v1/admin/payout-methods", method: "GET" },
+  {
+    adminPath: "payout-methods/pm1",
+    backendPath: "/api/v1/admin/payout-methods/pm1",
+    method: "GET",
+  },
+  { adminPath: "payment-methods", backendPath: "/api/v1/admin/payment-methods", method: "GET" },
+  {
+    adminPath: "payment-methods/pm1",
+    backendPath: "/api/v1/admin/payment-methods/pm1",
+    method: "GET",
   },
   { adminPath: "patient-withdrawals", backendPath: "/api/v1/admin/patient-withdrawals" },
   {

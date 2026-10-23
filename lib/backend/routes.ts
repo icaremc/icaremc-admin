@@ -16,6 +16,18 @@ export const STAGING_BACKEND_ADMIN_ROUTES = [
     path: "/api/v1/admin/payout-requests/{id}",
     label: "payout-request-review",
   },
+  { method: "GET", path: "/api/v1/admin/payout-methods", label: "payout-methods" },
+  {
+    method: "GET",
+    path: "/api/v1/admin/payout-methods/{id}",
+    label: "payout-method-detail",
+  },
+  { method: "GET", path: "/api/v1/admin/payment-methods", label: "payment-methods" },
+  {
+    method: "GET",
+    path: "/api/v1/admin/payment-methods/{id}",
+    label: "payment-method-detail",
+  },
   {
     method: "GET",
     path: "/api/v1/admin/patient-withdrawals",

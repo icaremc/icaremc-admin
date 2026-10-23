@@ -879,18 +879,48 @@ function mapPayoutMethodReview(
   if (!row) return null;
   return {
     id: str(row.id),
-    doctor_id: doctorId,
+    doctor_id: str(row.doctor_id ?? row.doctorId) || doctorId,
     holder_name: str(row.holder_name ?? row.holderName),
     account_number: str(row.account_number ?? row.accountNumber),
     bank_name: str(row.bank_name ?? row.bankName),
     bank_code: (row.bank_code ?? row.bankCode ?? null) as string | null,
     swift_code: (row.swift_code ?? row.swiftCode ?? null) as string | null,
-    is_active: true,
-    is_default: true,
+    is_active: row.is_active !== false && row.isActive !== false,
+    is_default: Boolean(row.is_default ?? row.isDefault ?? true),
     currency: str(row.currency || "ETB"),
     created_at: str(row.created_at ?? row.createdAt),
     updated_at: str(row.updated_at ?? row.updatedAt),
   };
+}
+
+function mapPaymentMethodRow(row: Record<string, unknown>) {
+  return {
+    id: str(row.id),
+    doctor_id: (row.doctor_id ?? row.doctorId ?? null) as string | null,
+    patient_id: (row.patient_id ?? row.patientId ?? null) as string | null,
+    user_id: (row.user_id ?? row.userId ?? null) as string | null,
+    holder_name: str(row.holder_name ?? row.holderName),
+    account_number: str(row.account_number ?? row.accountNumber),
+    bank_name: str(row.bank_name ?? row.bankName),
+    bank_code: (row.bank_code ?? row.bankCode ?? null) as string | null,
+    swift_code: (row.swift_code ?? row.swiftCode ?? null) as string | null,
+    is_active: row.is_active !== false && row.isActive !== false,
+    is_default: Boolean(row.is_default ?? row.isDefault ?? false),
+    currency: str(row.currency || "ETB"),
+    created_at: str(row.created_at ?? row.createdAt),
+    updated_at: str(row.updated_at ?? row.updatedAt),
+  };
+}
+
+function paymentMethodListRows(body: unknown): Record<string, unknown>[] {
+  if (Array.isArray(body)) return body.filter(isPlainObject);
+  if (isPlainObject(body) && Array.isArray(body.methods)) {
+    return body.methods.filter(isPlainObject);
+  }
+  if (isPlainObject(body) && Array.isArray(body.items)) {
+    return body.items.filter(isPlainObject);
+  }
+  return [];
 }
 
 /** OpenAPI PayoutReviewOut → admin payout detail { request, context }. */
@@ -910,14 +940,21 @@ function mapPayoutReviewOut(body: Record<string, unknown>) {
       ? rawRequest.payout_method
       : isPlainObject(rawRequest.payoutMethod)
         ? rawRequest.payoutMethod
-        : null,
+        : isPlainObject(body.payout_method)
+          ? body.payout_method
+          : isPlainObject(body.payoutMethod)
+            ? body.payoutMethod
+            : null,
     doctorId,
   );
 
   const request = {
     id: str(rawRequest.id),
     doctor_id: doctorId,
-    payout_method_id: method?.id ?? null,
+    payout_method_id:
+      str(rawRequest.payout_method_id ?? rawRequest.payoutMethodId) ||
+      method?.id ||
+      null,
     amount: num(rawRequest.amount),
     note: (rawRequest.doctor_note ??
       rawRequest.doctorNote ??
@@ -1725,10 +1762,15 @@ export function adaptBackendResponse(
                     };
                   })()
               : null;
+            const mappedMethod = mapPayoutMethodReview(method, doctorId);
             return {
               ...row,
               id: str(row.id),
               doctor_id: doctorId,
+              payout_method_id:
+                str(row.payout_method_id ?? row.payoutMethodId) ||
+                mappedMethod?.id ||
+                null,
               amount: num(row.amount),
               status: str(row.status || "pending"),
               note: (row.doctor_note ??
@@ -1746,9 +1788,14 @@ export function adaptBackendResponse(
                 row.updated_at ?? row.updatedAt ?? row.created_at ?? row.createdAt,
               ),
               doctor_profiles: profiles,
-              doctor_payout_methods: mapPayoutMethodReview(method, doctorId),
+              doctor_payout_methods: mappedMethod,
             };
           }),
+        };
+      case "payout-methods":
+      case "payment-methods":
+        return {
+          methods: body.filter(isPlainObject).map(mapPaymentMethodRow),
         };
       case "patient-withdrawals":
         return {
@@ -1953,6 +2000,22 @@ export function adaptBackendResponse(
     }
     if (head === "payout-requests" && rest.length === 1) {
       return { request: body, ...body };
+    }
+    if (
+      (head === "payout-methods" || head === "payment-methods") &&
+      rest.length === 0 &&
+      upper === "GET"
+    ) {
+      return {
+        methods: paymentMethodListRows(body).map(mapPaymentMethodRow),
+      };
+    }
+    if (
+      (head === "payout-methods" || head === "payment-methods") &&
+      rest.length === 1 &&
+      upper === "GET"
+    ) {
+      return { method: mapPaymentMethodRow(body) };
     }
     if (head === "patient-withdrawals" && rest.length === 1 && upper === "GET") {
       return mapPatientWithdrawalReviewOut(body);

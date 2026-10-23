@@ -772,6 +772,77 @@ describe("adaptBackendResponse", () => {
     assert.equal(list.requests[0]?.payout_method?.account_number, "1000123456789");
   });
 
+  it("adapts payout-methods and payment-methods list/detail", () => {
+    const list = adaptBackendResponse("payout-methods", "GET", 200, [
+      {
+        id: "pm-1",
+        doctorId: "doc-1",
+        holderName: "Dr Test",
+        bankName: "CBE",
+        accountNumber: "1000",
+        bankCode: "cbe",
+        isDefault: true,
+      },
+    ]) as {
+      methods: Array<{
+        id: string;
+        doctor_id: string | null;
+        bank_name: string;
+        account_number: string;
+      }>;
+    };
+    assert.equal(list.methods[0]?.id, "pm-1");
+    assert.equal(list.methods[0]?.doctor_id, "doc-1");
+    assert.equal(list.methods[0]?.bank_name, "CBE");
+    assert.equal(list.methods[0]?.account_number, "1000");
+
+    const detail = adaptBackendResponse(
+      "payment-methods/pay-1",
+      "GET",
+      200,
+      {
+        id: "pay-1",
+        patient_id: "pat-1",
+        holder_name: "Sara",
+        bank_name: "Awash",
+        account_number: "2000",
+      },
+    ) as {
+      method: { id: string; patient_id: string | null; bank_name: string };
+    };
+    assert.equal(detail.method.id, "pay-1");
+    assert.equal(detail.method.patient_id, "pat-1");
+    assert.equal(detail.method.bank_name, "Awash");
+  });
+
+  it("adapts payout list with enriched payout_method into doctor_payout_methods", () => {
+    const out = adaptBackendResponse("payout-requests", "GET", 200, [
+      {
+        id: "req-2",
+        doctor_id: "doc-2",
+        amount: 200,
+        status: "pending",
+        created_at: "2026-10-20T00:00:00Z",
+        payout_method_id: "pm-2",
+        payout_method: {
+          id: "pm-2",
+          holder_name: "Enriched",
+          bank_name: "Dashen",
+          account_number: "555",
+          bank_code: "dashen",
+        },
+      },
+    ]) as {
+      requests: Array<{
+        doctor_payout_methods: { bank_name: string; account_number: string } | null;
+        payout_method_id: string | null;
+      }>;
+    };
+    assert.equal(out.requests[0]?.payout_method_id, "pm-2");
+    assert.equal(out.requests[0]?.doctor_payout_methods?.bank_name, "Dashen");
+    assert.equal(out.requests[0]?.doctor_payout_methods?.account_number, "555");
+  });
+
   it("keeps document preview_url and wallet doctor_profiles", () => {
     const docs = adaptBackendResponse("documents", "GET", 200, [
       {
