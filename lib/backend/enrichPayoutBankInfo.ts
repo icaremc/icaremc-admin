@@ -1,4 +1,4 @@
-// ponytail: one list fetch (limit 500); switch to per-id/doctor_id filters if catalogs grow
+// ponytail: list-only enrich for table GETs; single get-by-id only on detail
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -58,11 +58,12 @@ function pickForOwner(
   });
   if (pool.length === 0) return null;
 
-  const preferred =
+  return (
     pool.find((m) => Boolean(m.is_default ?? m.isDefault)) ??
     pool.find((m) => m.is_active !== false && m.isActive !== false) ??
-    pool[0];
-  return preferred ?? null;
+    pool[0] ??
+    null
+  );
 }
 
 async function fetchMethodList(
@@ -152,6 +153,29 @@ function attachMethod(
   };
 }
 
+function applyMethodsFromList(
+  rows: Record<string, unknown>[],
+  methods: Record<string, unknown>[],
+  owner: "doctor" | "patient",
+): Record<string, unknown>[] {
+  return rows.map((row) => {
+    if (hasBankDetails(nestedMethod(row))) return row;
+    const methodId = str(row.payout_method_id ?? row.payoutMethodId);
+    const method =
+      owner === "doctor"
+        ? pickForOwner(methods, {
+            methodId,
+            doctorId: str(row.doctor_id ?? row.doctorId),
+          })
+        : pickForOwner(methods, {
+            methodId,
+            patientId: str(row.patient_id ?? row.patientId),
+            userId: str(row.user_id ?? row.userId),
+          });
+    return method && hasBankDetails(method) ? attachMethod(row, method) : row;
+  });
+}
+
 async function enrichDoctorRows(
   rows: Record<string, unknown>[],
   baseUrl: string,
@@ -167,25 +191,7 @@ async function enrichDoctorRows(
     "/api/v1/admin/payout-methods",
     fetchImpl,
   );
-
-  return Promise.all(
-    rows.map(async (row) => {
-      if (hasBankDetails(nestedMethod(row))) return row;
-      const methodId = str(row.payout_method_id ?? row.payoutMethodId);
-      const doctorId = str(row.doctor_id ?? row.doctorId);
-      let method = pickForOwner(methods, { methodId, doctorId });
-      if (!method && methodId) {
-        method = await fetchMethodById(
-          baseUrl,
-          token,
-          "/api/v1/admin/payout-methods",
-          methodId,
-          fetchImpl,
-        );
-      }
-      return method && hasBankDetails(method) ? attachMethod(row, method) : row;
-    }),
-  );
+  return applyMethodsFromList(rows, methods, "doctor");
 }
 
 async function enrichPatientRows(
@@ -201,35 +207,76 @@ async function enrichPatientRows(
     fetchMethodList(baseUrl, token, "/api/v1/admin/payment-methods", fetchImpl),
     fetchMethodList(baseUrl, token, "/api/v1/admin/payout-methods", fetchImpl),
   ]);
-  const methods = [...paymentMethods, ...payoutMethods];
+  return applyMethodsFromList(rows, [...paymentMethods, ...payoutMethods], "patient");
+}
 
-  return Promise.all(
-    rows.map(async (row) => {
-      if (hasBankDetails(nestedMethod(row))) return row;
-      const methodId = str(row.payout_method_id ?? row.payoutMethodId);
-      const patientId = str(row.patient_id ?? row.patientId);
-      const userId = str(row.user_id ?? row.userId);
-      let method = pickForOwner(methods, { methodId, patientId, userId });
-      if (!method && methodId) {
-        method =
-          (await fetchMethodById(
-            baseUrl,
-            token,
-            "/api/v1/admin/payment-methods",
-            methodId,
-            fetchImpl,
-          )) ??
-          (await fetchMethodById(
-            baseUrl,
-            token,
-            "/api/v1/admin/payout-methods",
-            methodId,
-            fetchImpl,
-          ));
-      }
-      return method && hasBankDetails(method) ? attachMethod(row, method) : row;
-    }),
+async function enrichDoctorDetail(
+  row: Record<string, unknown>,
+  baseUrl: string,
+  token: string,
+  fetchImpl: typeof fetch,
+): Promise<Record<string, unknown>> {
+  if (hasBankDetails(nestedMethod(row))) return row;
+  const methodId = str(row.payout_method_id ?? row.payoutMethodId);
+  const doctorId = str(row.doctor_id ?? row.doctorId);
+
+  const methods = await fetchMethodList(
+    baseUrl,
+    token,
+    "/api/v1/admin/payout-methods",
+    fetchImpl,
   );
+  let method = pickForOwner(methods, { methodId, doctorId });
+  if (!method && methodId) {
+    method = await fetchMethodById(
+      baseUrl,
+      token,
+      "/api/v1/admin/payout-methods",
+      methodId,
+      fetchImpl,
+    );
+  }
+  return method && hasBankDetails(method) ? attachMethod(row, method) : row;
+}
+
+async function enrichPatientDetail(
+  row: Record<string, unknown>,
+  baseUrl: string,
+  token: string,
+  fetchImpl: typeof fetch,
+): Promise<Record<string, unknown>> {
+  if (hasBankDetails(nestedMethod(row))) return row;
+  const methodId = str(row.payout_method_id ?? row.payoutMethodId);
+  const patientId = str(row.patient_id ?? row.patientId);
+  const userId = str(row.user_id ?? row.userId);
+
+  const [paymentMethods, payoutMethods] = await Promise.all([
+    fetchMethodList(baseUrl, token, "/api/v1/admin/payment-methods", fetchImpl),
+    fetchMethodList(baseUrl, token, "/api/v1/admin/payout-methods", fetchImpl),
+  ]);
+  let method = pickForOwner([...paymentMethods, ...payoutMethods], {
+    methodId,
+    patientId,
+    userId,
+  });
+  if (!method && methodId) {
+    method =
+      (await fetchMethodById(
+        baseUrl,
+        token,
+        "/api/v1/admin/payment-methods",
+        methodId,
+        fetchImpl,
+      )) ??
+      (await fetchMethodById(
+        baseUrl,
+        token,
+        "/api/v1/admin/payout-methods",
+        methodId,
+        fetchImpl,
+      ));
+  }
+  return method && hasBankDetails(method) ? attachMethod(row, method) : row;
 }
 
 export async function enrichPayoutBankInfo(
@@ -262,7 +309,7 @@ export async function enrichPayoutBankInfo(
     if (hasBankDetails(nestedMethod(rawRequest)) || hasBankDetails(nestedMethod(body))) {
       return body;
     }
-    const [enriched] = await enrichDoctorRows([rawRequest], baseUrl, token, fetchImpl);
+    const enriched = await enrichDoctorDetail(rawRequest, baseUrl, token, fetchImpl);
     if (isPlainObject(body.request)) {
       return { ...body, request: enriched, payout_method: enriched.payout_method };
     }
@@ -283,7 +330,7 @@ export async function enrichPayoutBankInfo(
     ) {
       return body;
     }
-    const [enriched] = await enrichPatientRows([rawRequest], baseUrl, token, fetchImpl);
+    const enriched = await enrichPatientDetail(rawRequest, baseUrl, token, fetchImpl);
     if (isPlainObject(body.request)) {
       return { ...body, request: enriched, payout_method: enriched.payout_method };
     }

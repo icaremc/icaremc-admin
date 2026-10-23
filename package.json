@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "dev:staging": "NEXT_PUBLIC_USE_BACKEND_API=true USE_BACKEND_API=true API_BASE_URL=https://api.icaremchealth.com NEXT_PUBLIC_API_BASE_URL=https://api.icaremchealth.com next dev -p 3001",
+    "dev": "NODE_OPTIONS='--max-old-space-size=8192' next dev",
+    "dev:staging": "NODE_OPTIONS='--max-old-space-size=8192' NEXT_PUBLIC_USE_BACKEND_API=true USE_BACKEND_API=true API_BASE_URL=https://api.icaremchealth.com NEXT_PUBLIC_API_BASE_URL=https://api.icaremchealth.com next dev -p 3001",
     "build": "next build",
     "build:staging": "NEXT_PUBLIC_USE_BACKEND_API=true USE_BACKEND_API=true API_BASE_URL=https://api.icaremchealth.com NEXT_PUBLIC_API_BASE_URL=https://api.icaremchealth.com next build",
     "start": "next start",
